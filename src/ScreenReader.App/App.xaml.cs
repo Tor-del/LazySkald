@@ -1,0 +1,109 @@
+using System.Windows;
+using ScreenReader.Edge;
+using Forms=System.Windows.Forms;
+
+namespace ScreenReader.App;
+
+public partial class App : Application
+{
+    private Mutex? instance;
+    private Forms.NotifyIcon? tray;
+    private HotkeyService? hotkeys;
+    private System.Drawing.Icon? trayIcon;
+    private AppLifetimeSignal? exitSignal;
+    private MainWindow? settingsWindow;
+    private readonly CancellationTokenSource lifetime=new();
+    public AppSettings Settings { get; private set; }=new();
+    public WindowsOcrProvider Ocr { get; }=new();
+    public SpeechProviderRegistry Providers { get; }=new();
+    public ReadingController Reader { get; private set; }=null!;
+    public CancellationToken Lifetime=>lifetime.Token;
+    public bool IsExiting { get; private set; }
+
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        bool firstRun=!File.Exists(SettingsStore.SettingsPath);
+        Settings=SettingsStore.Load();
+        string? requestedLanguage=e.Args.FirstOrDefault(a=>a.StartsWith("--ui-language=",StringComparison.Ordinal))?.Split('=',2)[1];
+        if (firstRun && UiText.SupportsLanguage(requestedLanguage)) { Settings=Settings with { UiLanguage=requestedLanguage!.ToLowerInvariant() }; SettingsStore.Save(Settings); }
+        UiText.SetLanguage(Settings.UiLanguage);
+        instance=new Mutex(true,"Local\\ScreenReader.Desktop",out bool created);
+        if (!created) { MessageBox.Show(UiText.T("app.alreadyRunning"),"LazySkald"); Shutdown(); return; }
+        exitSignal=new AppLifetimeSignal(()=> { if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(Quit); });
+        Reader=new ReadingController(new ScreenCapture(),Ocr,new IdentityTextTransform(),Providers,new StreamingAudioPlayer());
+        Reader.StatusChanged += value=>settingsWindow?.SetStatus(value);
+        Reader.TextTranslated += value=>settingsWindow?.SetTranslatedText(value);
+        Reader.GenderDetected += value=>settingsWindow?.SetGender(value);
+        Reader.TextRecognized += value=>settingsWindow?.SetRecognizedText(value);
+        Reader.Failed += error=>
+        {
+            string message=error.Message;
+            settingsWindow?.SetStatus(message);
+            tray?.ShowBalloonTip(5000,"LazySkald",message,Forms.ToolTipIcon.Warning);
+        };
+        trayIcon=BrandAssets.CreateTrayIcon();
+        tray=new Forms.NotifyIcon { Icon=trayIcon,Text="LazySkald — "+(Settings.CaptureHotkey?.ToString() ?? UiText.T("hotkey.unassigned")),Visible=true };
+        UpdateTrayLanguage(); UiText.LanguageChanged+=UpdateTrayLanguage;
+        tray.DoubleClick += (_,_)=>ShowSettings();
+        hotkeys=new HotkeyService();
+        hotkeys.ActionRequested += async action=>
+        {
+            switch (action)
+            {
+                case HotkeyAction.Toggle: await Reader.ToggleAsync(Settings); break;
+                case HotkeyAction.Capture: await Reader.CaptureAndReadAsync(Settings); break;
+                case HotkeyAction.RepeatCapture: await Reader.RepeatCaptureAndReadAsync(Settings); break;
+                case HotkeyAction.CancelCurrent: Reader.CancelCurrent(); break;
+                case HotkeyAction.CancelAll: Reader.Stop(); break;
+            }
+        };
+        string? warning=null;
+        try { hotkeys.Configure(Settings); }
+        catch (Exception ex) { warning=ex.Message; AppLog.Write("Ошибка регистрации горячих клавиш",ex); }
+        try { settingsWindow=new MainWindow(this); MainWindow=settingsWindow; }
+        catch (Exception ex) { MessageBox.Show(UiText.T("app.startFailed",ex.Message),"LazySkald"); Quit(); return; }
+        if (!Settings.StartInTray || warning is not null) ShowSettings();
+        else tray.ShowBalloonTip(2500,"LazySkald",UiText.T("tray.started",Settings.CaptureHotkey?.ToString() ?? UiText.T("hotkey.unassigned")),Forms.ToolTipIcon.Info);
+        if (warning is not null) settingsWindow.SetStatus(warning);
+        AppLog.Write("Приложение запущено");
+    }
+    public void ApplySettings(AppSettings value)
+    {
+        var previous=Settings;
+        Providers.Get(value.SpeechProviderId);
+        hotkeys!.Configure(value);
+        try { SettingsStore.Save(value); Settings=value; }
+        catch { hotkeys.Configure(previous); throw; }
+        if (tray is not null) tray.Text="LazySkald — "+(value.CaptureHotkey?.ToString() ?? UiText.T("hotkey.unassigned"));
+    }
+    public void SetHotkeyEditing(bool editing)
+    {
+        try { hotkeys?.SetSuspended(editing); }
+        catch (Exception e) { settingsWindow?.SetStatus(e.Message); AppLog.Write("Ошибка восстановления горячих клавиш",e); }
+    }
+    private void UpdateTrayLanguage()
+    {
+        if (tray is null) return;
+        var menu=new Forms.ContextMenuStrip();
+        menu.Items.Add(UiText.T("tray.toggle"),null,async (_,_)=>await Reader.ToggleAsync(Settings));
+        menu.Items.Add(UiText.T("button.stop"),null,(_,_)=>Reader.Stop());
+        menu.Items.Add(UiText.T("tray.settings"),null,(_,_)=>ShowSettings());
+        menu.Items.Add(new Forms.ToolStripSeparator());
+        menu.Items.Add(UiText.T("tray.exit"),null,(_,_)=>Quit());
+        var previous=tray.ContextMenuStrip; tray.ContextMenuStrip=menu; previous?.Dispose();
+    }
+    private void ShowSettings()
+    { settingsWindow?.Show(); if (settingsWindow is not null) { settingsWindow.WindowState=WindowState.Normal; settingsWindow.Activate(); } }
+    public void Quit()
+    {
+        if (IsExiting) return;
+        IsExiting=true; Reader?.Stop(); lifetime.Cancel(); settingsWindow?.Close(); Shutdown();
+    }
+    protected override void OnExit(ExitEventArgs e)
+    {
+        UiText.LanguageChanged-=UpdateTrayLanguage;
+        exitSignal?.Dispose(); hotkeys?.Dispose(); tray?.Dispose(); trayIcon?.Dispose(); Providers.Dispose(); lifetime.Dispose(); instance?.Dispose();
+        base.OnExit(e);
+    }
+}

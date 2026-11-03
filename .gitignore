@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.packages/
+.dotnet/
+artifacts/
+reference/
+*.user
+.vs/
+tools/downloads/
+tools/innosetup/

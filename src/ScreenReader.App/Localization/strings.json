@@ -1,0 +1,1011 @@
+{
+  "app.title": {
+    "ru": "LazySkald — рассказчик с экрана",
+    "en": "LazySkald — your screen storyteller"
+  },
+  "app.subtitle": {
+    "ru": "Выделите текст на экране — рассказчик прочитает его вслух.",
+    "en": "Select text on your screen and let the storyteller read it aloud."
+  },
+  "tab.speech": {
+    "ru": "Озвучивание",
+    "en": "Speech"
+  },
+  "tab.controls": {
+    "ru": "Управление",
+    "en": "Controls"
+  },
+  "tab.preview": {
+    "ru": "Проверки",
+    "en": "Checks"
+  },
+  "tab.application": {
+    "ru": "Приложение",
+    "en": "Application"
+  },
+  "label.provider": {
+    "ru": "Провайдер озвучивания",
+    "en": "Speech provider"
+  },
+  "label.ocrLanguage": {
+    "ru": "Язык текста и распознавания",
+    "en": "Text and recognition language"
+  },
+  "label.voice": {
+    "ru": "Голос",
+    "en": "Voice"
+  },
+  "label.speed": {
+    "ru": "Скорость речи",
+    "en": "Speaking rate"
+  },
+  "label.endpoint": {
+    "ru": "Полный адрес TTS-сервера",
+    "en": "Full TTS server URL"
+  },
+  "label.model": {
+    "ru": "Модель",
+    "en": "Model"
+  },
+  "label.apiKey": {
+    "ru": "API-ключ (если сервер требует)",
+    "en": "API key (if required by the server)"
+  },
+  "label.format": {
+    "ru": "Формат ответа",
+    "en": "Response format"
+  },
+  "label.device": {
+    "ru": "Устройство воспроизведения",
+    "en": "Playback device"
+  },
+  "label.hotkey": {
+    "ru": "Запустить / остановить",
+    "en": "Start / stop"
+  },
+  "label.hotkeyMode": {
+    "ru": "Обработка горячей клавиши",
+    "en": "Hotkey handling"
+  },
+  "label.captureMode": {
+    "ru": "Способ захвата экрана",
+    "en": "Screen capture method"
+  },
+  "label.uiLanguage": {
+    "ru": "Язык интерфейса",
+    "en": "Interface language"
+  },
+  "label.behavior": {
+    "ru": "Работа в трее",
+    "en": "System tray behavior"
+  },
+  "label.about": {
+    "ru": "О программе",
+    "en": "About"
+  },
+  "button.refresh": {
+    "ru": "Обновить",
+    "en": "Refresh"
+  },
+  "button.save": {
+    "ru": "Сохранить",
+    "en": "Save"
+  },
+  "button.hide": {
+    "ru": "Свернуть в трей",
+    "en": "Hide to tray"
+  },
+  "button.log": {
+    "ru": "Открыть журнал",
+    "en": "Open log"
+  },
+  "button.listen": {
+    "ru": "Прослушать",
+    "en": "Listen"
+  },
+  "button.stop": {
+    "ru": "Остановить",
+    "en": "Stop"
+  },
+  "check.closeToTray": {
+    "ru": "При закрытии окна оставаться в трее",
+    "en": "Keep running in the tray when the window is closed"
+  },
+  "check.startInTray": {
+    "ru": "При следующем запуске сразу сворачиваться в трей",
+    "en": "Start in the tray next time"
+  },
+  "hint.hotkey": {
+    "ru": "Нажмите сочетание в нужном поле. Delete или Backspace снимает назначение. Запуск / остановка отменяет все задачи; добавление в очередь сохраняет текущее чтение.",
+    "en": "Press a shortcut in its field. Delete or Backspace clears it. Start / stop cancels all tasks; adding to the queue keeps current speech playing."
+  },
+  "hint.hotkeyField": {
+    "ru": "Нажмите сочетание с Ctrl, Alt, Shift или Win; Delete — снять назначение",
+    "en": "Press a shortcut with Ctrl, Alt, Shift, or Win; Delete clears it"
+  },
+  "hint.game": {
+    "ru": "Для полноэкранных игр выберите игровой режим. Если игра запущена от администратора, утилите может потребоваться тот же уровень прав.",
+    "en": "Use game mode for fullscreen games. If a game runs as administrator, the utility may need the same privilege level."
+  },
+  "hint.device": {
+    "ru": "По умолчанию используется устройство Windows. Изменение применяется к следующему чтению после сохранения.",
+    "en": "The Windows default device is used unless another device is selected. Save to apply changes to the next reading."
+  },
+  "hint.preview": {
+    "ru": "Здесь показан исходный текст. «Прослушать» применяет текущие настройки перевода и озвучивания. Результат перевода показан ниже.",
+    "en": "Source text appears here. Listen applies the current translation and speech settings. The translation result appears below."
+  },
+  "hint.startInTray": {
+    "ru": "Этот параметр не включает автозагрузку Windows.",
+    "en": "This option does not enable Windows startup."
+  },
+  "hint.about": {
+    "ru": "Локальный OCR, сменные провайдеры TTS и чтение выделенной области. Иконка раскрытой книги и речи вдохновлена образом рассказчика.",
+    "en": "Local OCR, interchangeable TTS providers, and region reading. The open-book and speech icon is inspired by a storyteller."
+  },
+  "preview.sample": {
+    "ru": "Привет! Это проверка чтения текста с экрана.",
+    "en": "Hello! This is a test of reading text from the screen."
+  },
+  "provider.edge": {
+    "ru": "Microsoft Edge TTS (онлайн)",
+    "en": "Microsoft Edge TTS (online)"
+  },
+  "provider.windows": {
+    "ru": "Windows TTS (локально)",
+    "en": "Windows TTS (offline)"
+  },
+  "provider.openai-compatible": {
+    "ru": "OpenAI-совместимый сервер",
+    "en": "OpenAI-compatible server"
+  },
+  "mode.game": {
+    "ru": "Игровой: низкоуровневый хук Windows",
+    "en": "Game: low-level Windows hook"
+  },
+  "mode.registered": {
+    "ru": "Обычный: RegisterHotKey",
+    "en": "Standard: RegisterHotKey"
+  },
+  "capture.auto": {
+    "ru": "Автоматически: DXGI → GDI",
+    "en": "Automatic: DXGI → GDI"
+  },
+  "capture.dxgi": {
+    "ru": "DXGI Desktop Duplication",
+    "en": "DXGI Desktop Duplication"
+  },
+  "capture.gdi": {
+    "ru": "GDI (совместимый захват)",
+    "en": "GDI (compatibility capture)"
+  },
+  "language.ru": {
+    "ru": "Русский (ru-RU)",
+    "en": "Russian (ru-RU)"
+  },
+  "language.en": {
+    "ru": "Английский (en-US)",
+    "en": "English (en-US)"
+  },
+  "language.zh": {
+    "ru": "Китайский, упрощённый (zh-CN)",
+    "en": "Chinese, Simplified (zh-CN)"
+  },
+  "language.ja": {
+    "ru": "Японский (ja-JP)",
+    "en": "Japanese (ja-JP)"
+  },
+  "language.es": {
+    "ru": "Испанский (es-ES)",
+    "en": "Spanish (es-ES)"
+  },
+  "language.ko": {
+    "ru": "Корейский (ko-KR)",
+    "en": "Korean (ko-KR)"
+  },
+  "language.fr": {
+    "ru": "Французский (fr-FR)",
+    "en": "French (fr-FR)"
+  },
+  "language.de": {
+    "ru": "Немецкий (de-DE)",
+    "en": "German (de-DE)"
+  },
+  "audio.default": {
+    "ru": "По умолчанию в Windows",
+    "en": "Windows default device"
+  },
+  "audio.missingChoice": {
+    "ru": "Недоступное сохранённое устройство",
+    "en": "Saved device is unavailable"
+  },
+  "audio.missing": {
+    "ru": "Выбранное устройство воспроизведения недоступно. Подключите его или выберите другое на вкладке «Озвучивание».",
+    "en": "The selected playback device is unavailable. Reconnect it or select another device on the Speech tab."
+  },
+  "audio.none": {
+    "ru": "Нет доступного устройства воспроизведения.",
+    "en": "No playback device is available."
+  },
+  "audio.empty": {
+    "ru": "Не получено аудио для воспроизведения.",
+    "en": "No audio was received for playback."
+  },
+  "audio.failed": {
+    "ru": "Ошибка устройства воспроизведения.",
+    "en": "Playback device error."
+  },
+  "ready": {
+    "ru": "Готово",
+    "en": "Ready"
+  },
+  "status.working": {
+    "ru": "Работа выполняется…",
+    "en": "Working…"
+  },
+  "status.stopped": {
+    "ru": "Остановлено",
+    "en": "Stopped"
+  },
+  "status.cancelled": {
+    "ru": "Выделение отменено",
+    "en": "Selection cancelled"
+  },
+  "status.ocr": {
+    "ru": "Распознавание…",
+    "en": "Recognizing text…"
+  },
+  "status.noText": {
+    "ru": "В выделенной области текст не найден",
+    "en": "No text found in the selected region"
+  },
+  "status.preparing": {
+    "ru": "Подготовка речи: {0}…",
+    "en": "Preparing speech: {0}…"
+  },
+  "status.reading": {
+    "ru": "Чтение · до аудио {0} мс · OCR {1} мс",
+    "en": "Reading · audio start {0} ms · OCR {1} ms"
+  },
+  "status.saved": {
+    "ru": "Настройки сохранены. Распознать и добавить в очередь: {0}.",
+    "en": "Settings saved. Recognize and add to queue: {0}."
+  },
+  "status.captureChanged": {
+    "ru": "Способ захвата изменён. Нажмите «Сохранить», чтобы применить его.",
+    "en": "Capture method changed. Click Save to apply it."
+  },
+  "status.keyUnavailable": {
+    "ru": "Сохранённый ключ TTS недоступен. Введите его заново.",
+    "en": "The saved TTS key is unavailable. Enter it again."
+  },
+  "error.language": {
+    "ru": "Выберите язык.",
+    "en": "Select a language."
+  },
+  "error.voice": {
+    "ru": "Выберите голос или введите его имя для TTS-сервера.",
+    "en": "Select a voice or enter its name for the TTS server."
+  },
+  "error.previewEmpty": {
+    "ru": "Введите текст для проверки.",
+    "en": "Enter text to preview."
+  },
+  "error.timeout": {
+    "ru": "Сервис озвучивания не ответил вовремя.",
+    "en": "The speech service did not respond in time."
+  },
+  "error.systemVoice": {
+    "ru": "Выбранный системный голос не установлен. Обновите список голосов.",
+    "en": "The selected system voice is not installed. Refresh the voice list."
+  },
+  "error.unknownProvider": {
+    "ru": "Неизвестный провайдер TTS: {0}",
+    "en": "Unknown TTS provider: {0}"
+  },
+  "error.ocrMissing": {
+    "ru": "Не установлен OCR для {0}. Добавьте распознавание текста в параметрах языка Windows.",
+    "en": "OCR for {0} is not installed. Add text recognition in Windows language settings."
+  },
+  "error.hotkey": {
+    "ru": "Используйте модификатор и обычную клавишу; F12 зарезервирована Windows.",
+    "en": "Use a modifier and a regular key; F12 is reserved by Windows."
+  },
+  "error.hotkeyMode": {
+    "ru": "Неизвестный режим горячей клавиши.",
+    "en": "Unknown hotkey mode."
+  },
+  "error.hotkeyBusy": {
+    "ru": "Сочетание занято: {0}",
+    "en": "Shortcut is already in use: {0}"
+  },
+  "error.hook": {
+    "ru": "Не удалось включить игровой режим горячей клавиши. Выберите обычный режим.",
+    "en": "Could not enable game hotkey mode. Select standard mode."
+  },
+  "error.secret": {
+    "ru": "Не удалось обработать ключ TTS. Введите его заново для текущего пользователя Windows.",
+    "en": "Could not process the TTS key. Enter it again for the current Windows user."
+  },
+  "ocr.installed": {
+    "ru": "Распознавание для этого языка установлено.",
+    "en": "Text recognition is installed for this language."
+  },
+  "ocr.missing": {
+    "ru": "OCR для этого языка не установлен. Добавьте распознавание текста в параметрах языка Windows. Проверка голоса доступна.",
+    "en": "OCR for this language is not installed. Add text recognition in Windows language settings. Voice preview is still available."
+  },
+  "voices.loading": {
+    "ru": "Загрузка голосов…",
+    "en": "Loading voices…"
+  },
+  "voices.none": {
+    "ru": "Для этого языка нет доступного голоса. Добавьте голос в параметрах речи Windows или выберите другой провайдер.",
+    "en": "No voice is available for this language. Add a voice in Windows speech settings or choose another provider."
+  },
+  "voices.windows": {
+    "ru": "Используются установленные голоса Windows. Интернет не требуется.",
+    "en": "Using installed Windows voices. No internet connection is required."
+  },
+  "voices.edge": {
+    "ru": "Онлайн-сервис Microsoft Edge TTS.",
+    "en": "Microsoft Edge online TTS service."
+  },
+  "voices.loaded": {
+    "ru": "Список голосов получен от Microsoft.",
+    "en": "Voice list received from Microsoft."
+  },
+  "voices.timeout": {
+    "ru": "Превышено время загрузки голосов.",
+    "en": "Voice list request timed out."
+  },
+  "voices.error": {
+    "ru": "Не удалось обновить голоса. {0}",
+    "en": "Could not refresh voices. {0}"
+  },
+  "voices.custom": {
+    "ru": "Введите точное имя голоса на вашем сервере. Ответ — бинарное аудио, не SSE.",
+    "en": "Enter the exact voice name used by your server. The response must be binary audio, not SSE."
+  },
+  "privacy.windows": {
+    "ru": "OCR и озвучивание выполняются локально. Текст и снимки в журнал не сохраняются.",
+    "en": "OCR and speech run locally. Text and screenshots are not saved in the log."
+  },
+  "privacy.server": {
+    "ru": "OCR выполняется локально. Текст отправляется на заданный TTS-сервер. Ключ хранится зашифрованным для вашего пользователя Windows.",
+    "en": "OCR runs locally. Text is sent to the configured TTS server. The key is encrypted for your Windows user."
+  },
+  "privacy.edge": {
+    "ru": "OCR выполняется локально. Текст для озвучивания отправляется Microsoft Edge TTS. Текст и снимки в журнал не сохраняются.",
+    "en": "OCR runs locally. Speech text is sent to Microsoft Edge TTS. Text and screenshots are not saved in the log."
+  },
+  "selection.hint": {
+    "ru": "Выделите текст мышью  ·  Esc — отмена",
+    "en": "Drag to select text  ·  Esc to cancel"
+  },
+  "tray.toggle": {
+    "ru": "Запустить / остановить",
+    "en": "Start / stop"
+  },
+  "tray.settings": {
+    "ru": "Настройки",
+    "en": "Settings"
+  },
+  "tray.exit": {
+    "ru": "Выход",
+    "en": "Exit"
+  },
+  "app.alreadyRunning": {
+    "ru": "LazySkald уже запущен. Откройте настройки через значок в трее.",
+    "en": "LazySkald is already running. Open Settings from its tray icon."
+  },
+  "app.startFailed": {
+    "ru": "Не удалось открыть настройки: {0}",
+    "en": "Could not open settings: {0}"
+  },
+  "tray.started": {
+    "ru": "Распознать и добавить в очередь: {0}",
+    "en": "Recognize and add to queue: {0}"
+  },
+  "wave.expected": {
+    "ru": "Ожидалось аудио WAV/PCM.",
+    "en": "Expected WAV/PCM audio."
+  },
+  "wave.noFormat": {
+    "ru": "В WAV отсутствует описание PCM.",
+    "en": "The WAV file has no PCM format description."
+  },
+  "wave.largeHeader": {
+    "ru": "Слишком большой заголовок WAV.",
+    "en": "The WAV header is too large."
+  },
+  "wave.badFormat": {
+    "ru": "Повреждённое описание WAV.",
+    "en": "Invalid WAV format description."
+  },
+  "wave.parameters": {
+    "ru": "Неподдерживаемые параметры WAV.",
+    "en": "Unsupported WAV parameters."
+  },
+  "wave.encoding": {
+    "ru": "Поддерживается WAV PCM или Float32. Для сжатого аудио выберите MP3.",
+    "en": "WAV PCM or Float32 is supported. Select MP3 for compressed audio."
+  },
+  "wave.alignment": {
+    "ru": "Неверный размер PCM-кадра WAV.",
+    "en": "Invalid WAV PCM frame size."
+  },
+  "wave.truncated": {
+    "ru": "WAV обрезан до завершения аудио.",
+    "en": "The WAV audio is truncated."
+  },
+  "capture.noFrame": {
+    "ru": "DXGI вернул только обновление курсора без изображения рабочего стола.",
+    "en": "DXGI returned only a cursor update without a desktop image."
+  },
+  "capture.size": {
+    "ru": "Размер кадра DXGI не совпал с размером монитора.",
+    "en": "The DXGI frame size does not match the monitor size."
+  },
+  "capture.noMonitor": {
+    "ru": "Не найден монитор для DXGI. Попробуйте захват GDI.",
+    "en": "No monitor found for DXGI. Try GDI capture."
+  },
+  "tab.translation": {
+    "ru": "Перевод",
+    "en": "Translation"
+  },
+  "translation.enabled": {
+    "ru": "Переводить перед озвучиванием",
+    "en": "Translate before speaking"
+  },
+  "translation.provider": {
+    "ru": "Провайдер перевода",
+    "en": "Translation provider"
+  },
+  "translation.url": {
+    "ru": "Базовый URL (LM Studio / OpenAI: с /v1; Ollama: без /api)",
+    "en": "Base URL (LM Studio / OpenAI: include /v1; Ollama: without /api)"
+  },
+  "translation.target": {
+    "ru": "Язык перевода и голоса (выберите или введите код)",
+    "en": "Translation and voice language (select or enter a code)"
+  },
+  "translation.prompt": {
+    "ru": "Системный промпт перевода",
+    "en": "Translation system prompt"
+  },
+  "translation.promptHint": {
+    "ru": "{targetLanguage} заменяется языком перевода. Исходный текст отправляется отдельным сообщением.",
+    "en": "{targetLanguage} is replaced with the target language. Source text is sent as a separate message."
+  },
+  "translation.temperature": {
+    "ru": "Отправлять температуру (0–2; отключите, если модель не поддерживает)",
+    "en": "Send temperature (0–2; disable if unsupported by the model)"
+  },
+  "translation.timeoutLabel": {
+    "ru": "Таймаут запроса, секунд (1–3600)",
+    "en": "Request timeout, seconds (1–3600)"
+  },
+  "translation.privacy": {
+    "ru": "При включении перевода исходный текст отправляется выбранному LLM-серверу. API-ключ хранится зашифрованным для пользователя Windows. Нажмите «Сохранить», чтобы применить настройки к захвату экрана.",
+    "en": "When translation is enabled, source text is sent to the selected LLM server. The API key is encrypted for your Windows user. Save to apply settings to screen capture."
+  },
+  "translation.modelsHint": {
+    "ru": "Нажмите «Обновить» для загрузки моделей или введите точный ID вручную.",
+    "en": "Refresh to load models or enter the exact model ID manually."
+  },
+  "translation.loading": {
+    "ru": "Загрузка моделей…",
+    "en": "Loading models…"
+  },
+  "translation.noModels": {
+    "ru": "Сервер не вернул модели. Загрузите модель на сервере или введите ID вручную.",
+    "en": "The server returned no models. Load a model on the server or enter its ID manually."
+  },
+  "translation.working": {
+    "ru": "Перевод через LLM…",
+    "en": "Translating with LLM…"
+  },
+  "translation.result": {
+    "ru": "Результат перевода (озвучивается при включённом переводе)",
+    "en": "Translation result (spoken when translation is enabled)"
+  },
+  "translation.invalid": {
+    "ru": "Проверьте URL LLM (HTTP/HTTPS), модель, промпт, температуру (0–2), таймаут (1–3600 с) и язык перевода.",
+    "en": "Check the LLM URL (HTTP/HTTPS), model, prompt, temperature (0–2), timeout (1–3600 s) and translation language."
+  },
+  "translation.empty": {
+    "ru": "LLM вернула пустой ответ. Озвучивание остановлено.",
+    "en": "The LLM returned an empty response. Speech stopped."
+  },
+  "translation.truncated": {
+    "ru": "Ответ LLM обрезан лимитом модели. Уменьшите выделение или увеличьте лимит на сервере.",
+    "en": "The LLM response was truncated by the model limit. Select less text or increase the server limit."
+  },
+  "translation.response": {
+    "ru": "Неожиданный формат ответа LLM-сервера.",
+    "en": "Unexpected LLM server response format."
+  },
+  "translation.http": {
+    "ru": "LLM-сервер вернул HTTP {0}. Проверьте адрес, ключ и модель.",
+    "en": "LLM server returned HTTP {0}. Check the URL, key and model."
+  },
+  "translation.timeout": {
+    "ru": "LLM-сервер не ответил вовремя. Увеличьте таймаут или проверьте модель.",
+    "en": "The LLM server timed out. Increase the timeout or check the model."
+  },
+  "translation.connection": {
+    "ru": "Не удалось подключиться к LLM-серверу. Проверьте URL и запуск сервера.",
+    "en": "Could not connect to the LLM server. Check its URL and whether it is running."
+  },
+  "translation.keyUnavailable": {
+    "ru": "Сохранённый ключ перевода недоступен. Введите его заново.",
+    "en": "The saved translation key is unavailable. Enter it again."
+  },
+  "privacy.translation": {
+    "ru": " Перевод включён: исходный текст также отправляется выбранному LLM-серверу.",
+    "en": " Translation is enabled: source text is also sent to the selected LLM server."
+  },
+  "tab.recognition": {
+    "ru": "Распознавание",
+    "en": "Recognition"
+  },
+  "tab.genderization": {
+    "ru": "Гендеризация",
+    "en": "Genderization"
+  },
+  "ocr.provider": {
+    "ru": "Провайдер распознавания",
+    "en": "Recognition provider"
+  },
+  "ocr.windows": {
+    "ru": "Windows 11 OCR (локально)",
+    "en": "Windows 11 OCR (offline)"
+  },
+  "ocr.unknownProvider": {
+    "ru": "Неизвестный провайдер распознавания. Выберите Windows OCR.",
+    "en": "Unknown recognition provider. Select Windows OCR."
+  },
+  "gender.enabled": {
+    "ru": "Определять гендер рассказчика с помощью LLM",
+    "en": "Detect narrator gender using an LLM"
+  },
+  "gender.provider": {
+    "ru": "Провайдер гендеризации",
+    "en": "Genderization provider"
+  },
+  "gender.prompt": {
+    "ru": "Системный промпт гендеризации",
+    "en": "Genderization system prompt"
+  },
+  "gender.promptHint": {
+    "ru": "LLM получает исходный и озвучиваемый текст. Ответ: male, female или unknown. Для неоднозначного текста используется основной голос.",
+    "en": "The LLM receives original and spoken text. Reply: male, female or unknown. Ambiguous text uses the default voice."
+  },
+  "gender.privacy": {
+    "ru": "При включении исходный текст и перевод отправляются выбранному LLM-серверу. Настройки и ключ независимы от перевода. Ключ хранится зашифрованным для пользователя Windows.",
+    "en": "When enabled, original text and translation are sent to the selected LLM server. Settings and key are independent of translation. The key is encrypted for your Windows user."
+  },
+  "gender.privacyShort": {
+    "ru": " Гендеризация включена: исходный текст и перевод также отправляются LLM-серверу гендеризации.",
+    "en": " Genderization is enabled: original and spoken text are also sent to the genderization LLM server."
+  },
+  "gender.working": {
+    "ru": "Определение гендера рассказчика…",
+    "en": "Detecting narrator gender…"
+  },
+  "gender.result": {
+    "ru": "Гендер рассказчика: {0}",
+    "en": "Narrator gender: {0}"
+  },
+  "gender.unknown": {
+    "ru": "не определён (основной голос)",
+    "en": "unknown (default voice)"
+  },
+  "gender.female": {
+    "ru": "женский",
+    "en": "female"
+  },
+  "gender.male": {
+    "ru": "мужской",
+    "en": "male"
+  },
+  "gender.keyUnavailable": {
+    "ru": "Сохранённый ключ гендеризации недоступен. Введите его заново.",
+    "en": "The saved genderization key is unavailable. Enter it again."
+  },
+  "speech.roles": {
+    "ru": "Голоса по ролям",
+    "en": "Voices by role"
+  },
+  "speech.defaultRole": {
+    "ru": "Голос по умолчанию",
+    "en": "Default voice"
+  },
+  "speech.femaleRole": {
+    "ru": "Женская роль",
+    "en": "Female role"
+  },
+  "speech.maleRole": {
+    "ru": "Мужская роль",
+    "en": "Male role"
+  },
+  "speech.addFemale": {
+    "ru": "Добавить женскую роль",
+    "en": "Add female role"
+  },
+  "speech.addMale": {
+    "ru": "Добавить мужскую роль",
+    "en": "Add male role"
+  },
+  "speech.removeRole": {
+    "ru": "Удалить роль",
+    "en": "Remove role"
+  },
+  "speech.rolesHint": {
+    "ru": "Выберите роль, чтобы настроить её провайдера, голос, темп, устройство и параметры сервера. Если роль не добавлена или гендер неизвестен, используется голос по умолчанию.",
+    "en": "Select a role to configure its provider, voice, rate, playback device and server settings. Missing roles and unknown gender use the default voice."
+  },
+  "speech.roleError": {
+    "ru": "{0}: {1}",
+    "en": "{0}: {1}"
+  },
+  "label.hotkeyQueue": {
+    "ru": "Распознать и добавить в очередь",
+    "en": "Recognize and add to queue"
+  },
+  "label.hotkeyRepeatQueue": {
+    "ru": "Повторить распознавание последней области и добавить в очередь",
+    "en": "Recognize last selected area again and add to queue"
+  },
+  "label.hotkeyCancelCurrent": {
+    "ru": "Отменить текущую задачу и перейти к следующей",
+    "en": "Cancel current task and go to next"
+  },
+  "label.hotkeyCancelAll": {
+    "ru": "Отменить все задачи",
+    "en": "Cancel all tasks"
+  },
+  "hotkey.unassigned": {
+    "ru": "Не назначено",
+    "en": "Unassigned"
+  },
+  "error.hotkeyDuplicate": {
+    "ru": "Сочетание {0} назначено нескольким действиям. Выберите разные сочетания.",
+    "en": "Shortcut {0} is assigned to multiple actions. Choose different shortcuts."
+  },
+  "cache.delete": {
+    "ru": "Удалить запись",
+    "en": "Delete entry"
+  },
+  "cache.replay": {
+    "ru": "Воспроизвести",
+    "en": "Play"
+  },
+  "cache.openFolder": {
+    "ru": "Открыть папку кэша в Проводнике",
+    "en": "Open cache folder in File Explorer"
+  },
+  "cache.clear": {
+    "ru": "Очистить весь кэш",
+    "en": "Clear all cache"
+  },
+  "queue.preparing": {
+    "ru": "Захват / распознавание",
+    "en": "Capture / recognition"
+  },
+  "cache.enabled": {
+    "ru": "Включить кэш переводов и озвучиваний",
+    "en": "Enable translation and speech cache"
+  },
+  "queue.processing": {
+    "ru": "Обработка",
+    "en": "Processing"
+  },
+  "cache.hint": {
+    "ru": "Сохраните настройки, чтобы применить переключатель. Завершённые озвучивания сохраняются на диске вместе с текстом и переводом. При совпадении текста и настроек воспроизводится готовая дорожка. Отключение сохраняет базу; очистка удаляет все записи.",
+    "en": "Save settings to apply the switch. Completed readings, original text and translations are stored on disk. Matching text and settings reuse the saved audio. Disabling keeps existing entries; clearing deletes them all."
+  },
+  "queue.cancelCurrent": {
+    "ru": "Отменить текущую",
+    "en": "Cancel current"
+  },
+  "tab.queue": {
+    "ru": "Очередь",
+    "en": "Queue"
+  },
+  "queue.waiting": {
+    "ru": "Ожидает очереди",
+    "en": "Waiting"
+  },
+  "tab.cache": {
+    "ru": "Кэш",
+    "en": "Cache"
+  },
+  "queue.cancelAll": {
+    "ru": "Отменить все",
+    "en": "Cancel all"
+  },
+  "cache.playing": {
+    "ru": "Воспроизведение из кэша…",
+    "en": "Playing from cache…"
+  },
+  "ollama.heading": {
+    "ru": "Ollama и локальный перевод",
+    "en": "Ollama and local translation"
+  },
+  "ollama.intro": {
+    "ru": "Подготовьте TranslateGemma одной кнопкой: приложение проверит Ollama, при необходимости скачает установщик с ollama.com, установит Ollama, запустит сервер и загрузит выбранную модель.",
+    "en": "Prepare TranslateGemma with one button: check Ollama, download the installer from ollama.com if needed, install Ollama, start the server and download the selected model."
+  },
+  "ollama.unchecked": {
+    "ru": "Ollama ещё не проверена.",
+    "en": "Ollama has not been checked yet."
+  },
+  "ollama.hardware": {
+    "ru": "ОЗУ: {0:0.#} ГБ, доступно: {1:0.#} ГБ. GPU: {2}. Выделенная видеопамять: {3:0.#} ГБ.",
+    "en": "RAM: {0:0.#} GB, available: {1:0.#} GB. GPU: {2}. Dedicated VRAM: {3:0.#} GB."
+  },
+  "ollama.gpuUnknown": {
+    "ru": "не определён",
+    "en": "not detected"
+  },
+  "ollama.recommendation": {
+    "ru": "Рекомендуется {0}. Подбор учитывает ОЗУ и выделенную память одной видеокарты с запасом для системы. Без большой видеокарты выбирается 4B для работы на CPU. Поддержка GPU и скорость зависят от Ollama и драйверов; размер можно изменить вручную.",
+    "en": "Recommended: {0}. Selection uses RAM and dedicated memory on one GPU, leaving room for the system. Without a large GPU, 4B is preferred for CPU use. GPU support and speed depend on Ollama and drivers; you can change the size manually."
+  },
+  "ollama.requirements": {
+    "ru": "Ориентир: от {0} ГБ ОЗУ; для размещения на GPU — от {1} ГБ видеопамяти. Размер скачивания приблизительный.",
+    "en": "Guideline: at least {0} GB RAM; at least {1} GB VRAM for GPU use. Download size is approximate."
+  },
+  "ollama.lowMemory": {
+    "ru": "Памяти может быть недостаточно. Закройте другие программы или выберите меньшую модель.",
+    "en": "Memory may be insufficient. Close other applications or choose a smaller model."
+  },
+  "ollama.check": {
+    "ru": "Проверить снова",
+    "en": "Check again"
+  },
+  "ollama.setup": {
+    "ru": "Установить / скачать модель",
+    "en": "Install / download model"
+  },
+  "ollama.use": {
+    "ru": "Использовать для перевода",
+    "en": "Use for translation"
+  },
+  "ollama.note": {
+    "ru": "Для установки и скачивания нужен интернет. Для Ollama требуется около 4 ГБ на диске плюс место для модели. Скачивание можно остановить и повторить; Ollama возобновляет загрузку модели. Во время установки отображается этап без точного процента, отмена временно недоступна. После подготовки перевод работает локально.",
+    "en": "Installation and downloads require internet access. Ollama needs about 4 GB of disk space plus space for the model. Downloads can be stopped and retried; Ollama resumes model downloads. During installation, the stage is shown without an exact percentage and cancellation is temporarily disabled. Once ready, translation runs locally."
+  },
+  "ollama.notInstalled": {
+    "ru": "Ollama не найдена. Нажмите «Установить / скачать модель».",
+    "en": "Ollama was not found. Click “Install / download model”."
+  },
+  "ollama.stopped": {
+    "ru": "Ollama установлена, но локальный сервер недоступен. Кнопка подготовки попробует запустить его.",
+    "en": "Ollama is installed, but the local server is unavailable. The setup button will try to start it."
+  },
+  "ollama.running": {
+    "ru": "Ollama {0}: сервер доступен. Установленные TranslateGemma: {1}.",
+    "en": "Ollama {0}: server available. Installed TranslateGemma models: {1}."
+  },
+  "ollama.noModels": {
+    "ru": "нет",
+    "en": "none"
+  },
+  "ollama.checking": {
+    "ru": "Проверка Ollama…",
+    "en": "Checking Ollama…"
+  },
+  "ollama.checked": {
+    "ru": "Проверка завершена.",
+    "en": "Check complete."
+  },
+  "ollama.starting": {
+    "ru": "Запуск локального сервера Ollama…",
+    "en": "Starting the local Ollama server…"
+  },
+  "ollama.startFailed": {
+    "ru": "Ollama не запустилась. Запустите её вручную и повторите проверку.",
+    "en": "Ollama did not start. Start it manually and check again."
+  },
+  "ollama.downloadingInstaller": {
+    "ru": "Скачивание установщика Ollama…",
+    "en": "Downloading the Ollama installer…"
+  },
+  "ollama.installing": {
+    "ru": "Установка Ollama. Дождитесь завершения…",
+    "en": "Installing Ollama. Please wait…"
+  },
+  "ollama.installFailed": {
+    "ru": "Не удалось запустить установщик Ollama.",
+    "en": "Could not start the Ollama installer."
+  },
+  "ollama.installExit": {
+    "ru": "Установщик Ollama завершился с кодом {0}. Повторите установку.",
+    "en": "Ollama installer exited with code {0}. Retry installation."
+  },
+  "ollama.incomplete": {
+    "ru": "Загрузка прервана до завершения. Повторите попытку.",
+    "en": "Download ended before completion. Please retry."
+  },
+  "ollama.verifyFailed": {
+    "ru": "Не удалось подтвердить наличие модели. Повторите проверку.",
+    "en": "Could not verify the installed model. Check again."
+  },
+  "ollama.ready": {
+    "ru": "{0} скачана и готова. Нажмите «Использовать для перевода».",
+    "en": "{0} is downloaded and ready. Click “Use for translation”."
+  },
+  "ollama.applied": {
+    "ru": "{0} выбрана для перевода через Ollama. Нажмите «Сохранить», чтобы сохранить настройки.",
+    "en": "{0} selected for translation with Ollama. Click “Save” to save the settings."
+  },
+  "ollama.cancelled": {
+    "ru": "Операция остановлена. Можно повторить подготовку.",
+    "en": "Operation stopped. You can retry setup."
+  },
+  "ollama.timedOut": {
+    "ru": "Превышено время ожидания. Проверьте соединение и повторите попытку.",
+    "en": "Operation timed out. Check your connection and retry."
+  },
+  "ollama.manifest": {
+    "ru": "Получение сведений о модели…",
+    "en": "Fetching model manifest…"
+  },
+  "ollama.verifying": {
+    "ru": "Проверка целостности модели…",
+    "en": "Verifying model integrity…"
+  },
+  "ollama.writing": {
+    "ru": "Сохранение сведений о модели…",
+    "en": "Writing model manifest…"
+  },
+  "ollama.finished": {
+    "ru": "Загрузка завершена.",
+    "en": "Download complete."
+  },
+  "ollama.pulling": {
+    "ru": "Скачивание слоя модели…",
+    "en": "Downloading model layer…"
+  },
+  "ollama.error": {
+    "ru": "Ошибка: {0}",
+    "en": "Error: {0}"
+  },
+  "tts.empty": {
+    "ru": "TTS-сервер вернул пустое аудио.",
+    "en": "TTS server returned empty audio."
+  },
+  "tts.largeResponse": {
+    "ru": "Ответ TTS-сервера превышает 100 МБ.",
+    "en": "The TTS response exceeds 100 MB."
+  },
+  "tts.wavResponse": {
+    "ru": "TTS-сервер вернул WAV. Выберите WAV в настройках сервера.",
+    "en": "TTS server returned WAV. Select WAV in the server settings."
+  },
+  "tts.textResponse": {
+    "ru": "TTS-сервер вернул текст вместо аудио. Проверьте полный адрес /v1/audio/speech.",
+    "en": "TTS server returned text instead of audio. Check the full /v1/audio/speech URL."
+  },
+  "tts.limit": {
+    "ru": "Для OpenAI-совместимого TTS выберите фрагмент до 4096 символов.",
+    "en": "Select up to 4096 characters for the OpenAI-compatible TTS server."
+  },
+  "tts.voice": {
+    "ru": "Укажите имя голоса на TTS-сервере.",
+    "en": "Enter the voice name used by the TTS server."
+  },
+  "tts.format": {
+    "ru": "Неизвестный формат аудио.",
+    "en": "Unknown audio format."
+  },
+  "tts.model": {
+    "ru": "Укажите модель TTS-сервера.",
+    "en": "Enter the TTS server model."
+  },
+  "tts.url": {
+    "ru": "Укажите полный HTTP(S)-адрес TTS, например http://127.0.0.1:5050/v1/audio/speech.",
+    "en": "Enter the full HTTP(S) TTS URL, for example http://127.0.0.1:5050/v1/audio/speech."
+  },
+  "edge.message": {
+    "ru": "Неожиданный тип бинарного сообщения Edge TTS.",
+    "en": "Unexpected Edge TTS binary message type."
+  },
+  "edge.header": {
+    "ru": "Повреждённый заголовок Edge TTS.",
+    "en": "Invalid Edge TTS header."
+  },
+  "edge.headerLength": {
+    "ru": "Нет длины заголовка Edge TTS.",
+    "en": "Missing Edge TTS header length."
+  },
+  "edge.voice": {
+    "ru": "Некорректное имя голоса.",
+    "en": "Invalid voice name."
+  },
+  "edge.empty": {
+    "ru": "Edge TTS не вернул аудио. Проверьте голос и подключение к интернету.",
+    "en": "Edge TTS returned no audio. Check the voice and internet connection."
+  },
+  "edge.largeResponse": {
+    "ru": "Слишком большой ответ Edge TTS.",
+    "en": "The Edge TTS response is too large."
+  },
+  "edge.closed": {
+    "ru": "Edge TTS закрыл соединение до завершения речи.",
+    "en": "Edge TTS closed the connection before speech finished."
+  },
+  "edge.limit": {
+    "ru": "Слишком большой фрагмент: максимум 30 000 символов.",
+    "en": "The text exceeds the 30,000 character limit."
+  },
+  "edge.language": {
+    "ru": "Некорректное имя голоса или языка.",
+    "en": "Invalid voice or language name."
+  },
+  "tts.http": {
+    "ru": "TTS-сервер вернул HTTP {0}. Проверьте адрес, модель, голос и ключ.",
+    "en": "TTS server returned HTTP {0}. Check the URL, model, voice and key."
+  },
+  "edge.interrupted": {
+    "ru": "Edge TTS прервал озвучивание голосом {0}. Повторите чтение или выберите другой голос.",
+    "en": "Edge TTS interrupted voice {0}. Try reading again or select another voice."
+  },
+  "edge.retries": {
+    "ru": "Edge TTS не вернул аудио голоса {0} после {1} попыток. Попробуйте другой голос или повторите позже.",
+    "en": "Edge TTS returned no audio for voice {0} after {1} attempts. Try another voice or retry later."
+  },
+  "tab.help": {
+    "ru": "Как пользоваться?",
+    "en": "How to use"
+  },
+  "help.setupTitle": {
+    "ru": "Начальная настройка",
+    "en": "Initial setup"
+  },
+  "help.setup": {
+    "ru": "1. «Распознавание»: выберите язык текста на экране.\n2. «Озвучивание»: выберите провайдер, голос, скорость и устройство вывода. Windows TTS работает без интернета.\n3. «Проверки»: нажмите «Прослушать» для проверки звука.\n4. Нажмите «Сохранить».",
+    "en": "1. In Recognition, select the language of the text on screen.\n2. In Speech, select a provider, voice, speed and output device. Windows TTS works offline.\n3. In Checks, click Listen to test the sound.\n4. Click Save."
+  },
+  "help.readTitle": {
+    "ru": "Чтение текста",
+    "en": "Reading text"
+  },
+  "help.capture": {
+    "ru": "Наведите курсор на нужный монитор и нажмите {0} (после сохранения настроек).",
+    "en": "Move the pointer to the desired monitor and press {0} (after saving settings)."
+  },
+  "help.captureUnassigned": {
+    "ru": "В «Управлении» назначьте клавишу «Распознать и добавить в очередь» и сохраните настройки. Затем наведите курсор на нужный монитор и нажмите это сочетание.",
+    "en": "In Controls, assign a shortcut for Recognize and add to queue, then save. Move the pointer to the desired monitor and press that shortcut."
+  },
+  "help.read": {
+    "ru": "Выделите текст левой кнопкой мыши — чтение начнётся автоматически. Esc отменяет выделение. Следующие фрагменты добавляются в очередь; управлять чтением можно на вкладке «Очередь».",
+    "en": "Select text with the left mouse button; reading starts automatically. Esc cancels selection. Further selections join the queue; manage reading in Queue."
+  },
+  "help.moreTitle": {
+    "ru": "Дополнительные возможности",
+    "en": "More features"
+  },
+  "help.more": {
+    "ru": "«Перевод» переводит текст перед чтением. «Гендеризация» определяет мужскую или женскую роль; голоса ролей настраиваются в «Озвучивании». Обе функции требуют подключения LLM. В «Управлении» можно назначить повторное распознавание последней области и остановку чтения.",
+    "en": "Translation translates text before reading. Gender detection identifies a male or female role; configure role voices in Speech. Both features require an LLM connection. In Controls, assign shortcuts to recognize the last area again and stop reading."
+  },
+  "help.troubleshootTitle": {
+    "ru": "Если что-то не работает",
+    "en": "Troubleshooting"
+  },
+  "help.troubleshoot": {
+    "ru": "Нет текста: проверьте язык и установите его пакет OCR в параметрах языка Windows.\nНет звука: проверьте голос, устройство вывода и громкость; для Edge TTS нужен интернет.\nНе работает сочетание: назначьте другое в «Управлении» или смените режим горячих клавиш, затем сохраните настройки.",
+    "en": "No text: check the language and install its OCR pack in Windows language settings.\nNo sound: check the voice, output device and volume; Edge TTS requires internet.\nShortcut does not work: assign another one in Controls or change the hotkey mode, then save."
+  },
+  "help.ollama": {
+    "ru": "Не знаете, где взять LLM? Откройте вкладку Ollama: там можно легко скачать и установить движок Ollama и выбранную модель. Для установки и скачивания нужен интернет; после настройки модель работает локально на вашем компьютере.",
+    "en": "Not sure where to get an LLM? Open the Ollama tab to easily download and install the Ollama engine and your chosen model. Installation and downloads require internet; once set up, the model runs locally on your computer."
+  }
+
+}
