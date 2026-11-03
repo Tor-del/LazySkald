@@ -23,21 +23,18 @@ public sealed class IdentityTextTransform : ITextTransform
 }
 public sealed class WindowsOcrProvider : IOcrProvider
 {
-    private readonly Dictionary<string,OcrEngine> engines = new(StringComparer.OrdinalIgnoreCase);
     public IReadOnlyList<(string Tag,string Name)> Languages => OcrEngine.AvailableRecognizerLanguages.Select(l => (CultureInfo.CreateSpecificCulture(l.LanguageTag).Name,l.DisplayName)).Distinct().ToArray();
     public async Task<string> RecognizeAsync(Bitmap bitmap,string language,CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (!engines.TryGetValue(language,out var engine))
-        {
-            // Windows can expose neutral OCR tags (e.g. "ru"), while TTS uses "ru-RU".
-            var installed = OcrEngine.AvailableRecognizerLanguages;
-            var selected = installed.FirstOrDefault(l => l.LanguageTag.Equals(language,StringComparison.OrdinalIgnoreCase))
-                ?? installed.FirstOrDefault(l => CultureInfo.CreateSpecificCulture(l.LanguageTag).Name.Equals(language,StringComparison.OrdinalIgnoreCase));
-            engine = selected is null ? null : OcrEngine.TryCreateFromLanguage(selected);
-            engine = engine ?? throw new InvalidOperationException(UiText.T("error.ocrMissing",language));
-            engines[language] = engine;
-        }
+        // Each queued capture can recognize independently; engines are not shared
+        // between overlapping RecognizeAsync calls.
+        // Windows can expose neutral OCR tags (e.g. "ru"), while TTS uses "ru-RU".
+        var installed = OcrEngine.AvailableRecognizerLanguages;
+        var selected = installed.FirstOrDefault(l => l.LanguageTag.Equals(language,StringComparison.OrdinalIgnoreCase))
+            ?? installed.FirstOrDefault(l => CultureInfo.CreateSpecificCulture(l.LanguageTag).Name.Equals(language,StringComparison.OrdinalIgnoreCase));
+        var engine = selected is null ? null : OcrEngine.TryCreateFromLanguage(selected);
+        engine = engine ?? throw new InvalidOperationException(UiText.T("error.ocrMissing",language));
         using var stream = new MemoryStream();
         bitmap.Save(stream,ImageFormat.Png); stream.Position = 0;
         using var random = stream.AsRandomAccessStream();

@@ -33,6 +33,8 @@ public partial class MainWindow : Window
         UiText.ApplyResources();
         InitializeComponent();
         InitializeCacheAndQueue();
+        OcrReplaceLineBreaksBox.IsChecked=draft.OcrReplaceLineBreaks;
+        OcrPreserveParagraphsBox.IsChecked=draft.OcrPreserveParagraphs;
         ProviderBox.ItemsSource=owner.Providers.Definitions;
         ProviderBox.SelectedItem=owner.Providers.Definitions.FirstOrDefault(p=>p.Id==providerId) ?? owner.Providers.Definitions.First();
         providerId=((SpeechProviderDefinition)ProviderBox.SelectedItem).Id;
@@ -100,6 +102,8 @@ public partial class MainWindow : Window
             CaptureMode=((CaptureChoice)CaptureModeBox.SelectedItem).Mode,
             MinimizeToTray=CloseToTrayBox.IsChecked==true,StartInTray=StartInTrayBox.IsChecked==true,
             OcrProviderId=((OcrProviderChoice)OcrProviderBox.SelectedItem).Id,
+            OcrReplaceLineBreaks=OcrReplaceLineBreaksBox.IsChecked==true,
+            OcrPreserveParagraphs=OcrPreserveParagraphsBox.IsChecked==true,
             Genderization=ReadGenderControls(),Translation=ReadTranslationControls(),UiLanguage=UiText.Language,
             FemaleRole=speechRoles.GetValueOrDefault(SpeakerGender.Female),
             MaleRole=speechRoles.GetValueOrDefault(SpeakerGender.Male),
@@ -261,6 +265,24 @@ public partial class MainWindow : Window
             try { HotkeyService.Validate(value); }
             catch (Exception ex) { SetStatus(ex.Message); return; }
         }
+        SetHotkey(sender,value);
+    }
+    private void CaptureMouseDown(object sender,MouseButtonEventArgs e)
+    {
+        // The first click focuses the field; subsequent clicks assign the button.
+        if (sender is not TextBox box) return;
+        if (!box.IsKeyboardFocusWithin) { box.Focus(); e.Handled=true; return; }
+        e.Handled=true;
+        uint key=e.ChangedButton switch { MouseButton.Left=>1u,MouseButton.Right=>2u,MouseButton.Middle=>4u,MouseButton.XButton1=>5u,MouseButton.XButton2=>6u,_=>0u };
+        var mods=Keyboard.Modifiers;
+        uint flags=((mods&ModifierKeys.Alt)!=0 ? 1u:0)|((mods&ModifierKeys.Control)!=0 ? 2u:0)|((mods&ModifierKeys.Shift)!=0 ? 4u:0)|((mods&ModifierKeys.Windows)!=0 ? 8u:0);
+        var value=new Hotkey(flags,key);
+        try { HotkeyService.Validate(value); }
+        catch (Exception ex) { SetStatus(ex.Message); return; }
+        SetHotkey(sender,value);
+    }
+    private void SetHotkey(object sender,Hotkey? value)
+    {
         if (sender==CaptureKeyBox) captureKey=value;
         else if (sender==RepeatCaptureKeyBox) repeatCaptureKey=value;
         else if (sender==ToggleKeyBox) toggleKey=value;

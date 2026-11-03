@@ -72,6 +72,12 @@ The Controls tab also offers separate start/stop, cancel current and go to next,
 and cancel all shortcuts; these are unassigned by default. Start/stop cancels all
 work when busy. Press Delete or Backspace in a shortcut field to clear it, then
 save settings. Each action must use a different shortcut.
+Single keys without modifiers are supported, including Caps Lock and F1–F12,
+as well as left, right, middle and X1/X2 mouse buttons, optionally with modifiers.
+To assign a mouse button, focus its shortcut field first, then press the button.
+Unmodified Delete/Backspace clear the binding; Tab moves between fields.
+Assigned inputs are consumed. In standard mode, F12 and mouse buttons use hooks;
+other keys use `RegisterHotKey`.
 **Esc** cancels selection. The original application is restored before OCR begins.
 
 ## Playback devices
@@ -95,8 +101,7 @@ OCR and screenshot processing are local. Screenshots and recognized text are not
 stored in the diagnostic log. Settings and logs are under
 `%LOCALAPPDATA%/ScreenReader`.
 
-OCR continuation lines are joined with spaces when the next nonempty line does
-not start with an uppercase letter. Uppercase starts keep their line break.
+In Recognition, “Replace line breaks with spaces” is enabled by default and also collapses repeated spaces and tabs. Optionally enable paragraph preservation: a break is kept only if the previous line ends with a period and the next nonempty line starts with an uppercase letter. Disabling replacement leaves OCR text unchanged. Manually entered text is not reformatted.
 
 ## Installation and updates
 
@@ -145,6 +150,9 @@ size limit.
 The Queue tab shows active jobs in submission order, their text, submission
 time and processing stage. Completed jobs disappear. Cancel the current job
 or the entire queue using the buttons on this tab.
+OCR, translation, voice detection and speech synthesis prepare queued fragments
+without waiting for playback. Generated audio is buffered in memory; playback
+remains strictly in submission order, with streaming start for the first fragment.
 
 ## LLM translation
 

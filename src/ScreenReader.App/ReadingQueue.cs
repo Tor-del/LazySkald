@@ -39,9 +39,12 @@ public sealed class ReadingQueue
         LinkedListNode<CancellationTokenSource> node;
         lock (gate) { previous=tail; tail=finished.Task; node=jobs.AddLast(operation); details[operation]=new(++nextId,"","queue.preparing",DateTimeOffset.Now); }
         Changed?.Invoke();
+        T? value=default;
+        bool prepared=false;
         try
         {
-            var value=await prepare(operation.Token);
+            value=await prepare(operation.Token);
+            prepared=true;
             Update(operation.Token,describe?.Invoke(value),"queue.waiting");
             await previous.WaitAsync(operation.Token);
             operation.Token.ThrowIfCancellationRequested();
@@ -53,10 +56,17 @@ public sealed class ReadingQueue
         {
             // A later cancelled/failed preparation must not let its successor overtake
             // an earlier task that is still speaking.
-            await previous;
-            lock (gate) { jobs.Remove(node); details.Remove(operation); }
-            finished.TrySetResult();
-            Changed?.Invoke();
+            try
+            {
+                if (prepared && value is IAsyncDisposable resource) await resource.DisposeAsync();
+            }
+            finally
+            {
+                await previous;
+                lock (gate) { jobs.Remove(node); details.Remove(operation); }
+                finished.TrySetResult();
+                Changed?.Invoke();
+            }
         }
     }
 }

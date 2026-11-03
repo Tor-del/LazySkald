@@ -1,4 +1,34 @@
 {
+  "ocr.replaceLineBreaks": {
+    "ru": "Заменять переносы строк пробелами",
+    "en": "Replace line breaks with spaces",
+    "zh": "将换行替换为空格",
+    "ja": "改行をスペースに置き換える",
+    "es": "Sustituir saltos de línea por espacios",
+    "ko": "줄 바꿈을 공백으로 바꾸기",
+    "fr": "Remplacer les sauts de ligne par des espaces",
+    "de": "Zeilenumbrüche durch Leerzeichen ersetzen"
+  },
+  "ocr.preserveParagraphs": {
+    "ru": "Сохранять абзацы после точки перед заглавной буквой",
+    "en": "Keep paragraphs after a period before an uppercase letter",
+    "zh": "句点后以大写字母开头时保留段落",
+    "ja": "ピリオドの後に大文字が続く場合は段落を保持",
+    "es": "Conservar párrafos tras un punto antes de una mayúscula",
+    "ko": "마침표 뒤 대문자로 시작하는 단락 유지",
+    "fr": "Conserver les paragraphes après un point avant une majuscule",
+    "de": "Absätze nach einem Punkt vor einem Großbuchstaben beibehalten"
+  },
+  "ocr.lineBreaksHint": {
+    "ru": "Повторные пробелы и табуляции заменяются одним пробелом. Абзац сохраняется только на месте исходного переноса строки.",
+    "en": "Repeated spaces and tabs become one space. Paragraphs are kept only where a line break already existed.",
+    "zh": "连续空格和制表符合并为一个空格。仅在原有换行处保留段落。",
+    "ja": "連続するスペースとタブは1つのスペースになります。段落は元の改行位置でのみ保持されます。",
+    "es": "Los espacios repetidos y tabulaciones se reducen a un espacio. Solo se conservan párrafos donde ya había un salto de línea.",
+    "ko": "연속 공백과 탭은 공백 하나로 바뀝니다. 기존 줄 바꿈 위치에서만 단락을 유지합니다.",
+    "fr": "Les espaces répétés et tabulations deviennent une seule espace. Les paragraphes sont conservés uniquement aux sauts de ligne existants.",
+    "de": "Mehrere Leerzeichen und Tabulatoren werden zu einem Leerzeichen. Absätze bleiben nur an vorhandenen Zeilenumbrüchen erhalten."
+  },
   "app.title": {
     "ru": "LazySkald — рассказчик с экрана",
     "en": "LazySkald — your screen storyteller"
@@ -120,8 +150,8 @@
     "en": "Press a shortcut in its field. Delete or Backspace clears it. Start / stop cancels all tasks; adding to the queue keeps current speech playing."
   },
   "hint.hotkeyField": {
-    "ru": "Нажмите сочетание с Ctrl, Alt, Shift или Win; Delete — снять назначение",
-    "en": "Press a shortcut with Ctrl, Alt, Shift, or Win; Delete clears it"
+    "ru": "Нажмите клавишу (включая Caps Lock, F1–F12) или сочетание. Для кнопки мыши сначала выберите поле, затем нажмите кнопку. Delete — снять назначение",
+    "en": "Press a key (including Caps Lock, F1–F12) or a shortcut. To assign a mouse button, focus the field first, then press the button. Delete clears it"
   },
   "hint.game": {
     "ru": "Для полноэкранных игр выберите игровой режим. Если игра запущена от администратора, утилите может потребоваться тот же уровень прав.",
@@ -308,8 +338,8 @@
     "en": "OCR for {0} is not installed. Add text recognition in Windows language settings."
   },
   "error.hotkey": {
-    "ru": "Используйте модификатор и обычную клавишу; F12 зарезервирована Windows.",
-    "en": "Use a modifier and a regular key; F12 is reserved by Windows."
+    "ru": "Нажмите клавишу или кнопку мыши, при желании с Ctrl, Alt, Shift или Win. Один модификатор назначить нельзя.",
+    "en": "Press a key or mouse button, optionally with Ctrl, Alt, Shift, or Win. A modifier alone cannot be assigned."
   },
   "error.hotkeyMode": {
     "ru": "Неизвестный режим горячей клавиши.",
@@ -320,8 +350,8 @@
     "en": "Shortcut is already in use: {0}"
   },
   "error.hook": {
-    "ru": "Не удалось включить игровой режим горячей клавиши. Выберите обычный режим.",
-    "en": "Could not enable game hotkey mode. Select standard mode."
+    "ru": "Не удалось установить перехватчик клавиатуры или мыши.",
+    "en": "Could not install the keyboard or mouse hook."
   },
   "error.secret": {
     "ru": "Не удалось обработать ключ TTS. Введите его заново для текущего пользователя Windows.",

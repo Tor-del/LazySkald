@@ -183,6 +183,32 @@ internal static partial class Program
     }
     private static void RunHotkeyChecks()
     {
+        foreach (uint key in new uint[] { 0x41,0x14,0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7A,0x7B,1,2,4,5,6 })
+        {
+            var binding=new Hotkey(0,key); HotkeyService.Validate(binding);
+            var single=new HotkeyChordRecognizer(binding);
+            Assert(single.Process(key,true)==new HotkeyResult(true,true),"Single key/button triggers and suppresses: "+binding);
+            Assert(single.Process(key,true)==new HotkeyResult(false,true),"Held key/button fires once: "+binding);
+            Assert(single.Process(key,false)==new HotkeyResult(false,true),"Single key/button release is suppressed: "+binding);
+            Assert(single.Process(key,true).Trigger,"Single key/button can trigger again: "+binding);
+            var modified=new HotkeyChordRecognizer(binding);
+            modified.Process(0xA2,true);
+            Assert(!modified.Process(key,true).Trigger,"Unmodified binding ignores Ctrl chord: "+binding);
+        }
+        foreach (uint key in new uint[] { 0,3,0x10,0x11,0x12,0x5B,0x5C,0xA0,0xA1,0xA2,0xA3,0xA4,0xA5,255 })
+            Throws<ArgumentException>(()=>HotkeyService.Validate(new Hotkey(0,key)),"Invalid standalone key rejected: "+key);
+        Throws<ArgumentException>(()=>HotkeyService.Validate(new Hotkey(16,0x41)),"Invalid modifier bits rejected");
+        Assert(new Hotkey(0,0x14).ToString()=="Caps Lock" && new Hotkey(0,0x7B).ToString()=="F12","Caps Lock and F12 display names");
+        foreach (var (down,up,data,key) in new (int,int,uint,uint)[] { (0x201,0x202,0,1),(0x204,0x205,0,2),(0x207,0x208,0,4),(0x20B,0x20C,0x10000,5),(0x20B,0x20C,0x20000,6) })
+        {
+            Assert(HotkeyService.MouseInput(down,data)==(key,true) && HotkeyService.MouseInput(up,data)==(key,false),"Native mouse messages map to button: "+key);
+        }
+        Assert(HotkeyService.MouseInput(0x200,0) is null && HotkeyService.MouseInput(0x20B,0) is null,"Mouse motion and unknown side buttons ignored");
+        var mouse=new HotkeyChordRecognizer(new(2,5));
+        mouse.Process(0xA2,true);
+        Assert(mouse.Process(5,true).Trigger,"Keyboard modifier combines with mouse button");
+        mouse.Process(0xA2,false);
+        Assert(mouse.Process(5,false).Suppress,"Mouse release remains suppressed after modifier release");
         var chord=new HotkeyChordRecognizer(new(3,0x52));
         chord.Process(0xA2,true); chord.Process(0xA4,true);
         Assert(chord.Process(0x52,true)==new HotkeyResult(true,true),"Game hook triggers and suppresses the configured chord");
@@ -205,6 +231,12 @@ internal static partial class Program
         Assert(true,"Five-action keyboard hook installs, suspends and resumes on its own thread");
         service.Configure(settings with { HotkeyMode=HotkeyMode.Registered });
         Assert(true,"Five-action service switches to RegisterHotKey without duplicate handlers");
+        foreach (var mode in new[] { HotkeyMode.GameHook,HotkeyMode.Registered })
+        {
+            service.Configure(settings with { HotkeyMode=mode,CaptureHotkey=new(0,0x14),RepeatCaptureHotkey=new(0,0x70),ToggleHotkey=new(0,0x7B),CancelCurrentHotkey=new(0,4),CancelAllHotkey=new(2,5) });
+            service.SetSuspended(true); service.SetSuspended(false);
+            Assert(true,"Single keys, F12 and mouse hooks install and resume: "+mode);
+        }
         Throws<ArgumentException>(()=>service.Configure(settings with { ToggleHotkey=settings.CaptureHotkey }),"Service rejects conflicting actions without replacing valid configuration");
         service.Configure(new AppSettings { CaptureHotkey=null });
         service.SetSuspended(true); service.SetSuspended(false);

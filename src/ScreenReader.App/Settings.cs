@@ -4,10 +4,12 @@ namespace ScreenReader.App;
 
 public sealed record Hotkey(uint Modifiers, uint Key)
 {
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsMouse=>Key is 0x01 or 0x02 or 0x04 or 0x05 or 0x06;
     public override string ToString() => string.Join(" + ",new[] {
         (Modifiers&2)!=0 ? "Ctrl" : null,(Modifiers&1)!=0 ? "Alt" : null,
         (Modifiers&4)!=0 ? "Shift" : null,(Modifiers&8)!=0 ? "Win" : null,
-        ((System.Windows.Forms.Keys)Key).ToString() }.Where(x => x != null));
+        Key switch { 0x01=>"Mouse Left",0x02=>"Mouse Right",0x04=>"Mouse Middle",0x05=>"Mouse X1",0x06=>"Mouse X2",0x14=>"Caps Lock",_=>((System.Windows.Forms.Keys)Key).ToString() } }.Where(x => x != null));
 }
 public enum CaptureMode { Auto, DesktopDuplication, Gdi }
 public enum HotkeyMode { GameHook, Registered }
@@ -15,6 +17,8 @@ public sealed record AppSettings
 {
     public bool CacheEnabled { get; init; }
     public string OcrProviderId { get; init; }="windows";
+    public bool OcrReplaceLineBreaks { get; init; }=true;
+    public bool OcrPreserveParagraphs { get; init; }
     public GenderizationSettings Genderization { get; init; }=new();
     public Dictionary<string,string> FemaleProviderVoices { get; init; }=new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string,string> MaleProviderVoices { get; init; }=new(StringComparer.OrdinalIgnoreCase);

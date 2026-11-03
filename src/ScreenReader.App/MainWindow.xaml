@@ -65,6 +65,9 @@
       <ComboBox x:Name="LanguageBox" DisplayMemberPath="Name" SelectionChanged="LanguageChanged" Margin="0,0,0,0"/>
       <TextBlock x:Name="OcrHint" Foreground="#7B5617" TextWrapping="Wrap" FontSize="12" Margin="0,6,0,20"/>
       <TextBlock Text="{DynamicResource label.captureMode}" Style="{StaticResource FieldLabel}"/><ComboBox x:Name="CaptureModeBox" DisplayMemberPath="Name" Margin="0,0,0,20"/>
+      <CheckBox x:Name="OcrReplaceLineBreaksBox" Content="{DynamicResource ocr.replaceLineBreaks}" Margin="0,0,0,12"/>
+      <CheckBox x:Name="OcrPreserveParagraphsBox" Content="{DynamicResource ocr.preserveParagraphs}" IsEnabled="{Binding IsChecked, ElementName=OcrReplaceLineBreaksBox}" Margin="20,0,0,8"/>
+      <TextBlock Text="{DynamicResource ocr.lineBreaksHint}" Foreground="{StaticResource FluentSecondary}" TextWrapping="Wrap" FontSize="12" Margin="0,0,0,20"/>
     </StackPanel></ScrollViewer>
    </TabItem>
    <TabItem Header="{DynamicResource tab.translation}" Tag="&#xE8C1;">
@@ -186,15 +189,15 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
      <StackPanel Margin="28,24">
       <TextBlock Text="{DynamicResource label.hotkey}" Style="{StaticResource FieldLabel}"/>
-      <TextBox x:Name="ToggleKeyBox" IsReadOnly="True" PreviewKeyDown="CaptureKeyDown" ToolTip="{DynamicResource hint.hotkeyField}" Margin="0,0,0,20"/>
+      <TextBox x:Name="ToggleKeyBox" IsReadOnly="True" PreviewKeyDown="CaptureKeyDown" PreviewMouseDown="CaptureMouseDown" ContextMenu="{x:Null}" ToolTip="{DynamicResource hint.hotkeyField}" Margin="0,0,0,20"/>
       <TextBlock Text="{DynamicResource label.hotkeyQueue}" Style="{StaticResource FieldLabel}"/>
-      <TextBox x:Name="CaptureKeyBox" IsReadOnly="True" PreviewKeyDown="CaptureKeyDown" ToolTip="{DynamicResource hint.hotkeyField}" Margin="0,0,0,20"/>
+      <TextBox x:Name="CaptureKeyBox" IsReadOnly="True" PreviewKeyDown="CaptureKeyDown" PreviewMouseDown="CaptureMouseDown" ContextMenu="{x:Null}" ToolTip="{DynamicResource hint.hotkeyField}" Margin="0,0,0,20"/>
       <TextBlock Text="{DynamicResource label.hotkeyRepeatQueue}" Style="{StaticResource FieldLabel}"/>
-      <TextBox x:Name="RepeatCaptureKeyBox" IsReadOnly="True" PreviewKeyDown="CaptureKeyDown" ToolTip="{DynamicResource hint.hotkeyField}" Margin="0,0,0,20"/>
+      <TextBox x:Name="RepeatCaptureKeyBox" IsReadOnly="True" PreviewKeyDown="CaptureKeyDown" PreviewMouseDown="CaptureMouseDown" ContextMenu="{x:Null}" ToolTip="{DynamicResource hint.hotkeyField}" Margin="0,0,0,20"/>
       <TextBlock Text="{DynamicResource label.hotkeyCancelCurrent}" Style="{StaticResource FieldLabel}"/>
-      <TextBox x:Name="CancelCurrentKeyBox" IsReadOnly="True" PreviewKeyDown="CaptureKeyDown" ToolTip="{DynamicResource hint.hotkeyField}" Margin="0,0,0,20"/>
+      <TextBox x:Name="CancelCurrentKeyBox" IsReadOnly="True" PreviewKeyDown="CaptureKeyDown" PreviewMouseDown="CaptureMouseDown" ContextMenu="{x:Null}" ToolTip="{DynamicResource hint.hotkeyField}" Margin="0,0,0,20"/>
       <TextBlock Text="{DynamicResource label.hotkeyCancelAll}" Style="{StaticResource FieldLabel}"/>
-      <TextBox x:Name="CancelAllKeyBox" IsReadOnly="True" PreviewKeyDown="CaptureKeyDown" ToolTip="{DynamicResource hint.hotkeyField}" Margin="0,0,0,20"/>
+      <TextBox x:Name="CancelAllKeyBox" IsReadOnly="True" PreviewKeyDown="CaptureKeyDown" PreviewMouseDown="CaptureMouseDown" ContextMenu="{x:Null}" ToolTip="{DynamicResource hint.hotkeyField}" Margin="0,0,0,20"/>
       <TextBlock Text="{DynamicResource hint.hotkey}" FontSize="12" Foreground="{StaticResource FluentSecondary}" TextWrapping="Wrap" Margin="0,6,0,20"/>
       <TextBlock Text="{DynamicResource label.hotkeyMode}" Style="{StaticResource FieldLabel}"/><ComboBox x:Name="HotkeyModeBox" DisplayMemberPath="Name" Margin="0,0,0,20"/>
       <TextBlock Text="{DynamicResource hint.game}" TextWrapping="Wrap" Foreground="{StaticResource FluentSecondary}" FontSize="12" Margin="0,6,0,20"/>

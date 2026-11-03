@@ -7,7 +7,7 @@
   #error ProductAppId must be a compact stable identifier (use a GUID without braces).
 #endif
 #ifndef AppVersion
-  #define AppVersion "0.5.0"
+  #define AppVersion "0.5.2"
 #endif
 #ifndef SourceDir
   #define SourceDir "..\artifacts\LazySkald-win-x64-0.5.0"

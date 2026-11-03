@@ -5,6 +5,8 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using ScreenReader.App;
+using ScreenReader.Speech;
+using System.Linq;
 
 internal static partial class Program
 {
@@ -101,11 +103,71 @@ internal static partial class Program
                 Assert(capture.Repeats==3 && ocr.Images[^1].Size==replacement.Size,
                     "A new selection replaces the remembered area even when OCR finds no text");
                 Assert(readerFailure is null && !reader.IsBusy,"Repeat capture finishes cleanly after cancellation and empty OCR");
+
+                var prefetched=new PrefetchSpeech();
+                registry.Register(new("prefetch-test","Prefetch test",false,_=>prefetched,false));
+                var orderedAudio=new OrderedPrefetchAudio();
+                var translated=new TestTranslator();
+                var detected=new TestGenderization { Result=SpeakerGender.Female };
+                reader=new ReadingController(capture,ocr,new IdentityTextTransform(),registry,orderedAudio,new NoFocus(),translated,detected);
+                reader.Failed+=e=>readerFailure=e;
+                settings=settings with { SpeechProviderId="prefetch-test",CacheEnabled=false,Translation=new() { Enabled=true },Genderization=new() { Enabled=true } };
+                ocr.Text="First";
+                var head=reader.CaptureAndReadAsync(settings);
+                await Select(region);
+                await orderedAudio.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                ocr.Text="Second";
+                var next=reader.RepeatCaptureAndReadAsync(settings);
+                await WaitFor(()=>prefetched.Calls==2);
+                ocr.Text="Third";
+                var last=reader.RepeatCaptureAndReadAsync(settings);
+                await WaitFor(()=>prefetched.Completed==3);
+                Assert(detected.Calls==3 && orderedAudio.Played.SequenceEqual(new byte[] { 1 }) && !head.IsCompleted,
+                    "Queued OCR, translation, gender detection and complete TTS finish while first playback is blocked");
+                orderedAudio.Release.TrySetResult();
+                await Task.WhenAll(head,next,last).WaitAsync(TimeSpan.FromSeconds(5));
+                Assert(orderedAudio.Played.SequenceEqual(new byte[] { 1,2,3 }) && readerFailure is null && !reader.IsBusy,
+                    "Prefetched audio plays exactly once in submission order without overlap");
             }
             catch (Exception e) { failure=e; }
             finally { reader.Stop(); loop.Continue=false; }
         });
         System.Windows.Threading.Dispatcher.PushFrame(loop);
         if (failure is not null) throw failure;
+    }
+
+    private sealed class PrefetchSpeech : ISpeechProvider
+    {
+        public int Calls,Completed;
+        public Task<IReadOnlyList<SpeechVoice>> GetVoicesAsync(CancellationToken ct)=>Task.FromResult<IReadOnlyList<SpeechVoice>>([]);
+        public async IAsyncEnumerable<byte[]> StreamAsync(SpeechRequest request,[System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
+        {
+            Assert(request.Text=="Перевод" && request.Gender==SpeakerGender.Female,"Prefetch includes translation and detected voice");
+            byte id=(byte)++Calls;
+            await Task.Yield();
+            ct.ThrowIfCancellationRequested();
+            yield return new[] { id };
+            Completed++;
+        }
+    }
+    private sealed class OrderedPrefetchAudio : IAudioPlayer
+    {
+        public readonly List<byte> Played=[];
+        public readonly TaskCompletionSource Started=new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public readonly TaskCompletionSource Release=new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private bool active;
+        public Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,Action started,CancellationToken ct)=>PlayAsync(audio,started,ct);
+        public async Task PlayAsync(IAsyncEnumerable<byte[]> audio,Action started,CancellationToken ct)
+        {
+            Assert(!active,"Only one queued audio player is active");
+            active=true;
+            try
+            {
+                await foreach (var chunk in audio.WithCancellation(ct)) Played.AddRange(chunk);
+                started(); Started.TrySetResult();
+                if (Played.Count==1) await Release.Task.WaitAsync(ct);
+            }
+            finally { active=false; }
+        }
     }
 }

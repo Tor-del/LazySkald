@@ -11,13 +11,14 @@ using ScreenReader.App;
 internal static partial class Program
 {
     [StructLayout(LayoutKind.Sequential)] private struct KeyboardInput { public ushort Key,Scan; public uint Flags,Time; public IntPtr Extra; }
-    [StructLayout(LayoutKind.Explicit,Size=32)] private struct InputData { [FieldOffset(0)] public KeyboardInput Keyboard; }
+    [StructLayout(LayoutKind.Sequential)] private struct MouseInputData { public int X,Y; public uint Data,Flags,Time; public IntPtr Extra; }
+    [StructLayout(LayoutKind.Explicit,Size=32)] private struct InputData { [FieldOffset(0)] public KeyboardInput Keyboard; [FieldOffset(0)] public MouseInputData Mouse; }
     [StructLayout(LayoutKind.Sequential)] private struct Input { public uint Type; public InputData Data; }
     [DllImport("user32.dll",SetLastError=true)] private static extern uint SendInput(uint count,Input[] input,int size);
-    private static void SendTestChord(ushort mainKey=0x86)
+    private static void SendTestChord(ushort mainKey=0x86,bool modified=true)
     {
         Input Key(ushort code,bool up=false)=>new() { Type=1,Data=new InputData { Keyboard=new KeyboardInput { Key=code,Flags=up ? 2u:0 } } };
-        var input=new[] { Key(0xA2),Key(0xA4),Key(mainKey),Key(mainKey),Key(mainKey,true),Key(0xA4,true),Key(0xA2,true) };
+        var input=modified ? new[] { Key(0xA2),Key(0xA4),Key(mainKey),Key(mainKey),Key(mainKey,true),Key(0xA4,true),Key(0xA2,true) } : new[] { Key(mainKey),Key(mainKey),Key(mainKey,true) };
         if (SendInput((uint)input.Length,input,Marshal.SizeOf<Input>())!=input.Length) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
     }
     private static void RunHotkeyInput()
@@ -59,6 +60,26 @@ internal static partial class Program
                         SendTestChord(key); await Task.Delay(100);
                     }
                     Assert(actions.SequenceEqual(new[] { HotkeyAction.Toggle,HotkeyAction.Capture,HotkeyAction.RepeatCapture,HotkeyAction.CancelCurrent,HotkeyAction.CancelAll }),"Native input routes all five actions independently: "+mode);
+                }
+                foreach (var mode in new[] { HotkeyMode.GameHook,HotkeyMode.Registered })
+                {
+                    foreach (ushort key in new ushort[] { 0x41,0x14,0x70,0x7B })
+                    {
+                        if (GetForegroundWindow()!=handle) throw new Exception("Test window lost foreground; no further keys sent.");
+                        service.Configure(new AppSettings { CaptureHotkey=new(0,key),HotkeyMode=mode });
+                        actions.Clear(); SendTestChord(key,false); await Task.Delay(100);
+                        Assert(actions.SequenceEqual(new[] { HotkeyAction.Capture }),"Native single key fires once: "+mode+" / "+key);
+                    }
+                    foreach (var (key,down,up,data) in new (uint,uint,uint,uint)[] { (1,2,4,0),(2,8,16,0),(4,32,64,0),(5,128,256,1),(6,128,256,2) })
+                    {
+                        if (GetForegroundWindow()!=handle) throw new Exception("Test window lost foreground; no mouse input sent.");
+                        service.Configure(new AppSettings { CaptureHotkey=new(0,key),HotkeyMode=mode });
+                        actions.Clear();
+                        var input=new[] { new Input { Data=new InputData { Mouse=new MouseInputData { Flags=down,Data=data } } },new Input { Data=new InputData { Mouse=new MouseInputData { Flags=up,Data=data } } } };
+                        if (SendInput((uint)input.Length,input,Marshal.SizeOf<Input>())!=input.Length) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+                        await Task.Delay(100);
+                        Assert(actions.SequenceEqual(new[] { HotkeyAction.Capture }),"Native mouse button fires once: "+mode+" / "+key);
+                    }
                 }
                 service.Configure(new AppSettings { CaptureHotkey=null });
                 actions.Clear(); SendTestChord(); await Task.Delay(100);

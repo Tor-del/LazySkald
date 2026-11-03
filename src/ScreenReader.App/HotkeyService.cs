@@ -34,9 +34,11 @@ public sealed class HotkeyService : IDisposable
     private readonly Thread thread;
     private readonly TaskCompletionSource<Dispatcher> ready=new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly KeyboardProc callback;
+    private readonly KeyboardProc mouseCallback;
     private Dispatcher worker=null!;
     private HwndSource? source;
     private IntPtr keyboardHook;
+    private IntPtr mouseHook;
     private AppSettings? current;
     private readonly Dictionary<HotkeyAction,HotkeyChordRecognizer> recognizers=new();
     private bool suspended;
@@ -46,6 +48,7 @@ public sealed class HotkeyService : IDisposable
     public HotkeyService()
     {
         callback=OnKeyboard;
+        mouseCallback=OnMouse;
         thread=new Thread(() =>
         {
             try
@@ -81,7 +84,7 @@ public sealed class HotkeyService : IDisposable
     });
     public static void Validate(Hotkey key)
     {
-        if (key.Modifiers is 0 or >15 || key.Key is 0 or >254 or 0x10 or 0x11 or 0x12 or 0x5B or 0x5C or 0x7B)
+        if (key.Modifiers>15 || key.Key is 0 or >254 or 0x03 or 0x10 or 0x11 or 0x12 or 0x5B or 0x5C or >=0xA0 and <=0xA5)
             throw new ArgumentException(UiText.T("error.hotkey"));
     }
     public static IEnumerable<(HotkeyAction Action,Hotkey Key)> Bindings(AppSettings settings)
@@ -104,18 +107,23 @@ public sealed class HotkeyService : IDisposable
     private void Register(AppSettings settings)
     {
         var bindings=Bindings(settings).ToArray();
+        var hooked=bindings.Where(b=>settings.HotkeyMode==HotkeyMode.GameHook || b.Key.IsMouse || b.Key.Key==0x7B).ToArray();
         if (settings.HotkeyMode==HotkeyMode.Registered)
         {
-            foreach (var (action,key) in bindings)
+            foreach (var (action,key) in bindings.Except(hooked))
                 if (!RegisterHotKey(source!.Handle,(int)action,key.Modifiers|0x4000,key.Key))
                     throw new Win32Exception(Marshal.GetLastWin32Error(),UiText.T("error.hotkeyBusy",key));
-            return;
         }
-        if (bindings.Length==0) return;
+        if (hooked.Length==0) return;
         var pressed=Enumerable.Range(1,254).Where(k=>k is not (0x10 or 0x11 or 0x12) && (GetAsyncKeyState(k)&0x8000)!=0).Select(k=>(uint)k).ToArray();
-        foreach (var (action,key) in bindings) recognizers[action]=new(key,pressed);
+        foreach (var (action,key) in hooked) recognizers[action]=new(key,pressed);
         keyboardHook=SetWindowsHookEx(13,callback,GetModuleHandle(null),0);
         if (keyboardHook==IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error(),UiText.T("error.hook"));
+        if (hooked.Any(b=>b.Key.IsMouse))
+        {
+            mouseHook=SetWindowsHookEx(14,mouseCallback,GetModuleHandle(null),0);
+            if (mouseHook==IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error(),UiText.T("error.hook"));
+        }
     }
     private IntPtr OnKeyboard(int code,IntPtr wParam,IntPtr lParam)
     {
@@ -127,17 +135,35 @@ public sealed class HotkeyService : IDisposable
                 uint key=(uint)Marshal.ReadInt32(lParam);
                 uint flags=(uint)Marshal.ReadInt32(lParam,8), scan=(uint)Marshal.ReadInt32(lParam,4);
                 key=key switch { 0x11=>(flags&1)!=0 ? 0xA3u:0xA2u,0x12=>(flags&1)!=0 ? 0xA5u:0xA4u,0x10=>scan==0x36 ? 0xA1u:0xA0u,_=>key };
-                bool suppress=false;
-                foreach (var (action,recognizer) in recognizers)
-                {
-                    var result=recognizer.Process(key,message is 0x100 or 0x104);
-                    if (result.Trigger) Dispatch(action);
-                    suppress|=result.Suppress;
-                }
-                if (suppress) return new IntPtr(1);
+                if (ProcessInput(key,message is 0x100 or 0x104)) return new IntPtr(1);
             }
         }
         return CallNextHookEx(keyboardHook,code,wParam,lParam);
+    }
+    public static (uint Key,bool Down)? MouseInput(int message,uint data)=>message switch
+    {
+        0x201 or 0x202 => (0x01,message==0x201),
+        0x204 or 0x205 => (0x02,message==0x204),
+        0x207 or 0x208 => (0x04,message==0x207),
+        0x20B or 0x20C when (data>>16) is 1 or 2 => ((data>>16)==1 ? 0x05u:0x06u,message==0x20B),
+        _=>null
+    };
+    private IntPtr OnMouse(int code,IntPtr wParam,IntPtr lParam)
+    {
+        if (code>=0 && !suspended && !disposed && MouseInput(wParam.ToInt32(),(uint)Marshal.ReadInt32(lParam,8)) is { } input && ProcessInput(input.Key,input.Down))
+            return new IntPtr(1);
+        return CallNextHookEx(mouseHook,code,wParam,lParam);
+    }
+    private bool ProcessInput(uint key,bool down)
+    {
+        bool suppress=false;
+        foreach (var (action,recognizer) in recognizers)
+        {
+            var result=recognizer.Process(key,down);
+            if (result.Trigger) Dispatch(action);
+            suppress|=result.Suppress;
+        }
+        return suppress;
     }
     private IntPtr OnMessage(IntPtr hwnd,int message,IntPtr wParam,IntPtr lParam,ref bool handled)
     {
@@ -154,6 +180,7 @@ public sealed class HotkeyService : IDisposable
     {
         if (source is not null) foreach (var action in Enum.GetValues<HotkeyAction>()) UnregisterHotKey(source.Handle,(int)action);
         if (keyboardHook!=IntPtr.Zero) { UnhookWindowsHookEx(keyboardHook); keyboardHook=IntPtr.Zero; }
+        if (mouseHook!=IntPtr.Zero) { UnhookWindowsHookEx(mouseHook); mouseHook=IntPtr.Zero; }
         recognizers.Clear();
     }
     public void Dispose()

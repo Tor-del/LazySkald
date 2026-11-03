@@ -73,16 +73,11 @@ internal static partial class Program
         Throws<InvalidDataException>(()=>EdgeSpeechClient.ParseAudioFrame(new byte[]{0xFF,0xFF,0}),"Oversized frame header rejected");
         Assert(SelectionMath.ToPixels(900,400,100,50,1280,720,2560,1440)==Rectangle.FromLTRB(200,100,1800,800),"Reverse drag converts 200% DPI coordinates");
         Assert(SelectionMath.ToPixels(-5,-5,1500,800,1280,720,1920,1080)==new Rectangle(0,0,1920,1080),"Selection clamps to monitor bounds");
-        Throws<ArgumentException>(()=>HotkeyService.Validate(new Hotkey(0,0x52)),"Unmodified hotkey rejected");
+        HotkeyService.Validate(new Hotkey(0,0x52));
+        Assert(true,"Unmodified hotkey accepted");
         Assert(new Hotkey(3,0x52).ToString()=="Ctrl + Alt + R","Hotkey display");
         Assert(EdgeSpeechClient.ToServiceVoiceName("ru-RU-DmitryNeural")=="Microsoft Server Speech Text to Speech Voice (ru-RU, DmitryNeural)","Russian voice uses canonical service name");
-        Assert(OcrTextFormatter.Format("Это длинная строка\r\n   которая продолжается\nНовая фраза\rс продолжением")=="Это длинная строка которая продолжается"+Environment.NewLine+"Новая фраза с продолжением","OCR joins lowercase continuation lines and keeps uppercase starts");
-        Assert(OcrTextFormatter.Format("First line\nnext line\nAnother sentence")=="First line next line"+Environment.NewLine+"Another sentence","OCR formatting handles English capitalization");
-        Assert(OcrTextFormatter.Format("Начало\n2026 год\n«цитата»\nЁжик")=="Начало 2026 год «цитата»"+Environment.NewLine+"Ёжик","Digits and punctuation join; uppercase Cyrillic Yo starts a line");
-        Assert(OcrTextFormatter.Format("  \r\n Первая строка \n\n продолжение \n ")=="Первая строка продолжение","OCR discards empty lines and excess whitespace around line breaks");
-        Assert(OcrTextFormatter.Format("text\n\U00010400Test")=="text"+Environment.NewLine+"\U00010400Test","OCR recognizes uppercase letters outside the basic Unicode plane");
-        Assert(OcrTextFormatter.Format(" \n \r\n ")=="","Empty OCR stays empty");
-        Assert(OcrTextFormatter.Format("Слово\nпродолжение.")==OcrTextFormatter.Format(OcrTextFormatter.Format("Слово\nпродолжение.")),"OCR formatting is stable on repeated application");
+        RunOcrFormattingChecks();
     }
     private static async Task RunOcrAsync()
     {
@@ -192,6 +187,13 @@ internal static partial class Program
         var ocrLanguages=(System.Windows.Controls.ComboBox)window.FindName("LanguageBox");
         var targetLanguages=(System.Windows.Controls.ComboBox)window.FindName("TranslationTargetBox");
         var translateEnabled=(System.Windows.Controls.CheckBox)window.FindName("TranslateEnabledBox");
+        var replaceBreaks=(System.Windows.Controls.CheckBox)window.FindName("OcrReplaceLineBreaksBox");
+        var preserveParagraphs=(System.Windows.Controls.CheckBox)window.FindName("OcrPreserveParagraphsBox");
+        Assert(replaceBreaks.IsChecked==true && preserveParagraphs.IsChecked==false && preserveParagraphs.IsEnabled,"Recognition shows default line break settings");
+        replaceBreaks.IsChecked=false;
+        Assert(!preserveParagraphs.IsEnabled,"Paragraph preservation is disabled when replacement is off");
+        replaceBreaks.IsChecked=true;
+        Assert(preserveParagraphs.IsEnabled,"Paragraph preservation is available when replacement is on");
         foreach (string tag in LanguageCatalog.Tags)
         {
             ocrLanguages.SelectedItem=ocrLanguages.Items.Cast<LanguageChoice>().First(l=>l.Tag==tag);
