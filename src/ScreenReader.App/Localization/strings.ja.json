@@ -120,6 +120,8 @@
   "translation.target": "翻訳と音声の言語（選択またはコードを入力）",
   "translation.prompt": "翻訳のシステムプロンプト",
   "translation.promptHint": "{targetLanguage} は翻訳先の言語に置き換えられます。原文は別のメッセージで送信されます。",
+  "translation.stressMarks": "TTS 用の強勢記号を追加",
+  "translation.stressMarksHint": "翻訳に強勢記号を付けるようモデルに依頼します（例：замо́к）。結果はモデルと選択した TTS の対応に依存します。",
   "translation.temperature": "温度を送信（0–2；モデルが非対応なら無効に）",
   "translation.timeoutLabel": "リクエストのタイムアウト、秒（1–3600）",
   "translation.privacy": "翻訳を有効にすると原文を選択した LLM サーバーに送信します。API キーは Windows ユーザーごとに暗号化されます。画面認識に適用するには保存してください。",

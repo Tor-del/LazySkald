@@ -20,6 +20,8 @@ internal static partial class Program
         Assert(key!=ReadingCache.KeyFor("original",settings),"Cache text match is exact and case sensitive");
         Assert(key!=Key(settings with { RatePercent=10 }) && key!=Key(settings with { Voice="another" }),"Voice and speed invalidate cached audio");
         Assert(key!=Key(settings with { Translation=settings.Translation with { Prompt="different" } }) && key!=Key(settings with { Translation=settings.Translation with { TargetLanguage="en-US" } }),"Translation prompt and language invalidate cache");
+        Assert(key!=Key(settings with { Translation=settings.Translation with { AddStressMarks=true } }),"Translation stress marks invalidate cached audio");
+        Assert(Key(settings with { Translation=settings.Translation with { Enabled=false } })==Key(settings with { Translation=settings.Translation with { Enabled=false,AddStressMarks=true } }),"Stress marks do not affect cache when translation is disabled");
         Assert(key!=Key(settings with { Genderization=settings.Genderization with { Temperature=1 } }) && key!=Key(settings with { FemaleRole=new() { RatePercent=20 } }),"Gender settings and complete role profiles invalidate cache");
         var server=settings with { SpeechProviderId="openai-compatible",OpenAiApiKeyProtected=SecretProtection.Protect("key") };
         Assert(ReadingCache.KeyFor("text",server)==ReadingCache.KeyFor("text",server with { OpenAiApiKeyProtected=SecretProtection.Protect("key") }),"Re-encrypting unchanged API key preserves cache identity");

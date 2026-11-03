@@ -479,6 +479,14 @@
     "ru": "{targetLanguage} заменяется языком перевода. Исходный текст отправляется отдельным сообщением.",
     "en": "{targetLanguage} is replaced with the target language. Source text is sent as a separate message."
   },
+  "translation.stressMarks": {
+    "ru": "Расставлять ударения для TTS",
+    "en": "Add stress marks for TTS"
+  },
+  "translation.stressMarksHint": {
+    "ru": "Просить модель расставить ударения в переводе: например, замо́к. Результат зависит от модели и поддержки ударений выбранным TTS.",
+    "en": "Ask the model to add word stress marks to the translation (e.g. замо́к). Results depend on the model and stress mark support in the selected TTS."
+  },
   "translation.temperature": {
     "ru": "Отправлять температуру (0–2; отключите, если модель не поддерживает)",
     "en": "Send temperature (0–2; disable if unsupported by the model)"

@@ -120,6 +120,8 @@
   "translation.target": "Idioma de traducción y voz (selecciona o introduce un código)",
   "translation.prompt": "Instrucción de sistema para traducir",
   "translation.promptHint": "{targetLanguage} se sustituye por el idioma de destino. El texto original se envía como mensaje separado.",
+  "translation.stressMarks": "Añadir marcas de acento para TTS",
+  "translation.stressMarksHint": "Pide al modelo que indique el acento en la traducción (p. ej., замо́к). El resultado depende del modelo y del TTS seleccionado.",
   "translation.temperature": "Enviar temperatura (0–2; desactívala si el modelo no la admite)",
   "translation.timeoutLabel": "Tiempo de espera, segundos (1–3600)",
   "translation.privacy": "Al activar la traducción, el texto original se envía al servidor LLM elegido. La clave API se cifra para tu usuario de Windows. Guarda para aplicar los ajustes a la captura.",

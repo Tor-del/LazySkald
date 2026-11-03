@@ -79,6 +79,8 @@
      <TextBlock Text="{DynamicResource translation.target}" Style="{StaticResource FieldLabel}"/><ComboBox x:Name="TranslationTargetBox" IsEditable="True" DisplayMemberPath="Name" TextSearch.TextPath="Tag" Margin="0,0,0,20"/>
      <TextBlock Text="{DynamicResource translation.prompt}" Style="{StaticResource FieldLabel}"/><TextBox x:Name="TranslationPromptBox" AcceptsReturn="True" TextWrapping="Wrap" Height="110" VerticalScrollBarVisibility="Auto" Margin="0,0,0,0"/>
      <TextBlock Text="{DynamicResource translation.promptHint}" Foreground="{StaticResource FluentSecondary}" TextWrapping="Wrap" FontSize="12" Margin="0,6,0,20"/>
+     <CheckBox x:Name="TranslationStressMarksBox" Content="{DynamicResource translation.stressMarks}"/>
+     <TextBlock Text="{DynamicResource translation.stressMarksHint}" Foreground="{StaticResource FluentSecondary}" TextWrapping="Wrap" FontSize="12" Margin="0,6,0,20"/>
      <CheckBox x:Name="TranslationTemperatureEnabledBox" Content="{DynamicResource translation.temperature}"/>
      <TextBox x:Name="TranslationTemperatureBox" Margin="0,8,0,20"/>
      <TextBlock Text="{DynamicResource translation.timeoutLabel}" Style="{StaticResource FieldLabel}"/><TextBox x:Name="TranslationTimeoutBox" Margin="0,0,0,20"/>

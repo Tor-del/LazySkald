@@ -120,6 +120,8 @@
   "translation.target": "Übersetzungs- und Stimmensprache (wählen oder Code eingeben)",
   "translation.prompt": "Systemanweisung für die Übersetzung",
   "translation.promptHint": "{targetLanguage} wird durch die Zielsprache ersetzt. Der Originaltext wird als separate Nachricht gesendet.",
+  "translation.stressMarks": "Betonungszeichen für TTS hinzufügen",
+  "translation.stressMarksHint": "Bittet das Modell um Betonungszeichen in der Übersetzung (z. B. замо́к). Das Ergebnis hängt vom Modell und der Unterstützung durch TTS ab.",
   "translation.temperature": "Temperatur senden (0–2; bei fehlender Unterstützung deaktivieren)",
   "translation.timeoutLabel": "Zeitlimit der Anfrage in Sekunden (1–3600)",
   "translation.privacy": "Bei aktivierter Übersetzung wird der Originaltext an den gewählten LLM-Server gesendet. Der API-Schlüssel wird für Ihren Windows-Benutzer verschlüsselt. Zum Anwenden auf Bildschirmaufnahmen speichern.",

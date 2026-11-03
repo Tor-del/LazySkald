@@ -120,6 +120,8 @@
   "translation.target": "翻译及声音语言（选择或输入代码）",
   "translation.prompt": "翻译系统提示词",
   "translation.promptHint": "{targetLanguage} 将替换为目标语言。原文作为单独消息发送。",
+  "translation.stressMarks": "为 TTS 添加重音标记",
+  "translation.stressMarksHint": "请求模型为译文添加重音标记（例如 замо́к）。效果取决于模型及所选 TTS 对重音标记的支持。",
   "translation.temperature": "发送温度参数（0–2；模型不支持时关闭）",
   "translation.timeoutLabel": "请求超时，秒（1–3600）",
   "translation.privacy": "启用翻译后，原文发送至所选 LLM 服务器。API 密钥针对当前 Windows 用户加密。请保存以应用到屏幕捕获。",

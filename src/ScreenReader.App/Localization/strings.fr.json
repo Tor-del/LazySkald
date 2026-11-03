@@ -120,6 +120,8 @@
   "translation.target": "Langue de traduction et de voix (sélection ou code)",
   "translation.prompt": "Instruction système de traduction",
   "translation.promptHint": "{targetLanguage} est remplacé par la langue cible. Le texte source est envoyé dans un message séparé.",
+  "translation.stressMarks": "Ajouter les marques d’accent tonique pour la synthèse vocale",
+  "translation.stressMarksHint": "Demande au modèle de marquer l’accent tonique dans la traduction (par ex. замо́к). Le résultat dépend du modèle et de la synthèse vocale.",
   "translation.temperature": "Envoyer la température (0–2 ; désactiver si non prise en charge)",
   "translation.timeoutLabel": "Délai de réponse, secondes (1–3600)",
   "translation.privacy": "La traduction envoie le texte source au serveur LLM choisi. La clé API est chiffrée pour votre utilisateur Windows. Enregistrez pour appliquer les réglages à la capture.",

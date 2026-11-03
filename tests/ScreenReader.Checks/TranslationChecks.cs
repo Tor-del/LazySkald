@@ -16,6 +16,7 @@ internal static partial class Program
         foreach (string provider in new[] { "lmstudio","ollama","openai" })
         {
             bool ollama=provider=="ollama";
+            bool expectStressMarks=false;
             var settings=new TranslationSettings { Enabled=true,Provider=provider,Providers=new() { [provider]=new() { BaseUrl=ollama ? "http://localhost:11434/prefix" : "http://localhost:1234/prefix/v1",Model="chosen-model",ApiKeyProtected=SecretProtection.Protect("test-key") } } };
             using var http=new HttpClient(new Handler(async (request,ct)=>
             {
@@ -30,12 +31,18 @@ internal static partial class Program
                 var root=body.RootElement;
                 Assert(root.GetProperty("model").GetString()=="chosen-model" && !root.GetProperty("stream").GetBoolean(),"Selected model and non-streaming translation: "+provider);
                 Assert(root.GetProperty("messages")[0].GetProperty("content").GetString()!.Contains("ru-RU") && root.GetProperty("messages")[1].GetProperty("content").GetString()=="Hello", "Target prompt and separate source text: "+provider);
+                string expectedPrompt=TranslationSettings.DefaultPrompt.Replace("{targetLanguage}","ru-RU");
+                if (expectStressMarks) expectedPrompt+="\n\n"+TranslationSettings.StressMarksPrompt;
+                Assert(root.GetProperty("messages")[0].GetProperty("content").GetString()==expectedPrompt,"Stress instruction is appended only when enabled: "+provider);
                 Assert((ollama ? root.GetProperty("options") : root).GetProperty("temperature").GetDouble()==0.2,"Provider temperature format: "+provider);
                 return JsonResponse(ollama ? "{\"message\":{\"content\":\"Привет\"}}" : "{\"choices\":[{\"message\":{\"content\":\"Привет\"},\"finish_reason\":\"stop\"}]}");
             }));
             var client=new LlmTranslationClient(http);
             Assert((await client.GetModelsAsync(settings,CancellationToken.None))[0]=="chosen-model","Model list parsed: "+provider);
             Assert(await client.TranslateAsync("Hello",settings,CancellationToken.None)=="Привет","Translation parsed: "+provider);
+            expectStressMarks=true;
+            Assert(await client.TranslateAsync("Hello",settings with { AddStressMarks=true },CancellationToken.None)=="Привет","Translation with stress marks parsed: "+provider);
+            Assert(settings.Prompt==TranslationSettings.DefaultPrompt && !settings.AddStressMarks,"Stress option preserves saved base prompt and defaults to disabled");
             Assert(await client.TranslateAsync("Hello",settings with { Enabled=false },CancellationToken.None)=="Hello","Disabled translation bypass: "+provider);
             using var cancel=new CancellationTokenSource(); cancel.Cancel();
             bool cancelled=false;
@@ -43,6 +50,8 @@ internal static partial class Program
             Assert(cancelled,"Translation cancellation before HTTP: "+provider);
         }
         var valid=new TranslationSettings { Enabled=true,Providers=new() { ["lmstudio"]=new() { BaseUrl="http://localhost/v1",Model="m" } } };
+        var restored=JsonSerializer.Deserialize<TranslationSettings>(JsonSerializer.Serialize(valid with { AddStressMarks=true }));
+        Assert(restored is { AddStressMarks:true },"Stress mark setting survives settings serialization");
         Throws<ArgumentException>(()=>LlmTranslationClient.Validate(valid with { Temperature=double.NaN }),"Invalid translation temperature rejected");
         foreach (string payload in new[] { "{}","{\"choices\":[{\"message\":{\"content\":\" \"}}]}","{\"choices\":[{\"message\":{\"content\":\"partial\"},\"finish_reason\":\"length\"}]}" })
         {

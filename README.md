@@ -166,6 +166,11 @@ The request timeout defaults to 120 seconds. URL, model and encrypted key are sa
 separately for each provider. Save to apply to screen capture; Listen uses current
 controls and shows the translation separately from the source.
 
+**Add stress marks for TTS** appends a request to mark word stress in the
+translation (e.g. замо́к). It is off by default. Save to apply. Results depend on
+the model and stress mark support in the selected TTS. Changing this option
+prevents reuse of audio cached with the previous setting.
+
 Translation is off by default for existing settings. When enabled, source text is
 sent to the configured LLM server and only the translation is sent to TTS. Empty,
 truncated and failed translations stop speech. The usual stop hotkey also cancels
