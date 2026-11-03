@@ -6,7 +6,7 @@ $selfContained = if ($FrameworkDependent) { 'false' } else { 'true' }
 dotnet publish src/ScreenReader.App/ScreenReader.App.csproj -c Release -r win-x64 --self-contained $selfContained -o $destination
 if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
 Copy-Item -LiteralPath 'README.md','THIRD-PARTY-NOTICES.md' -Destination $destination -Force
-if (Test-Path -LiteralPath 'README.en.md') { Copy-Item -LiteralPath 'README.en.md' -Destination $destination -Force }
+if (Test-Path -LiteralPath 'README.ru.md') { Copy-Item -LiteralPath 'README.ru.md' -Destination $destination -Force }
 Copy-Item -LiteralPath 'licenses' -Destination $destination -Recurse -Force
 $sourceRoot = Join-Path $destination 'source'
 foreach ($projectName in @('ScreenReader.Edge','ScreenReader.Speech')) {

@@ -1,16 +1,16 @@
 # LazySkald
 
-[English documentation](README.en.md)
+[Документация на русском](README.ru.md)
 
-## Сборки и релизы на GitHub
+## GitHub builds and releases
 
-GitHub Actions автоматически проверяет приложение, собирает установщик и переносимый
-ZIP для Windows x64 при отправке изменений и в pull request. Готовые файлы доступны
-в артефакте `LazySkald-win-x64` на странице запуска **Windows build and checks**.
-Проверяются также установка, два последовательных обновления и удаление в изолированном окружении.
+GitHub Actions checks the application, builds a Windows x64 installer and portable
+ZIP, and tests isolated installation, two upgrades and uninstall on pushes and pull
+requests. Download the `LazySkald-win-x64` artifact from **Windows build and checks**.
 
-Для первой публикации создайте **пустой** репозиторий GitHub (без README, лицензии
-и .gitignore), затем выполните в этой папке, заменив `OWNER/REPOSITORY` своим адресом:
+For the initial publication, create an **empty** GitHub repository without a README,
+license or .gitignore, then run these commands from this folder, replacing
+`OWNER/REPOSITORY` with your repository:
 
 ```powershell
 git remote add origin https://github.com/OWNER/REPOSITORY.git
@@ -19,363 +19,168 @@ git tag v0.5.0
 git push origin v0.5.0
 ```
 
-Тег `v<версия>` запускает **Publish release**: после успешных проверок публикуется
-GitHub Release с установщиком `.exe`, переносимым `.zip` со встроенным .NET Runtime
-и `SHA256SUMS.txt`. Версия тега должна точно совпадать с `Version` в
-`Directory.Build.props`. Для следующего релиза обновите эту версию, сохраните
-изменения в коммите, отправьте коммит и новый тег. Дополнительные секреты не нужны:
-используется встроенный `GITHUB_TOKEN`, право записи есть только у задания публикации.
+A `v<version>` tag starts **Publish release**. After all checks pass, it publishes
+a GitHub Release containing the installer `.exe`, a portable `.zip` with the .NET
+runtime, and `SHA256SUMS.txt`. The tag must exactly match `Version` in
+`Directory.Build.props`. For subsequent releases, update that version, commit and
+push the changes, then push the matching new tag. No additional secrets are needed;
+only the publishing job has write access through the built-in `GITHUB_TOKEN`.
 
-Локальная сборка тех же пакетов: `./tools/build-release.ps1` в PowerShell 7 с .NET SDK
-из `global.json`. Нужны Windows и доступ к интернету для зависимостей и Inno Setup.
-Выходные папки `artifacts/release` и `artifacts/LazySkald-win-x64-<версия>` должны
-отсутствовать перед запуском. Пакеты не подписаны сертификатом издателя.
+To build the same packages locally, run `./tools/build-release.ps1` in PowerShell 7
+on Windows with the SDK from `global.json`. Internet access is needed for dependencies
+and Inno Setup. The output folders `artifacts/release` and
+`artifacts/LazySkald-win-x64-<version>` must not already exist. Packages are unsigned.
 
-Утилита для Windows 11: горячая клавиша → выделение области → локальный Windows
-OCR → перевод через LLM (по желанию) → гендеризация через LLM (по желанию) → выбранный TTS. Написана на C# / .NET 10 / WPF. Docker и Python не нужны.
-Есть локальные голоса Windows, прямой потоковый Edge TTS и подключение к
-OpenAI-совместимому серверу. Системный TTS работает без интернета.
+LazySkald reads text from a selected screen region using local Windows OCR
+and a choice of Windows TTS, Microsoft Edge TTS, or an OpenAI-compatible server.
+Windows 11 x64-compatible systems are supported. The installer and portable build
+include the .NET runtime; Docker and Python are not required.
 
-## Запуск
+## Start
 
-Запустите установщик `artifacts/installers/LazySkald-0.5.0-Setup-x64.exe`
-или `LazySkald.exe` из переносимой папки `artifacts/LazySkald-win-x64-0.5.0`.
-В переносимую сборку включён .NET Runtime. При первом запуске откроются настройки.
+Run `LazySkald-<version>-Setup-x64.exe`, or open `LazySkald.exe` in the portable
+folder. Choose **Application → Interface language → English** and click **Save**.
+The interface also supports Russian, Simplified Chinese, Japanese, Spanish,
+Korean, French and German. Language changes take effect immediately; click
+**Save** to keep the selection for the next launch.
 
-1. На вкладке «Распознавание» выберите провайдер (по умолчанию Windows 11 OCR) и язык текста; на вкладке «Озвучивание» — провайдер TTS, голос и скорость. Автоопределения языка нет.
-2. Нажмите «Прослушать», чтобы проверить выбранный голос.
-3. Сохраните настройки и сверните окно в трей.
-4. Наведите курсор на нужный монитор и нажмите **Ctrl + Alt + R**.
-5. На снимке экрана выделите текст левой кнопкой мыши. Речь начнётся автоматически.
+The settings follow the pipeline in seven tabs:
 
-Настройки идут по пайплайну: «Распознавание», «Перевод», «Гендеризация»,
-«Озвучивание», «Проверки», «Приложение». Метод захвата находится в распознавании,
-горячие клавиши и их режим — в управлении. Язык интерфейса переключается на последней вкладке между русским
-и английским, китайским (упрощённым), японским, испанским, корейским,
-французским и немецким без перезапуска; затем нажмите «Сохранить».
+- **Recognition:** OCR provider (Windows 11 OCR by default), language and capture method.
+- **Translation:** optional LLM translation, provider, model and prompt.
+- **Genderization:** optional narrator gender detection using LM Studio, Ollama or OpenAI API, with independent connection profiles, model discovery, prompt, temperature and timeout.
+- **Speech:** default voice settings; when genderization is enabled, a role list with add/remove controls for female and male roles. Select a role to edit its own TTS provider, voice, rate, playback device and server settings.
+- **Checks:** recognized or manually entered text, translation, detected gender and speech preview.
+- **Controls:** five independent hotkeys and game mode.
+- **Application:** interface language and tray behavior.
 
-На вкладке «Озвучивание» можно выбрать устройство Windows по умолчанию или
-конкретные наушники/колонки. Выбор сохраняется по постоянному ID и применяется
-при следующем чтении. Для каждой добавленной роли можно выбрать своё устройство. Если устройство отключено, программа
-покажет ошибку вместо переключения на другой выход. Системная громкость и
-аудиоустройство игры не меняются.
+Genderization runs after translation and receives both original and spoken text.
+It returns male, female or unknown; ambiguous or mixed narrator genders use the
+default voice. Each role has an independent TTS provider and full settings, including server URL,
+model, encrypted key and format. New roles start with a copy of the default profile.
+You can remove a role to use the default profile for that gender. Turning genderization
+off preserves the role profiles for later use. Previous voice-only roles migrate with
+their original TTS provider. Detected gender accompanies the selected voice in the TTS request.
+Genderization is disabled by default. Its API keys are encrypted with Windows DPAPI.
+Stopping cancels the LLM request. Failed, empty or truncated responses stop speech;
+unexpected non-empty classification responses use unknown gender.
 
-После закрытия выделения программа восстанавливает исходное окно, если оно
-свернулось, и возвращает ему фокус до начала OCR и озвучивания. Это выполняется
-также при отмене выделения. Окно запоминается до захвата; закрытое окно не
-восстанавливается. Windows или игра могут ограничивать активацию — неудача
-возврата фокуса фиксируется в журнале.
+Press **Ctrl + Alt + R**, drag to select text, and release the mouse button.
+Press it again to recognize another fragment and append it to the reading queue without stopping current speech.
+The Controls tab offers a shortcut to recognize the last selected area again and append it to the queue. It captures fresh content on the original monitor; without a previous area, it opens selection. The area is remembered until the app closes, and cancelling selection preserves it. This shortcut is unassigned by default.
+The Controls tab also offers separate start/stop, cancel current and go to next,
+and cancel all shortcuts; these are unassigned by default. Start/stop cancels all
+work when busy. Press Delete or Backspace in a shortcut field to clear it, then
+save settings. Each action must use a different shortcut.
+**Esc** cancels selection. The original application is restored before OCR begins.
 
-На вкладке «Управление» можно назначить пять независимых горячих клавиш:
+## Playback devices
 
-- **Запустить / остановить** — начать чтение или отменить все задачи при повторном нажатии. По умолчанию не назначена.
-- **Распознать и добавить в очередь** — **Ctrl + Alt + R** по умолчанию. Новый фрагмент распознаётся без остановки текущей речи и читается в порядке добавления.
-- **Повторить распознавание последней области и добавить в очередь** — заново распознать текущее содержимое последней выбранной области на том же мониторе. Если область ещё не выбирали, открывается выделение. Область запоминается до закрытия программы; отмена выделения её не сбрасывает. По умолчанию клавиша не назначена.
-- **Отменить текущую задачу и перейти к следующей** — по умолчанию не назначена.
-- **Отменить все задачи** — остановить текущую и очистить очередь. По умолчанию не назначена.
+Choose **Windows default device** or a specific output on the Speech tab and save.
+The selection uses a stable endpoint ID and applies to the next reading. Each
+added role can use its own playback device. Refresh the list after connecting new hardware. If a saved device is
+unavailable, playback reports an error rather than silently using another output.
+The app does not change Windows master volume or the audio output used by games.
 
-Для назначения нажмите сочетание в соответствующем поле, для удаления — Delete или Backspace, затем сохраните настройки. Одинаковые сочетания для разных действий запрещены. Удержание клавиши не добавляет повторные задачи.
+## Providers and privacy
 
-**Esc** отменяет выделение. При обновлении сохранённая клавиша запуска используется для распознавания с добавлением в очередь.
+- **Windows TTS:** installed Microsoft voices, fully offline.
+- **Microsoft Edge TTS:** text is sent to Microsoft's consumer speech service.
+  This is not the subscription-based Azure Speech API. Voice availability can vary.
+- **OpenAI-compatible server:** configure the complete `/v1/audio/speech` URL,
+  model, voice, optional API key and MP3 or PCM WAV response. Text is sent to this
+  address. The key is encrypted with Windows DPAPI for the current user.
 
-По умолчанию включён **игровой режим**: `WH_KEYBOARD_LL` работает на отдельном
-потоке с собственной очередью сообщений; обработчик только распознаёт сочетание
-и отправляет команду интерфейсу. Записи остальных клавиш в журнал нет. Нажатие
-настроенного сочетания поглощается. Для несовместимых приложений можно выбрать
-обычный режим `RegisterHotKey`. В обычном режиме занятое сочетание даст ошибку.
+OCR and screenshot processing are local. Screenshots and recognized text are not
+stored in the diagnostic log. Settings and logs are under
+`%LOCALAPPDATA%/ScreenReader`.
 
-Меню значка в трее: чтение, остановка, настройки, выход. Закрытие окна по
-умолчанию скрывает его в трей. Флажок запуска в трее не включает автозагрузку Windows.
+OCR continuation lines are joined with spaces when the next nonempty line does
+not start with an uppercase letter. Uppercase starts keep their line break.
 
-## OCR и языки
+## Installation and updates
 
-Используется установленный в Windows OCR. В настройках видно, установлен ли
-выбранный язык. При отсутствии пакета добавьте распознавание текста в параметрах
-языка Windows. Язык `ru` в Windows сопоставляется с `ru-RU` для голоса.
-В меню доступны русский (`ru-RU`), английский (`en-US`), китайский упрощённый
-(`zh-CN`), японский (`ja-JP`), испанский (`es-ES`), корейский (`ko-KR`),
-французский (`fr-FR`), немецкий (`de-DE`) и другие установленные языки OCR.
-Для распознавания каждого языка нужен соответствующий пакет OCR Windows.
-Для Windows и Edge список голосов фильтруется по выбранному языку. Для сервера
-нужно вручную указать подходящий голос. Распознанный текст показывается в поле
-проверки; его можно исправить и прочитать повторно.
+The per-user Inno Setup installer installs under
+`%LOCALAPPDATA%/Programs/LazySkald`. Future installers with the same AppId
+close the app gracefully, uninstall the registered old version, and install the
+new version. User settings are preserved. Old portable copies are not registered
+installations and should be closed before the first install.
 
-Перед показом результата и озвучиванием обрабатываются переносы OCR: если
-следующая непустая строка после удаления отступов начинается с заглавной буквы,
-перенос сохраняется. Иначе он заменяется одним пробелом. Например:
+See [installer/README.md](installer/README.md) in the source repository for the
+reusable installer configuration, release commands and isolated upgrade tests.
 
-```text
-Это длинная строка
-которая продолжается.
-Новая фраза.
-```
+## Development
 
-превращается в:
-
-```text
-Это длинная строка которая продолжается.
-Новая фраза.
-```
-
-Пустые строки убираются; строки с цифрой или знаком препинания в начале
-присоединяются через пробел. Текст, введённый вручную, автоматически не меняется.
-
-## Гендеризация
-
-На вкладке «Гендеризация» можно включить определение того, от лица мужчины или
-женщины написан текст. Поддерживаются LM Studio, Ollama и OpenAI API с отдельными
-профилями URL, модели, зашифрованного ключа, промпта, температуры и таймаута,
-а также загрузкой списка моделей — как в переводе. По умолчанию опция выключена.
-
-После перевода LLM получает исходный и озвучиваемый текст, чтобы учитывать
-утраченные при переводе грамматические признаки. Результат — `male`, `female`
-или `unknown`. Для неоднозначного текста и нескольких рассказчиков разного
-гендера используется основной голос. На вкладке «Озвучивание» при выключенной
-гендеризации доступна настройка голоса по умолчанию. При включении появляется
-список ролей: можно добавить женскую и мужскую роль, выбрать её в списке и
-настроить в общем редакторе ниже. У каждой роли свой провайдер TTS, голос,
-темп, устройство вывода и параметры сервера (адрес, модель, ключ, формат).
-Например, женскую роль можно озвучивать через Windows, мужскую — через другой
-TTS-сервер. Новая роль копирует начальные настройки голоса по умолчанию, затем
-редактируется независимо. Роли можно удалить; если роль отсутствует или гендер
-не определён, используются настройки голоса по умолчанию. Выключение
-гендеризации сохраняет роли для последующего включения. Старые настройки
-голосов мужских/женских ролей переносятся с прежним провайдером TTS.
-В запрос TTS передаются и выбранный голос, и определённый гендер.
-Результат гендеризации виден на вкладке «Проверки».
-
-Остановка отменяет запрос LLM. Ошибка или пустой/обрезанный ответ останавливает
-озвучивание; неожиданный непустой ответ считается неопределённым гендером.
-
-## Провайдеры TTS
-
-- **Windows TTS (локально):** голоса, установленные в Windows, без сети и ключей.
-  На текущем компьютере обнаружены русские Microsoft Irina и Microsoft Pavel.
-  Синтез идёт через WinRT, WAV/PCM воспроизводится общим плеером.
-- **Microsoft Edge TTS (онлайн):** существующий провайдер со Светланой и Дмитрием.
-  Личный ключ Azure не требуется. Это потребительский сервис Edge, а не
-  официальный Azure Speech API с подпиской. Доступность отдельных голосов может
-  меняться; протокол и повторы сохранены.
-- **OpenAI-совместимый сервер:** укажите полный адрес, например
-  `http://127.0.0.1:5050/v1/audio/speech`, имя модели, имя голоса и необязательный
-  ключ. Адрес используется точно как введён, `/v1` автоматически не дописывается.
-  Сервер должен принимать POST с `model`, `input`, `voice`, `response_format`,
-  `speed` и возвращать бинарное MP3 либо WAV/PCM. SSE не используется. Голос
-  задаётся вручную: универсального списка голосов у совместимых серверов нет.
-  Для этого провайдера ограничение одного фрагмента — 4096 символов.
-
-Для каждого провайдера сохраняется свой голос. Нажмите «Сохранить» после
-изменений. API-ключ шифруется DPAPI для текущего пользователя Windows; перенос
-файла настроек другому пользователю потребует повторного ввода ключа. Полный
-ответ сервера и ключ в журнал не записываются. Ошибки сервера показывают HTTP-код.
-
-Формат совместимого запроса: [официальная документация OpenAI](https://developers.openai.com/api/reference/resources/audio/subresources/speech/methods/create).
-
-## Захват и игры
-
-- Захватывается монитор под курсором; выделять через границы мониторов нельзя.
-- В режиме «Автоматически» сначала используется DXGI Desktop Duplication,
-  при ошибке — GDI. Метод можно выбрать вручную.
-- Окно выделения показывает кадр, захваченный **до** появления окна. Игра
-  продолжает работать и не ставится на паузу.
-- Эксклюзивный полноэкранный режим, античиты, HDR, защищённое содержимое и
-  переключение видеорежимов могут мешать захвату или приводить к потере фокуса.
-  Универсальность для всех игр не гарантируется. Тестирование в играх выполняет пользователь.
-- HDR сейчас не имеет отдельной коррекции тонов; для нечитаемого кадра попробуйте SDR.
-- Если кадр чёрный, смените метод захвата или режим игры на безрамочный.
-- Программа не внедряет DLL в игру и не устанавливает драйверы.
-- Если игра запущена от администратора, может потребоваться тот же уровень прав
-  для утилиты. Во время диагностики `witcher.exe` (The Witcher Enhanced Edition)
-  работал без повышения прав. Действия в самой игре автоматическими тестами не выполняются.
-
-## Данные и диагностика
-
-Снимки обрабатываются в памяти, OCR выполняется локально. Системный TTS не
-отправляет текст в сеть. Edge TTS отправляет его Microsoft, серверный TTS —
-по заданному адресу. Настройки и журнал находятся в
-`%LOCALAPPDATA%/ScreenReader`. Журнал не содержит снимков или распознанного текста.
-Кнопка «Открыть журнал» открывает его в Блокноте.
-
-Измеряется время от завершения выделения до запуска аудиоплеера, отдельно — OCR.
-Это программная метрика: реальное появление звука зависит также от аудиоустройства.
-
-Edge TTS — потребительский сервис, протокол может меняться. Клиент выделен в
-отдельную DLL. При обрыве до первого аудиопакета выполняется до трёх попыток.
-После получения первого аудиопакета автоматического повтора нет, чтобы
-не повторять уже произнесённые фразы. Кнопка «Обновить» загружает голоса и
-корректирует смещение часов по времени сервера.
-
-## Сборка
-
-Требуется .NET 10 SDK. Версии зависимостей зафиксированы в проектах.
+Use .NET 10 SDK:
 
 ```powershell
 dotnet build src/ScreenReader.App -c Release
-dotnet run --project src/ScreenReader.App
-./build.ps1
+dotnet run --project tests/ScreenReader.Checks -- --devices --windows --ui
+./build-installer.ps1
 ```
 
-`build.ps1` выпускает переносимую x64-сборку с runtime в `artifacts`.
-Для выпуска в другую папку используйте параметр `-OutputDirectory`.
+`ScreenReader.Speech` defines the provider contract. Register new implementations
+through `SpeechProviderRegistry` without changing capture, OCR, cancellation or
+the audio pipeline. The shared player supports MP3 and PCM/Float32 WAV.
 
-Установщик Inno Setup собирается командой `./build-installer.ps1`. Настройки
-продукта находятся в `installer/AppConfig.iss`, общий механизм обновления —
-в `installer/Upgrade.iss`. Для следующих выпусков сохраняйте AppId и меняйте
-версию в `Directory.Build.props`: прежняя зарегистрированная версия удаляется
-перед установкой новой, а пользовательские настройки сохраняются. Подробности
-повторного использования шаблона и тестирования: `installer/README.md`.
+The icon has an editable SVG source and 16–256 px ICO variants. Regenerate it with
+`node tools/build-icons.cjs [path-to-sharp]`; generated assets are already included.
 
-Проверки:
+See `THIRD-PARTY-NOTICES.md` for dependency licenses.
 
-```powershell
-dotnet run --project tests/ScreenReader.Checks
-dotnet run --project tests/ScreenReader.Checks -- --ocr --online --audio --capture --ui
-```
+## Cache and queue
 
-Без параметров проверяются протокол, эталонные токены, Unicode и координаты.
-Также проверяются переключатель запуска/остановки, распознавание сочетаний,
-WAV, регистрация провайдеров, совместимый HTTP-запрос на тестовом обработчике,
-отмена запроса, шифрование ключа и миграция прежних настроек.
-`--ocr` использует искусственные изображения. `--online` отправляет две тестовые
-фразы Microsoft без воспроизведения. `--audio` проверяет декодер, воспроизведение с
-нулевой громкостью и отмену. `--capture` проверяет оба способа захвата рабочего
-стола без сохранения снимков. `--ui` создаёт PNG настроек в `artifacts`.
-`--overlay` проверяет отрисовку синтетического кадра. `--overlay-window` на полсекунды
-показывает контрольное цветное окно и проверяет его пиксели через DXGI и GDI.
-`--dmitry` отдельно проверяет доступность голоса Дмитрия; при сбое сервиса проверка
-возвращает ненулевой код, не подменяя голос другим.
-`--focus-window` создаёт контрольное окно, сворачивает его и проверяет
-восстановление после закрытия выделения. Игры этим тестом не запускаются.
-`--windows` проверяет реальные локальные голоса и WAV-воспроизведение с нулевой
-громкостью. `--hotkey-service` проверяет установку, приостановку и переключение
-игрового хука на обычную регистрацию. Клавиши в игру тестами не отправляются.
-`--hotkey-input` дополнительно отправляет тестовое сочетание только когда
-собственное контрольное окно успешно стало активным; иначе проверка пропускается
-без отправки ввода другому приложению.
-`--devices` проверяет выбранный WASAPI-выход с нулевой громкостью и отсутствие
-изменения системной громкости. `--ui` также проверяет английскую локализацию всех
-вкладок и сохранение параметров при смене языка.
+Enable caching on the Cache tab and save settings. Caching is off by default.
+Completed readings persist in `%LOCALAPPDATA%\ScreenReader\cache`, including
+original text, translation, detected gender and audio. Exact text and matching
+translation, genderization and TTS settings reuse the saved track without
+provider requests. Output device changes do not invalidate audio. Cancelled or
+failed readings are never saved.
 
-## Изменения 0.5
+Select an entry to inspect its text and translation, play it again, delete it,
+or clear the entire cache with one button. Replay joins the end of the queue.
+Disabling caching preserves existing entries. There is currently no automatic
+size limit.
 
-- Выбор устройства воспроизведения по постоянному ID, общий для всех TTS.
-- Четыре вкладки вместо длинной страницы настроек.
-- Русский и английский интерфейсы, включая меню трея, статусы и ошибки.
-- Собственная иконка рассказчика: раскрытая книга и символ речи, SVG/PNG/ICO.
-- Двуязычный установщик Inno Setup с удалением прежней установленной версии.
-- Постоянный AppId, отдельная конфигурация продукта и общий модуль обновления.
-- Английская инструкция: `README.en.md`.
+The Queue tab shows active jobs in submission order, their text, submission
+time and processing stage. Completed jobs disappear. Cancel the current job
+or the entire queue using the buttons on this tab.
 
-## Изменения 0.4
+## LLM translation
 
-- Одно сочетание запускает работу в покое и останавливает её во время выполнения.
-- Игровой режим глобальной клавиши работает через отдельный поток хука Windows.
-- Провайдеры: Windows TTS, Edge TTS, OpenAI-совместимый сервер.
-- Независимый контракт `ScreenReader.Speech` и реестр `SpeechProviderRegistry`.
-- Поддержка MP3 и WAV/PCM в общем плеере; отдельный голос для каждого провайдера.
-- Полный адрес, модель, голос, формат и защищённый API-ключ сервера в настройках.
+Enable **Translation → Translate before speaking**, choose LM Studio, Ollama or
+Custom OpenAI API, then refresh models or enter a model ID. Base URLs default to
+http://127.0.0.1:1234/v1, http://127.0.0.1:11434 and https://api.openai.com/v1.
+Start the local server and install/load a chat model before refreshing.
 
-## Изменения 0.3
+The target language (default ru-RU) controls the translation prompt and voice list,
+independently of OCR language. Select a suitable voice on Speech after changing it.
+Choose Russian, English, Simplified Chinese, Japanese, Spanish, Korean, French or
+German from the editable language menu, or enter another locale code manually.
+These eight languages are also listed in Recognition; each requires its Windows
+OCR package. Edge TTS includes male and female voice defaults for all eight
+languages and loads the full voice list from the service when refreshed.
+The system prompt supports {targetLanguage}; source text is a separate user message.
+Temperature defaults to 0.2 and can be omitted for models that do not support it.
+The request timeout defaults to 120 seconds. URL, model and encrypted key are saved
+separately for each provider. Save to apply to screen capture; Listen uses current
+controls and shows the translation separately from the source.
 
-- Переносы OCR склеиваются пробелом, если следующая строка не начинается с
-  заглавной буквы; результат одинаков для предварительного просмотра и TTS.
-- Перед захватом запоминаются исходное окно и его процесс. После выделения или
-  отмены восстанавливаются состояние и фокус до продолжения обработки.
-- Следующий захват ждёт завершения восстановления предыдущего, чтобы старое
-  задание не забирало фокус у нового окна выделения.
-- В живой проверке 2 ноября 2026 года Дмитрий вернул корректный MP3 в трёх
-  последовательных запросах, включая запрос после обновления списка голосов.
-  Код не подменяет его Светланой; доступность зависит от сервиса Edge TTS.
+Translation is off by default for existing settings. When enabled, source text is
+sent to the configured LLM server and only the translation is sent to TTS. Empty,
+truncated and failed translations stop speech. The usual stop hotkey also cancels
+translation. Text, translations and API keys are not written to the diagnostic log.
 
-## Исправления 0.2
+Protocol references: [LM Studio](https://lmstudio.ai/docs/developer/openai-compat),
+[Ollama chat](https://docs.ollama.com/api/chat),
+[Ollama models](https://docs.ollama.com/api/tags).
 
-- DXGI больше не принимает уведомление только о курсоре (`LastPresentTime = 0`)
-  за готовый снимок. Такие уведомления давали полностью чёрное изображение.
-- TTS отправляет полное служебное имя голоса и формат конверта Edge.
-- Добавлены безопасные повторы до первого аудио и сообщение о конкретном голосе,
-  для которого сервис не вернул аудио.
-- В журнале TTS сохраняются имя голоса, число попыток и стадия обрыва, без текста.
-- После смены метода захвата интерфейс напоминает о сохранении настройки.
+## Set up Ollama and TranslateGemma
 
-При диагностике версии 0.2 Дмитрий не возвращал аудио и в исходной библиотеке
-`edge-tts` 7.3.1, тогда как Светлана работала. Во время проверки 0.3 сервис снова
-вернул аудио Дмитрия. Поэтому восстановление его доступности не считается
-результатом исправления протокола в 0.3; при повторении сбоя остаются повторы и
-диагностика конкретного голоса.
+Open **Ollama** to check the local server, installed models, RAM and dedicated VRAM. **Install / download model** downloads the official installer if needed, installs Ollama for the current user, starts the server and pulls the selected TranslateGemma through the streaming API. Downloads show percentages and bytes; installation shows an activity indicator. Downloads can be cancelled and retried. Installation is allowed to finish safely.
 
-## Архитектура
+Available sizes: **4B (~3.3 GB)**, **12B (~8.1 GB)** and **27B (~17 GB)**. Automatic selection recommends 12B with at least 16 GB RAM and 12 GB VRAM, 27B with at least 32 GB RAM and 24 GB VRAM, otherwise 4B to limit CPU latency. These are conservative guidelines with room for the system and context, not GPU compatibility guarantees. Manual selection is available. Ollama itself needs about 4 GB of disk space.
 
-- `ScreenReader.Speech`: `ISpeechProvider`, `SpeechRequest`, `SpeechVoice`, формат
-  аудио, OpenAI-совместимый HTTP-клиент; этот проект не зависит от Windows и Edge.
-- `ScreenReader.Edge`: WebSocket-клиент, список голосов, токен v2.
-- `ScreenReader.App`: `IScreenCapture`, `IOcrProvider`, `ITextTransform`, `IAudioPlayer`.
-- `ReadingController`: порядок этапов, отмена заданий, единственный аудиопоток.
-- `IdentityTextTransform`: базовая обработка текста; `LlmTranslationClient` выполняет перевод перед TTS.
-- Для нового провайдера реализуйте `ISpeechProvider` и зарегистрируйте фабрику
-  через `SpeechProviderRegistry.Register`. Конвейер захвата/OCR/отмены менять не нужно.
-  Голоса хранятся по ID провайдера; фабрика задаёт владение экземпляром.
+After downloading, click **Use for translation**, then **Save**. This enables translation and selects the local model while preserving other provider and genderization profiles. Ollama appears first in both LLM lists; existing saved provider selections remain unchanged.
 
-Перевод, профили игр, постоянная область субтитров и автоматическое чтение
-сейчас не реализованы. См. `THIRD-PARTY-NOTICES.md` для лицензий зависимостей.
-
-## Кэш и очередь
-
-На вкладке «Кэш» включите кэш переводов и озвучиваний и нажмите «Сохранить».
-По умолчанию кэш выключен. Успешно завершённые задачи сохраняются в
-`%LOCALAPPDATA%\ScreenReader\cache`: исходный текст, перевод, определённый пол
-и готовое аудио. Данные сохраняются между запусками приложения.
-
-При точном совпадении распознанного текста и настроек перевода, гендеризации
-и TTS воспроизводится сохранённая дорожка без обращения к этим сервисам.
-Изменение языка, модели, промпта, голоса, скорости или настроек голосовых ролей
-создаёт отдельный вариант. Изменение устройства вывода не сбрасывает кэш.
-Отменённые задачи и задачи с ошибкой не сохраняются.
-
-Выберите запись для просмотра исходного текста и результата. Можно повторно
-воспроизвести её, удалить отдельно или очистить весь кэш одной кнопкой.
-Повторное воспроизведение добавляется в конец очереди. Отключение кэша
-сохраняет существующие записи. Автоматического ограничения размера пока нет.
-
-Вкладка «Очередь» показывает активные задачи в порядке поступления: текст,
-время добавления и текущий этап. Завершённые задачи исчезают из списка.
-Кнопки позволяют отменить текущую задачу или всю очередь.
-
-## Перевод через LLM
-
-На вкладке «Перевод» включите «Переводить перед озвучиванием», выберите LM Studio,
-Ollama или Custom OpenAI API. Нажмите «Обновить» рядом с моделью или введите её ID
-вручную. Перед этим запустите локальный сервер и установите/загрузите чат-модель.
-Адреса по умолчанию: LM Studio — http://127.0.0.1:1234/v1,
-Ollama — http://127.0.0.1:11434, OpenAI — https://api.openai.com/v1.
-Для совместимых серверов укажите собственный базовый URL, включая /v1.
-
-Язык перевода (по умолчанию ru-RU) не зависит от языка OCR и определяет список
-голосов. После его изменения выберите подходящий голос на вкладке «Озвучивание».
-Язык можно выбрать из выпадающего меню с восемью языками или ввести код вручную.
-Для всех восьми языков предусмотрены мужские и женские голоса Edge TTS;
-при обновлении загружается полный список голосов сервиса.
-Системный промпт поддерживает подстановку {targetLanguage}; исходный текст
-отправляется отдельным сообщением пользователя. Температура по умолчанию — 0.2;
-её отправку можно отключить, если модель не поддерживает параметр. Таймаут —
-120 секунд. Адрес, модель и зашифрованный API-ключ хранятся отдельно для каждого
-провайдера. Нажмите «Сохранить» для применения к захвату экрана.
-
-Кнопка «Прослушать» применяет текущие настройки и показывает перевод отдельно
-от исходного текста. Ошибка, пустой или обрезанный ответ LLM останавливают чтение.
-Горячая клавиша остановки отменяет и запрос перевода. По умолчанию перевод выключен.
-При включении исходный текст отправляется указанному LLM-серверу, затем перевод —
-выбранному TTS. Тексты, переводы и ключи в диагностический журнал не записываются.
-
-Документация протоколов: [LM Studio](https://lmstudio.ai/docs/developer/openai-compat),
-[чат Ollama](https://docs.ollama.com/api/chat),
-[модели Ollama](https://docs.ollama.com/api/tags).
-
-## Подготовка Ollama и TranslateGemma
-
-Откройте вкладку **Ollama**: приложение проверит локальный сервер, установленные модели, ОЗУ и выделенную видеопамять. Кнопка **«Установить / скачать модель»** скачивает официальный установщик при отсутствии Ollama, устанавливает её для текущего пользователя, запускает сервер и загружает выбранную TranslateGemma через потоковый API. Во время скачивания видны проценты и объём; во время установки — индикатор ожидания. Скачивание можно остановить и повторить. Установщик не прерывается посередине.
-
-Варианты: **4B (~3,3 ГБ)**, **12B (~8,1 ГБ)** и **27B (~17 ГБ)**. Автоподбор рекомендует 12B при ОЗУ от 16 ГБ и видеопамяти от 12 ГБ, 27B при ОЗУ от 32 ГБ и видеопамяти от 24 ГБ; иначе — 4B для меньшей задержки на CPU. Это ориентир с запасом для системы и контекста, а не гарантия совместимости GPU. Можно выбрать размер вручную. Дополнительно для Ollama требуется около 4 ГБ на диске.
-
-После загрузки нажмите **«Использовать для перевода»**, затем **«Сохранить»**. Настройка включает перевод и выбирает локальную модель; профили других провайдеров и гендеризации сохраняются. Ollama находится первой в обоих списках LLM; ранее сохранённый выбор провайдера не меняется.
-
-Размеры моделей: [официальный каталог TranslateGemma](https://ollama.com/library/translategemma/tags). Установка: [Ollama для Windows](https://docs.ollama.com/windows).
+Model sizes: [official TranslateGemma catalog](https://ollama.com/library/translategemma/tags). Installation: [Ollama for Windows](https://docs.ollama.com/windows).
