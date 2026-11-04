@@ -107,7 +107,7 @@ public sealed class HotkeyService : IDisposable
     private void Register(AppSettings settings)
     {
         var bindings=Bindings(settings).ToArray();
-        var hooked=bindings.Where(b=>settings.HotkeyMode==HotkeyMode.GameHook || b.Key.IsMouse || b.Key.Key==0x7B).ToArray();
+        var hooked=bindings.Where(b=>settings.ExclusiveHotkeys || settings.HotkeyMode==HotkeyMode.GameHook || b.Key.IsMouse || b.Key.Key==0x7B).ToArray();
         if (settings.HotkeyMode==HotkeyMode.Registered)
         {
             foreach (var (action,key) in bindings.Except(hooked))
@@ -163,7 +163,7 @@ public sealed class HotkeyService : IDisposable
             if (result.Trigger) Dispatch(action);
             suppress|=result.Suppress;
         }
-        return suppress;
+        return suppress && current?.ExclusiveHotkeys==true;
     }
     private IntPtr OnMessage(IntPtr hwnd,int message,IntPtr wParam,IntPtr lParam,ref bool handled)
     {

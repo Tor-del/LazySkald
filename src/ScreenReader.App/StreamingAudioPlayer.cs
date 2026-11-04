@@ -10,12 +10,14 @@ public interface IAudioPlayer
     Task PlayAsync(IAsyncEnumerable<byte[]> audio,Action started,CancellationToken cancellationToken);
     Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,Action started,CancellationToken cancellationToken);
     Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,string deviceId,Action started,CancellationToken cancellationToken)=>PlayAsync(audio,format,started,cancellationToken);
+    Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,string deviceId,float volume,Action started,CancellationToken cancellationToken)=>PlayAsync(audio,format,deviceId,started,cancellationToken);
 }
 public sealed class StreamingAudioPlayer(float volume = 1f) : IAudioPlayer
 {
     public Task PlayAsync(IAsyncEnumerable<byte[]> audio,Action started,CancellationToken cancellationToken)=>PlayAsync(audio,SpeechAudioFormat.Mp3,started,cancellationToken);
     public Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,Action started,CancellationToken cancellationToken)=>PlayAsync(audio,format,"",started,cancellationToken);
-    public async Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,string deviceId,Action started,CancellationToken cancellationToken)
+    public Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,string deviceId,Action started,CancellationToken cancellationToken)=>PlayAsync(audio,format,deviceId,1f,started,cancellationToken);
+    public async Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,string deviceId,float gain,Action started,CancellationToken cancellationToken)
     {
         using var stop = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var channel = Channel.CreateBounded<byte[]>(new BoundedChannelOptions(16) { SingleReader=true,SingleWriter=true,FullMode=BoundedChannelFullMode.Wait });
@@ -28,7 +30,7 @@ public sealed class StreamingAudioPlayer(float volume = 1f) : IAudioPlayer
         },CancellationToken.None);
         var consumer = Task.Run(() =>
         {
-            try { DecodeAndPlay(channel.Reader,format,deviceId,started,stop.Token); }
+            try { DecodeAndPlay(channel.Reader,format,deviceId,gain,started,stop.Token); }
             finally { stop.Cancel(); }
         },CancellationToken.None);
         try { await Task.WhenAll(producer,consumer).ConfigureAwait(false); }
@@ -42,7 +44,7 @@ public sealed class StreamingAudioPlayer(float volume = 1f) : IAudioPlayer
             throw;
         }
     }
-    private void DecodeAndPlay(ChannelReader<byte[]> reader,SpeechAudioFormat format,string deviceId,Action started,CancellationToken ct)
+    private void DecodeAndPlay(ChannelReader<byte[]> reader,SpeechAudioFormat format,string deviceId,float roleGain,Action started,CancellationToken ct)
     {
         using var stream = new ChunkStream(reader,ct);
         using var device=AudioOutputDevices.Resolve(deviceId);
@@ -95,7 +97,7 @@ public sealed class StreamingAudioPlayer(float volume = 1f) : IAudioPlayer
         void InitOutput(BufferedWaveProvider source)
         {
             // Software gain: never change the user's endpoint/master volume.
-            var gain=new VolumeSampleProvider(source.ToSampleProvider()) { Volume=Math.Clamp(volume,0,1) };
+            var gain=new VolumeSampleProvider(source.ToSampleProvider()) { Volume=Math.Clamp(volume*roleGain,0,1) };
             output.Init(gain.ToWaveProvider());
         }
     }

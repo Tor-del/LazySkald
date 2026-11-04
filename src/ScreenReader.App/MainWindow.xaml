@@ -116,6 +116,7 @@
        <WrapPanel Margin="0,8,0,8">
         <Button x:Name="AddFemaleRoleButton" Content="{DynamicResource speech.addFemale}" Click="AddFemaleRole"/>
         <Button x:Name="AddMaleRoleButton" Content="{DynamicResource speech.addMale}" Click="AddMaleRole"/>
+        <Button x:Name="AddFallbackRoleButton" Content="{DynamicResource speech.addFallback}" Click="AddFallbackRole"/>
         <Button x:Name="RemoveRoleButton" Content="{DynamicResource speech.removeRole}" Click="RemoveSpeechRole"/>
        </WrapPanel>
        <TextBlock Text="{DynamicResource speech.rolesHint}" TextWrapping="Wrap" Foreground="{StaticResource FluentSecondary}" FontSize="12"/>
@@ -132,6 +133,9 @@
        <TextBlock Text="{DynamicResource label.format}" Style="{StaticResource FieldLabel}"/><ComboBox x:Name="AudioFormatBox" Margin="0,0,0,20"/>
       </StackPanel>
       <TextBlock x:Name="VoiceHint" Foreground="{StaticResource FluentSecondary}" FontSize="12" TextWrapping="Wrap" Margin="0,6,0,20"/>
+      <DockPanel><TextBlock Text="{DynamicResource speech.volume}" Style="{StaticResource FieldLabel}"/><TextBlock HorizontalAlignment="Right" Text="{Binding Value, ElementName=VolumeSlider, StringFormat={}{0:0}%}"/></DockPanel>
+      <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" Value="100" TickFrequency="1" IsSnapToTickEnabled="True" Margin="0,5,0,16"/>
+      <TextBlock Text="{DynamicResource speech.fallbackHint}" TextWrapping="Wrap" Margin="0,0,0,16" FontSize="12"/>
       <DockPanel><TextBlock Text="{DynamicResource label.speed}" Style="{StaticResource FieldLabel}"/><TextBlock x:Name="RateLabel" HorizontalAlignment="Right"/></DockPanel>
       <Slider x:Name="RateSlider" Minimum="-50" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="RateChanged" Margin="0,5,0,16"/>
       <DockPanel Margin="0,0,0,8"><Button DockPanel.Dock="Right" Content="{DynamicResource button.refresh}" Click="RefreshAudioDevices" Padding="10,3" MinHeight="28" Margin="12,0,0,0"/><TextBlock Text="{DynamicResource label.device}" VerticalAlignment="Center" Margin="0" Style="{StaticResource FieldLabel}"/></DockPanel>
@@ -199,8 +203,25 @@
       <TextBlock Text="{DynamicResource label.hotkeyCancelAll}" Style="{StaticResource FieldLabel}"/>
       <TextBox x:Name="CancelAllKeyBox" IsReadOnly="True" PreviewKeyDown="CaptureKeyDown" PreviewMouseDown="CaptureMouseDown" ContextMenu="{x:Null}" ToolTip="{DynamicResource hint.hotkeyField}" Margin="0,0,0,20"/>
       <TextBlock Text="{DynamicResource hint.hotkey}" FontSize="12" Foreground="{StaticResource FluentSecondary}" TextWrapping="Wrap" Margin="0,6,0,20"/>
-      <TextBlock Text="{DynamicResource label.hotkeyMode}" Style="{StaticResource FieldLabel}"/><ComboBox x:Name="HotkeyModeBox" DisplayMemberPath="Name" Margin="0,0,0,20"/>
-      <TextBlock Text="{DynamicResource hint.game}" TextWrapping="Wrap" Foreground="{StaticResource FluentSecondary}" FontSize="12" Margin="0,6,0,20"/>
+      <CheckBox x:Name="ExclusiveHotkeysBox" Content="{DynamicResource controls.exclusive}" Margin="0,0,0,8"/>
+      <TextBlock Text="{DynamicResource controls.exclusiveHint}" TextWrapping="Wrap" Margin="0,0,0,16" FontSize="12"/>
+      <TextBlock x:Name="ExclusiveHotkeyModeHint" Text="{DynamicResource controls.exclusiveMode}" TextWrapping="Wrap" Foreground="{StaticResource FluentSecondary}" FontSize="12" Margin="0,0,0,20">
+       <TextBlock.Style>
+        <Style TargetType="TextBlock">
+         <Setter Property="Visibility" Value="Collapsed"/>
+         <Style.Triggers><DataTrigger Binding="{Binding IsChecked, ElementName=ExclusiveHotkeysBox}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>
+        </Style>
+       </TextBlock.Style>
+      </TextBlock>
+      <StackPanel x:Name="HotkeyModePanel">
+       <StackPanel.Style>
+        <Style TargetType="StackPanel">
+         <Style.Triggers><DataTrigger Binding="{Binding IsChecked, ElementName=ExclusiveHotkeysBox}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
+        </Style>
+       </StackPanel.Style>
+       <TextBlock Text="{DynamicResource label.hotkeyMode}" Style="{StaticResource FieldLabel}"/><ComboBox x:Name="HotkeyModeBox" DisplayMemberPath="Name" Margin="0,0,0,20"/>
+       <TextBlock Text="{DynamicResource hint.game}" TextWrapping="Wrap" Foreground="{StaticResource FluentSecondary}" FontSize="12" Margin="0,6,0,20"/>
+      </StackPanel>
      </StackPanel>
     </ScrollViewer>
    </TabItem>

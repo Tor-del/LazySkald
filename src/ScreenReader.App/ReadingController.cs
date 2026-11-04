@@ -68,7 +68,7 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
             System.Drawing.Rectangle? selected=saved?.Region;
             if (saved is null)
             {
-                window=new SelectionWindow(snapshot,originalWindow); overlay=window;
+                window=new SelectionWindow(snapshot,originalWindow,settings.ExclusiveHotkeys); overlay=window;
                 window.Show();
                 using var cancellation=token.Register(()=>window.Dispatcher.Invoke(() =>
                 {
@@ -139,16 +139,47 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
         GenderDetected?.Invoke(gender);
         var speech=settings.SpeechFor(gender);
         Report(UiText.T("status.preparing",providers.Get(speech.SpeechProviderId).DisplayName),token);
-        var lease=providers.Acquire(speech);
-        var request=new SpeechRequest(prepared,speech.SelectedVoice,settings.Translation.Enabled ? settings.Translation.TargetLanguage : settings.Language,speech.RatePercent,gender);
-        return new(text,prepared,gender,timer,ocrMs,cacheKey,cacheRevision,null,new PreparedSpeech(lease,request,token),speech);
+        PreparedSpeech Create(AppSettings voice)
+        {
+            var lease=providers.Acquire(voice);
+            return new PreparedSpeech(lease,new SpeechRequest(prepared,voice.SelectedVoice,settings.Translation.Enabled ? settings.Translation.TargetLanguage : settings.Language,voice.RatePercent,gender),token);
+        }
+        PreparedSpeech pending;
+        bool usedFallback=false;
+        try { pending=Create(speech); }
+        catch (Exception) when (!token.IsCancellationRequested && settings.FallbackRole is not null)
+        {
+            AppLog.Write("Не удалось создать основной провайдер; используется резервный.");
+            Report(UiText.T("speech.fallbackWorking"),token);
+            speech=settings.FallbackRole.ApplyTo(settings); pending=Create(speech); cacheKey=null; usedFallback=true;
+        }
+        return new(text,prepared,gender,timer,ocrMs,cacheKey,cacheRevision,null,pending,speech,usedFallback);
     }
     private sealed record PreparedReading(string Text,string SpokenText,SpeakerGender Gender,Stopwatch Timer,long OcrMs,
-        string? CacheKey,long CacheRevision,CachedReading? Cached,PreparedSpeech? Speech,AppSettings VoiceSettings) : IAsyncDisposable
+        string? CacheKey,long CacheRevision,CachedReading? Cached,PreparedSpeech? Speech,AppSettings VoiceSettings,bool UsedFallback=false) : IAsyncDisposable
     {
         public ValueTask DisposeAsync()=>Speech?.DisposeAsync() ?? ValueTask.CompletedTask;
     }
     private async Task PlayPreparedAsync(PreparedReading reading,AppSettings settings,CancellationToken token)
+    {
+        bool started=false;
+        try { await PlayPreparedCoreAsync(reading,settings,()=>started=true,token); }
+        catch (Exception error) when (!started && !token.IsCancellationRequested && reading.Cached is null && !reading.UsedFallback && settings.FallbackRole is not null)
+        {
+            await reading.Speech!.DisposeAsync();
+            await PlayFallbackAsync(reading,settings,error,token);
+        }
+    }
+    private async Task PlayFallbackAsync(PreparedReading reading,AppSettings settings,Exception error,CancellationToken token)
+    {
+        AppLog.Write("Основной голос недоступен; используется резервный.",error);
+        Report(UiText.T("speech.fallbackWorking"),token);
+        var speech=settings.FallbackRole!.ApplyTo(settings);
+        var request=new SpeechRequest(reading.SpokenText,speech.SelectedVoice,settings.Translation.Enabled ? settings.Translation.TargetLanguage : settings.Language,speech.RatePercent,reading.Gender);
+        await using var fallback=new PreparedSpeech(providers.Acquire(speech),request,token);
+        await PlayPreparedCoreAsync(reading with { Speech=fallback,VoiceSettings=speech,CacheKey=null },settings,()=>{},token);
+    }
+    private async Task PlayPreparedCoreAsync(PreparedReading reading,AppSettings settings,Action started,CancellationToken token)
     {
         if (reading.Cached is { } cached) { await PlayCachedCoreAsync(cached,settings,token); return; }
         TextRecognized?.Invoke(reading.Text);
@@ -168,8 +199,9 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
                 }
                 complete=true;
             }
-            await audio.PlayAsync(Record(token),reading.Speech!.Format,reading.VoiceSettings.AudioOutputDeviceId,() =>
+            await audio.PlayAsync(Record(token),reading.Speech!.Format,reading.VoiceSettings.AudioOutputDeviceId,reading.VoiceSettings.VolumePercent/100f,() =>
             {
+                started();
                 long firstSound=reading.Timer.ElapsedMilliseconds;
                 long ocrMs=reading.OcrMs;
                 AppLog.Write($"До запуска аудио: {firstSound} мс; OCR: {ocrMs} мс");
@@ -207,7 +239,7 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
                 }
             }
             Report(UiText.T("cache.playing"),token);
-            await audio.PlayAsync(Chunks(token),entry.Format,settings.SpeechFor(entry.Gender).AudioOutputDeviceId,()=>{},token);
+            await audio.PlayAsync(Chunks(token),entry.Format,settings.SpeechFor(entry.Gender).AudioOutputDeviceId,settings.SpeechFor(entry.Gender).VolumePercent/100f,()=>{},token);
             Report(UiText.T("ready"),token);
         }
         finally { playbackGate.Release(); }

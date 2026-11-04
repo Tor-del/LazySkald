@@ -197,3 +197,9 @@ Available sizes: **4B (~3.3 GB)**, **12B (~8.1 GB)** and **27B (~17 GB)**. Autom
 After downloading, click **Use for translation**, then **Save**. This enables translation and selects the local model while preserving other provider and genderization profiles. Ollama appears first in both LLM lists; existing saved provider selections remain unchanged.
 
 Model sizes: [official TranslateGemma catalog](https://ollama.com/library/translategemma/tags). Installation: [Ollama for Windows](https://docs.ollama.com/windows).
+
+Each speech profile has a 0–100% software volume slider, applied during playback without changing system volume or cached audio. **Add fallback voice** creates an optional shared profile with its own provider, voice, volume, rate and output device. It is attempted once if primary speech fails before playback starts; cancellation and failures after playback starts do not trigger fallback. Fallback audio does not replace primary audio in the cache. Remove the profile to disable it.
+
+**Controls → Exclusively intercept hotkeys** (enabled by default) uses low-level hooks in either mode to suppress the assigned key/button, repeats and release. Selection also consumes Escape and both left-click edges before restoring focus. Modifier keys are not separately blocked. Disabling it passes hooked input through; standard mode retains RegisterHotKey behavior. Suppression is verified for Windows events and cannot guarantee blocking applications that read input devices directly.
+
+When exclusive interception is enabled, the mode selector is replaced by an explanation that low-level hooks are active. Disabling the option restores access to the previously selected mode.

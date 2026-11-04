@@ -15,6 +15,9 @@ public enum CaptureMode { Auto, DesktopDuplication, Gdi }
 public enum HotkeyMode { GameHook, Registered }
 public sealed record AppSettings
 {
+    public int VolumePercent { get; init; }=100;
+    public SpeechRoleSettings? FallbackRole { get; init; }
+    public bool ExclusiveHotkeys { get; init; }=true;
     public bool CacheEnabled { get; init; }
     public string OcrProviderId { get; init; }="windows";
     public bool OcrReplaceLineBreaks { get; init; }=true;
@@ -71,7 +74,7 @@ public static class SettingsStore
         try
         {
             var value = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(SettingsPath)) ?? new();
-            if (value.FemaleRole?.IsStructurallyValid()==false || value.MaleRole?.IsStructurallyValid()==false || value.Genderization is null || value.Genderization.Providers is null || value.FemaleProviderVoices is null || value.MaleProviderVoices is null || value.OcrProviderId!="windows" || value.Translation is null || value.Translation.Providers is null || string.IsNullOrWhiteSpace(value.Language) || string.IsNullOrWhiteSpace(value.SpeechProviderId) || value.RatePercent is < -50 or > 100 || !Enum.IsDefined(value.CaptureMode) || !Enum.IsDefined(value.HotkeyMode) || !Enum.IsDefined(value.OpenAiFormat))
+            if (value.VolumePercent is < 0 or > 100 || value.FallbackRole?.IsStructurallyValid()==false || value.FemaleRole?.IsStructurallyValid()==false || value.MaleRole?.IsStructurallyValid()==false || value.Genderization is null || value.Genderization.Providers is null || value.FemaleProviderVoices is null || value.MaleProviderVoices is null || value.OcrProviderId!="windows" || value.Translation is null || value.Translation.Providers is null || string.IsNullOrWhiteSpace(value.Language) || string.IsNullOrWhiteSpace(value.SpeechProviderId) || value.RatePercent is < -50 or > 100 || !Enum.IsDefined(value.CaptureMode) || !Enum.IsDefined(value.HotkeyMode) || !Enum.IsDefined(value.OpenAiFormat))
                 throw new InvalidDataException("Некорректные параметры.");
             return value;
         }

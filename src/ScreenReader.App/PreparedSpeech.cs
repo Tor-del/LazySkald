@@ -8,6 +8,7 @@ internal sealed class PreparedSpeech : IAsyncDisposable
     private readonly Channel<byte[]> chunks=Channel.CreateUnbounded<byte[]>(new() { SingleReader=true,SingleWriter=true });
     private readonly CancellationTokenSource cancellation;
     private readonly Task producer;
+    private int disposed;
     public SpeechAudioFormat Format { get; }
 
     public PreparedSpeech(SpeechProviderLease lease,SpeechRequest request,CancellationToken token)
@@ -33,6 +34,7 @@ internal sealed class PreparedSpeech : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref disposed,1)!=0) return;
         cancellation.Cancel();
         await producer;
         while (chunks.Reader.TryRead(out _)) { }

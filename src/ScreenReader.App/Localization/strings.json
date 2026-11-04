@@ -1044,6 +1044,85 @@
   "help.ollama": {
     "ru": "Не знаете, где взять LLM? Откройте вкладку Ollama: там можно легко скачать и установить движок Ollama и выбранную модель. Для установки и скачивания нужен интернет; после настройки модель работает локально на вашем компьютере.",
     "en": "Not sure where to get an LLM? Open the Ollama tab to easily download and install the Ollama engine and your chosen model. Installation and downloads require internet; once set up, the model runs locally on your computer."
+  },
+  "speech.volume": {
+    "ru": "Громкость голоса",
+    "en": "Voice volume",
+    "zh": "语音音量",
+    "ja": "音声の音量",
+    "es": "Volumen de voz",
+    "ko": "음성 볼륨",
+    "fr": "Volume de la voix",
+    "de": "Stimmenlautstärke"
+  },
+  "speech.fallbackRole": {
+    "ru": "Резервный голос",
+    "en": "Fallback voice",
+    "zh": "备用语音",
+    "ja": "予備の音声",
+    "es": "Voz de respaldo",
+    "ko": "예비 음성",
+    "fr": "Voix de secours",
+    "de": "Ersatzstimme"
+  },
+  "speech.addFallback": {
+    "ru": "Добавить резервный голос",
+    "en": "Add fallback voice",
+    "zh": "添加备用语音",
+    "ja": "予備の音声を追加",
+    "es": "Añadir voz de respaldo",
+    "ko": "예비 음성 추가",
+    "fr": "Ajouter une voix de secours",
+    "de": "Ersatzstimme hinzufügen"
+  },
+  "speech.fallbackHint": {
+    "ru": "Резервный голос используется при ошибке основного до начала воспроизведения. Удалите его из списка, чтобы отключить.",
+    "en": "The fallback voice is used if the primary fails before playback starts. Remove it from the list to disable it.",
+    "zh": "主语音在播放开始前失败时使用备用语音。从列表中删除即可禁用。",
+    "ja": "再生開始前に通常の音声でエラーが発生した場合に使います。無効にするには一覧から削除してください。",
+    "es": "Se usa si la voz principal falla antes de comenzar la reproducción. Elimínala de la lista para desactivarla.",
+    "ko": "기본 음성이 재생 시작 전에 실패하면 예비 음성을 사용합니다. 목록에서 삭제하면 비활성화됩니다.",
+    "fr": "Utilisée si la voix principale échoue avant le début de la lecture. Supprimez-la de la liste pour la désactiver.",
+    "de": "Wird verwendet, wenn die Hauptstimme vor Wiedergabebeginn fehlschlägt. Zum Deaktivieren aus der Liste entfernen."
+  },
+  "speech.fallbackWorking": {
+    "ru": "Основной голос недоступен. Подготовка резервного…",
+    "en": "Primary voice unavailable. Preparing fallback…",
+    "zh": "主语音不可用。正在准备备用语音…",
+    "ja": "通常の音声を使用できません。予備の音声を準備中…",
+    "es": "Voz principal no disponible. Preparando respaldo…",
+    "ko": "기본 음성을 사용할 수 없습니다. 예비 음성 준비 중…",
+    "fr": "Voix principale indisponible. Préparation de la voix de secours…",
+    "de": "Hauptstimme nicht verfügbar. Ersatzstimme wird vorbereitet…"
+  },
+  "controls.exclusive": {
+    "ru": "Эксклюзивно перехватывать горячие клавиши",
+    "en": "Exclusively intercept hotkeys",
+    "zh": "独占拦截快捷键",
+    "ja": "ホットキーを排他的に捕捉",
+    "es": "Interceptar atajos de forma exclusiva",
+    "ko": "단축키 독점 가로채기",
+    "fr": "Intercepter les raccourcis exclusivement",
+    "de": "Tastenkürzel exklusiv abfangen"
+  },
+  "controls.exclusiveHint": {
+    "ru": "Перехватывать назначенные клавиши и кнопки, а также Esc и левую кнопку мыши при выделении. Использует хуки независимо от режима. Модификаторы Ctrl/Alt/Shift/Win отдельно не блокируются.",
+    "en": "Suppress assigned keys and buttons, plus Esc and the left mouse button during selection. Uses hooks in either mode. Ctrl/Alt/Shift/Win modifiers are not separately blocked.",
+    "zh": "拦截指定按键和鼠标按钮，以及选区时的 Esc 和鼠标左键。两种模式均使用钩子。不会单独拦截 Ctrl/Alt/Shift/Win。",
+    "ja": "割り当てたキーとボタン、選択中の Esc と左クリックを抑止します。両モードでフックを使います。Ctrl/Alt/Shift/Win 単独は抑止しません。",
+    "es": "Bloquea las teclas y botones asignados, además de Esc y el botón izquierdo al seleccionar. Usa hooks en ambos modos. No bloquea Ctrl/Alt/Shift/Win por separado.",
+    "ko": "지정된 키와 버튼 및 선택 중 Esc와 마우스 왼쪽 버튼을 차단합니다. 두 모드 모두 후크를 사용합니다. Ctrl/Alt/Shift/Win은 개별 차단하지 않습니다.",
+    "fr": "Bloque les touches et boutons assignés, ainsi que Échap et le clic gauche pendant la sélection. Utilise des hooks dans les deux modes. Ctrl/Alt/Maj/Win ne sont pas bloqués séparément.",
+    "de": "Unterdrückt zugewiesene Tasten und Maustasten sowie Esc und die linke Maustaste bei der Auswahl. Verwendet Hooks in beiden Modi. Ctrl/Alt/Shift/Win werden nicht einzeln blockiert."
+  },
+  "controls.exclusiveMode": {
+    "ru": "Используется низкоуровневый хук Windows с подавлением нажатий. Выбор режима доступен, когда эксклюзивный перехват выключен.",
+    "en": "Uses a low-level Windows hook to suppress input. Mode selection is available when exclusive interception is off.",
+    "zh": "使用 Windows 低级钩子拦截输入。关闭独占拦截后可选择模式。",
+    "ja": "Windows の低レベルフックで入力を抑止します。排他的な捕捉をオフにするとモードを選択できます。",
+    "es": "Usa un hook de bajo nivel de Windows para bloquear las pulsaciones. El modo se puede elegir al desactivar la interceptación exclusiva.",
+    "ko": "Windows 저수준 후크로 입력을 차단합니다. 독점 가로채기를 끄면 모드를 선택할 수 있습니다.",
+    "fr": "Utilise un hook Windows de bas niveau pour bloquer les frappes. Le choix du mode est disponible lorsque l’interception exclusive est désactivée.",
+    "de": "Verwendet einen Windows-Hook auf niedriger Ebene, um Eingaben zu unterdrücken. Die Modusauswahl ist bei ausgeschaltetem exklusivem Abfangen verfügbar."
   }
-
 }

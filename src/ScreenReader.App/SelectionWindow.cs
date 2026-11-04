@@ -18,11 +18,13 @@ public sealed class SelectionWindow : Window
     private readonly WpfRectangle selection = new() { Stroke = Brushes.DeepSkyBlue, StrokeThickness = 2, Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(25,0,170,255)), Visibility = Visibility.Collapsed };
     private readonly CapturedScreen screenshot;
     private WpfPoint? start;
+    private SelectionInputHook? inputHook;
+    private Exception? inputFailure;
     private Rectangle? selectedRegion;
     private readonly TaskCompletionSource<Rectangle?> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
     public Task<Rectangle?> Completion => completion.Task;
 
-    public SelectionWindow(CapturedScreen screenshot,IWindowFocusTarget? returnFocus=null)
+    public SelectionWindow(CapturedScreen screenshot,IWindowFocusTarget? returnFocus=null,bool exclusiveInput=false)
     {
         this.screenshot = screenshot;
         WindowStyle = WindowStyle.None; ResizeMode = ResizeMode.NoResize; ShowInTaskbar = false; Topmost = true;
@@ -35,23 +37,49 @@ public sealed class SelectionWindow : Window
         Canvas.SetLeft(hint,20); Canvas.SetTop(hint,20); canvas.Children.Add(hint);
         Content = grid;
         SourceInitialized += (_,_) => SetWindowPos(new WindowInteropHelper(this).Handle,new IntPtr(-1),screenshot.Bounds.X,screenshot.Bounds.Y,screenshot.Bounds.Width,screenshot.Bounds.Height,0x0040);
-        Loaded += (_,_) => { Activate(); Focus(); };
-        PreviewKeyDown += (_,e) => { if (e.Key==Key.Escape) { e.Handled=true; Close(); } };
-        MouseLeftButtonDown += (_,e) => { start=e.GetPosition(canvas); selection.Visibility=Visibility.Visible; CaptureMouse(); Update(e.GetPosition(canvas)); };
+        Loaded += (_,_) =>
+        {
+            Activate(); Focus();
+            if (exclusiveInput)
+            {
+                try
+                {
+                    inputHook=new SelectionInputHook(()=>Dispatcher.BeginInvoke(()=> { if (IsVisible) Close(); }), (down,x,y)=>Dispatcher.BeginInvoke(()=>
+                    {
+                        if (!IsVisible) return;
+                        var point=canvas.PointFromScreen(new WpfPoint(x,y));
+                        if (down) BeginSelection(point); else EndSelection(point);
+                    }));
+                }
+                catch (Exception error) { inputFailure=error; Close(); }
+            }
+        };
+        PreviewKeyDown += (_,e) => { if (!exclusiveInput && e.Key==Key.Escape) { e.Handled=true; Close(); } };
+        MouseLeftButtonDown += (_,e) => { if (!exclusiveInput) { BeginSelection(e.GetPosition(canvas)); CaptureMouse(); } };
         MouseMove += (_,e) => { if (start is not null) Update(e.GetPosition(canvas)); };
         MouseLeftButtonUp += (_,e) =>
         {
-            if (start is not { } origin) return;
-            ReleaseMouseCapture(); var end=e.GetPosition(canvas);
-            var rectangle = SelectionMath.ToPixels(origin.X,origin.Y,end.X,end.Y,canvas.ActualWidth,canvas.ActualHeight,screenshot.Image.Width,screenshot.Image.Height);
-            selectedRegion=rectangle.Width>=4 && rectangle.Height>=4 ? rectangle : null; Close();
+            if (!exclusiveInput) { ReleaseMouseCapture(); EndSelection(e.GetPosition(canvas)); }
         };
         Closed += async (_,_) =>
         {
+            inputHook?.Dispose(); inputHook=null;
             try { if (returnFocus is not null) await returnFocus.RestoreAsync(); }
             catch (Exception e) { AppLog.Write("Не удалось вернуть фокус после выделения.",e); }
-            finally { completion.TrySetResult(selectedRegion); }
+            finally
+            {
+                if (inputFailure is not null) completion.TrySetException(inputFailure);
+                else completion.TrySetResult(selectedRegion);
+            }
         };
+    }
+    private void BeginSelection(WpfPoint point)
+    { start=point; selection.Visibility=Visibility.Visible; Update(point); }
+    private void EndSelection(WpfPoint end)
+    {
+        if (start is not { } origin) return;
+        var rectangle=SelectionMath.ToPixels(origin.X,origin.Y,end.X,end.Y,canvas.ActualWidth,canvas.ActualHeight,screenshot.Image.Width,screenshot.Image.Height);
+        selectedRegion=rectangle.Width>=4 && rectangle.Height>=4 ? rectangle : null; Close();
     }
     private void Update(WpfPoint point)
     {

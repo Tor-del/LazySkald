@@ -51,6 +51,7 @@ public partial class MainWindow : Window
         CaptureModeBox.ItemsSource=new[] { new CaptureChoice(CaptureMode.Auto,UiText.T("capture.auto")),new CaptureChoice(CaptureMode.DesktopDuplication,UiText.T("capture.dxgi")),new CaptureChoice(CaptureMode.Gdi,UiText.T("capture.gdi")) };
         CaptureModeBox.SelectedItem=((IEnumerable<CaptureChoice>)CaptureModeBox.ItemsSource).First(c => c.Mode==owner.Settings.CaptureMode);
         CloseToTrayBox.IsChecked=owner.Settings.MinimizeToTray; StartInTrayBox.IsChecked=owner.Settings.StartInTray; RateSlider.Value=owner.Settings.RatePercent;
+        VolumeSlider.Value=draft.VolumePercent; ExclusiveHotkeysBox.IsChecked=draft.ExclusiveHotkeys;
         RateLabel.Text=$"{owner.Settings.RatePercent:+0;-0;0}%";
         UiLanguageBox.ItemsSource=UiText.Languages;
         UiLanguageBox.SelectedItem=((IEnumerable<UiLanguageChoice>)UiLanguageBox.ItemsSource).First(l=>l.Id==UiText.Language);
@@ -89,12 +90,13 @@ public partial class MainWindow : Window
         foreach (var pair in speechRoles)
         {
             // Dormant gender roles remain editable without blocking default speech.
-            if (pair.Key!=SpeakerGender.Unknown && GenderEnabledBox.IsChecked!=true) continue;
+            if (pair.Key!=SpeakerGender.Unknown && pair.Key!=FallbackRole && GenderEnabledBox.IsChecked!=true) continue;
             try { ValidateSpeechRole(pair.Value); }
             catch (Exception e) { throw new InvalidOperationException(UiText.T("speech.roleError",RoleName(pair.Key),e.Message),e); }
         }
         var settings=speechRoles[SpeakerGender.Unknown].ApplyTo(draft) with
         {
+            FallbackRole=speechRoles.GetValueOrDefault(FallbackRole),ExclusiveHotkeys=ExclusiveHotkeysBox.IsChecked==true,
             CacheEnabled=CacheEnabledBox.IsChecked==true,
             Language=language.Tag,CaptureHotkey=captureKey,RepeatCaptureHotkey=repeatCaptureKey,ToggleHotkey=toggleKey,
             CancelCurrentHotkey=cancelCurrentKey,CancelAllHotkey=cancelAllKey,
