@@ -183,7 +183,7 @@ internal static partial class Program
     }
     private static void RunHotkeyChecks()
     {
-        foreach (uint key in new uint[] { 0x41,0x14,0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7A,0x7B,1,2,4,5,6 })
+        foreach (uint key in new uint[] { 0x41,0x14,0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7A,0x7B,4,5,6 })
         {
             var binding=new Hotkey(0,key); HotkeyService.Validate(binding);
             var single=new HotkeyChordRecognizer(binding);
@@ -198,6 +198,14 @@ internal static partial class Program
         foreach (uint key in new uint[] { 0,3,0x10,0x11,0x12,0x5B,0x5C,0xA0,0xA1,0xA2,0xA3,0xA4,0xA5,255 })
             Throws<ArgumentException>(()=>HotkeyService.Validate(new Hotkey(0,key)),"Invalid standalone key rejected: "+key);
         Throws<ArgumentException>(()=>HotkeyService.Validate(new Hotkey(16,0x41)),"Invalid modifier bits rejected");
+        foreach (uint key in new uint[] { 1,2,0x1B })
+            for (uint modifiers=0; modifiers<16; modifiers++)
+                Throws<ArgumentException>(()=>HotkeyService.Validate(new Hotkey(modifiers,key)),"Reserved input rejected with every modifier combination: "+key+" / "+modifiers);
+        var legacy=new AppSettings { CaptureHotkey=new(0,1),RepeatCaptureHotkey=new(2,2),ToggleHotkey=new(1,0x1B),CancelCurrentHotkey=new(3,1),CancelAllHotkey=new(4,0x1B),VolumePercent=37 };
+        var migrated=SettingsStore.ClearReservedHotkeys(legacy);
+        Assert(!HotkeyService.Bindings(migrated).Any() && migrated.VolumePercent==37,"Loading legacy settings clears reserved bindings for all five actions while preserving other settings");
+        var allowed=new AppSettings { RepeatCaptureHotkey=new(0,4),ToggleHotkey=new(2,5),CancelCurrentHotkey=new(0,6) };
+        Assert(SettingsStore.ClearReservedHotkeys(allowed)==allowed,"Allowed shortcuts remain unchanged during migration");
         Assert(new Hotkey(0,0x14).ToString()=="Caps Lock" && new Hotkey(0,0x7B).ToString()=="F12","Caps Lock and F12 display names");
         foreach (var (down,up,data,key) in new (int,int,uint,uint)[] { (0x201,0x202,0,1),(0x204,0x205,0,2),(0x207,0x208,0,4),(0x20B,0x20C,0x10000,5),(0x20B,0x20C,0x20000,6) })
         {

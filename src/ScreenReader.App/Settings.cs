@@ -5,6 +5,8 @@ namespace ScreenReader.App;
 public sealed record Hotkey(uint Modifiers, uint Key)
 {
     [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsReserved=>Key is 0x01 or 0x02 or 0x1B;
+    [System.Text.Json.Serialization.JsonIgnore]
     public bool IsMouse=>Key is 0x01 or 0x02 or 0x04 or 0x05 or 0x06;
     public override string ToString() => string.Join(" + ",new[] {
         (Modifiers&2)!=0 ? "Ctrl" : null,(Modifiers&1)!=0 ? "Alt" : null,
@@ -22,6 +24,8 @@ public sealed record AppSettings
     public string OcrProviderId { get; init; }="windows";
     public bool OcrReplaceLineBreaks { get; init; }=true;
     public bool OcrPreserveParagraphs { get; init; }
+    public bool OcrCorrectionsEnabled { get; init; }
+    public string OcrCorrectionRules { get; init; }="/ => l";
     public GenderizationSettings Genderization { get; init; }=new();
     public Dictionary<string,string> FemaleProviderVoices { get; init; }=new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string,string> MaleProviderVoices { get; init; }=new(StringComparer.OrdinalIgnoreCase);
@@ -76,7 +80,9 @@ public static class SettingsStore
             var value = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(SettingsPath)) ?? new();
             if (value.VolumePercent is < 0 or > 100 || value.FallbackRole?.IsStructurallyValid()==false || value.FemaleRole?.IsStructurallyValid()==false || value.MaleRole?.IsStructurallyValid()==false || value.Genderization is null || value.Genderization.Providers is null || value.FemaleProviderVoices is null || value.MaleProviderVoices is null || value.OcrProviderId!="windows" || value.Translation is null || value.Translation.Providers is null || string.IsNullOrWhiteSpace(value.Language) || string.IsNullOrWhiteSpace(value.SpeechProviderId) || value.RatePercent is < -50 or > 100 || !Enum.IsDefined(value.CaptureMode) || !Enum.IsDefined(value.HotkeyMode) || !Enum.IsDefined(value.OpenAiFormat))
                 throw new InvalidDataException("Некорректные параметры.");
-            return value;
+            if (value.OcrCorrectionRules is null) throw new InvalidDataException("Некорректные правила коррекции текста.");
+            if (value.OcrCorrectionsEnabled) OcrTextCorrections.Parse(value.OcrCorrectionRules);
+            return ClearReservedHotkeys(value);
         }
         catch (Exception e) { AppLog.Write("Настройки повреждены; использованы значения по умолчанию.",e); return new(); }
     }
@@ -86,6 +92,16 @@ public static class SettingsStore
         string temporary = SettingsPath+".tmp";
         File.WriteAllText(temporary,JsonSerializer.Serialize(value,new JsonSerializerOptions { WriteIndented = true }));
         File.Move(temporary,SettingsPath,true);
+    }
+    public static AppSettings ClearReservedHotkeys(AppSettings value)
+    {
+        Hotkey? Allowed(Hotkey? key)=>key?.IsReserved==true ? null : key;
+        return value with
+        {
+            CaptureHotkey=Allowed(value.CaptureHotkey),RepeatCaptureHotkey=Allowed(value.RepeatCaptureHotkey),
+            ToggleHotkey=Allowed(value.ToggleHotkey),CancelCurrentHotkey=Allowed(value.CancelCurrentHotkey),
+            CancelAllHotkey=Allowed(value.CancelAllHotkey)
+        };
     }
 }
 public static class AppLog

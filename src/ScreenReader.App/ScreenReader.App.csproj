@@ -16,6 +16,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Localization/strings*.json" WithCulture="false" />
     <EmbeddedResource Include="Assets/storyteller.ico" />
+    <PackageReference Include="Markdig" Version="1.5.1" />
     <Resource Include="Assets/storyteller.png" />
     <Resource Include="Assets/storyteller.ico" />
     <ProjectReference Include="../ScreenReader.Edge/ScreenReader.Edge.csproj" />

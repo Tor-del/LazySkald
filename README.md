@@ -44,9 +44,10 @@ The interface also supports Russian, Simplified Chinese, Japanese, Spanish,
 Korean, French and German. Language changes take effect immediately; click
 **Save** to keep the selection for the next launch.
 
-The settings follow the pipeline in seven tabs:
+The settings are organized into tabs following the reading pipeline:
 
 - **Recognition:** OCR provider (Windows 11 OCR by default), language and capture method.
+- **Text correction:** optional literal replacements before translation and speech. Enable correction and save to use the prepared `/ => l` rule for italic fonts. Add one `error => correction` rule per line. Rules are case-sensitive, apply everywhere (including links and fractions), prefer the longest match and never reprocess replacement output. Leave the right side empty to delete; spaces at the edges of each side are ignored. Disabled by default.
 - **Translation:** optional LLM translation, provider, model and prompt.
 - **Genderization:** optional narrator gender detection using LM Studio, Ollama or OpenAI API, with independent connection profiles, model discovery, prompt, temperature and timeout.
 - **Speech:** default voice settings; when genderization is enabled, a role list with add/remove controls for female and male roles. Select a role to edit its own TTS provider, voice, rate, playback device and server settings.
@@ -73,12 +74,12 @@ and cancel all shortcuts; these are unassigned by default. Start/stop cancels al
 work when busy. Press Delete or Backspace in a shortcut field to clear it, then
 save settings. Each action must use a different shortcut.
 Single keys without modifiers are supported, including Caps Lock and F1–F12,
-as well as left, right, middle and X1/X2 mouse buttons, optionally with modifiers.
+as well as middle and X1/X2 mouse buttons, optionally with modifiers.
 To assign a mouse button, focus its shortcut field first, then press the button.
 Unmodified Delete/Backspace clear the binding; Tab moves between fields.
 Assigned inputs are consumed. In standard mode, F12 and mouse buttons use hooks;
 other keys use `RegisterHotKey`.
-**Esc** cancels selection. The original application is restored before OCR begins.
+**Esc** or **right-click** cancels selection. Left click, right click and Escape cannot be assigned as hotkeys, even with modifiers. The original application is restored before OCR begins.
 
 ## Playback devices
 
@@ -179,6 +180,11 @@ translation (e.g. замо́к). It is off by default. Save to apply. Results de
 the model and stress mark support in the selected TTS. Changing this option
 prevents reuse of audio cached with the previous setting.
 
+**Remove Markdown from translation** converts the model response to plain text
+before preview and speech, preserving text, code and table contents. Invalid Unicode
+and invisible control characters are removed; accents and punctuation are preserved. It is on
+by default. Save to apply; changing this option prevents reuse of old cached audio.
+
 Translation is off by default for existing settings. When enabled, source text is
 sent to the configured LLM server and only the translation is sent to TTS. Empty,
 truncated and failed translations stop speech. The usual stop hotkey also cancels
@@ -200,6 +206,6 @@ Model sizes: [official TranslateGemma catalog](https://ollama.com/library/transl
 
 Each speech profile has a 0–100% software volume slider, applied during playback without changing system volume or cached audio. **Add fallback voice** creates an optional shared profile with its own provider, voice, volume, rate and output device. It is attempted once if primary speech fails before playback starts; cancellation and failures after playback starts do not trigger fallback. Fallback audio does not replace primary audio in the cache. Remove the profile to disable it.
 
-**Controls → Exclusively intercept hotkeys** (enabled by default) uses low-level hooks in either mode to suppress the assigned key/button, repeats and release. Selection also consumes Escape and both left-click edges before restoring focus. Modifier keys are not separately blocked. Disabling it passes hooked input through; standard mode retains RegisterHotKey behavior. Suppression is verified for Windows events and cannot guarantee blocking applications that read input devices directly.
+**Controls → Exclusively intercept hotkeys** (enabled by default) uses low-level hooks in either mode to suppress the assigned key/button, repeats and release. Selection also consumes Escape and both edges of left and right clicks before restoring focus. Modifier keys are not separately blocked. Disabling it passes hooked input through; standard mode retains RegisterHotKey behavior. Suppression is verified for Windows events and cannot guarantee blocking applications that read input devices directly.
 
 When exclusive interception is enabled, the mode selector is replaced by an explanation that low-level hooks are active. Disabling the option restores access to the previously selected mode.

@@ -26,5 +26,23 @@ internal static partial class Program
         var settings=defaults with { OcrReplaceLineBreaks=false,OcrPreserveParagraphs=true };
         var restored=JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(settings))!;
         Assert(!restored.OcrReplaceLineBreaks && restored.OcrPreserveParagraphs,"OCR formatting preferences survive settings serialization");
+        Assert(!defaults.OcrCorrectionsEnabled && defaults.OcrCorrectionRules=="/ => l","OCR correction is opt-in for existing settings with the italic l rule prepared");
+        const string misread="He//o, /itt/e wor/d!\r\nNext /ine.";
+        Assert(OcrTextFormatter.Format(misread,defaults)=="He//o, /itt/e wor/d! Next /ine.","Disabled corrections preserve slashes");
+        var corrected=defaults with { OcrCorrectionsEnabled=true };
+        Assert(OcrTextFormatter.Format(misread,corrected)=="Hello, little world! Next line.","Italic l correction runs before OCR line formatting");
+        Assert(OcrTextFormatter.Format(misread,corrected with { OcrReplaceLineBreaks=false })=="Hello, little world!\r\nNext line.","Corrections work independently of newline replacement");
+        Assert(OcrTextCorrections.Apply("rn r m","r => x\nrn => m\nm => n")=="m x n","Longest match wins and replacement output is not corrected again");
+        Assert(OcrTextCorrections.Apply("[x] . $1 /","[x] => $1\r. => !\r\n$1 => ok\n/ =>")=="$1 ! ok ","Rules are literal, support all newline styles and allow deletion");
+        Assert(OcrTextCorrections.Apply("Il /", "\n I => L \n\n/ => l\n")=="Ll l","Rules ignore blank lines and trim edges but remain case-sensitive");
+        Assert(OcrTextCorrections.Apply(misread," \r\n")==misread,"Empty rule lists leave OCR unchanged");
+        Throws<ArgumentException>(()=>OcrTextCorrections.Parse("missing separator"),"Malformed correction rule rejected");
+        Throws<ArgumentException>(()=>OcrTextCorrections.Parse("=> l"),"Empty correction source rejected");
+        Throws<ArgumentException>(()=>OcrTextCorrections.Parse("/ => l\n/ => I"),"Duplicate correction sources rejected");
+        try { OcrTextCorrections.Parse("/ => l\n\nbad"); }
+        catch (ArgumentException e) { Assert(e.Message==UiText.T("ocr.correctionsInvalid",3),"Correction error identifies the original line number"); }
+        Assert(OcrTextFormatter.Format(misread,defaults with { OcrCorrectionRules="bad" })==OcrTextFormatter.Format(misread),"Dormant invalid rules do not affect reading");
+        var correctionRestored=JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(corrected with { OcrCorrectionRules="/ => l\nrn => m" }))!;
+        Assert(correctionRestored.OcrCorrectionsEnabled && correctionRestored.OcrCorrectionRules=="/ => l\nrn => m","Correction toggle and custom rules survive settings serialization");
     }
 }

@@ -35,6 +35,8 @@ public partial class MainWindow : Window
         InitializeCacheAndQueue();
         OcrReplaceLineBreaksBox.IsChecked=draft.OcrReplaceLineBreaks;
         OcrPreserveParagraphsBox.IsChecked=draft.OcrPreserveParagraphs;
+        OcrCorrectionsEnabledBox.IsChecked=draft.OcrCorrectionsEnabled;
+        OcrCorrectionRulesBox.Text=draft.OcrCorrectionRules;
         ProviderBox.ItemsSource=owner.Providers.Definitions;
         ProviderBox.SelectedItem=owner.Providers.Definitions.FirstOrDefault(p=>p.Id==providerId) ?? owner.Providers.Definitions.First();
         providerId=((SpeechProviderDefinition)ProviderBox.SelectedItem).Id;
@@ -106,11 +108,14 @@ public partial class MainWindow : Window
             OcrProviderId=((OcrProviderChoice)OcrProviderBox.SelectedItem).Id,
             OcrReplaceLineBreaks=OcrReplaceLineBreaksBox.IsChecked==true,
             OcrPreserveParagraphs=OcrPreserveParagraphsBox.IsChecked==true,
+            OcrCorrectionsEnabled=OcrCorrectionsEnabledBox.IsChecked==true,
+            OcrCorrectionRules=OcrCorrectionRulesBox.Text,
             Genderization=ReadGenderControls(),Translation=ReadTranslationControls(),UiLanguage=UiText.Language,
             FemaleRole=speechRoles.GetValueOrDefault(SpeakerGender.Female),
             MaleRole=speechRoles.GetValueOrDefault(SpeakerGender.Male),
             FemaleProviderVoices=new(),MaleProviderVoices=new()
         };
+        if (settings.OcrCorrectionsEnabled) OcrTextCorrections.Parse(settings.OcrCorrectionRules);
         return settings;
     }
     private void SaveSettings(object sender,RoutedEventArgs e)

@@ -17,6 +17,8 @@ engineering of this library for debugging modifications are permitted under LGPL
 
 Other dependencies:
 
+- Markdig 1.5.1 — Alexandre Mutel, BSD-2-Clause.
+  https://github.com/xoofx/markdig. See `licenses/Markdig-BSD-2-Clause.txt`.
 - NAudio 2.2.1 — Mark Heath and contributors, MIT.
   https://github.com/naudio/NAudio
 - Vortice.Direct3D11 / Vortice.DXGI 3.8.3 and Vortice.Mathematics — Amer Koleci

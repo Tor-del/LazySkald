@@ -10,6 +10,31 @@ using ScreenReader.Speech;
 
 internal static partial class Program
 {
+    private static void RunSelectionCancellationChecks()
+    {
+        using var image=new System.Drawing.Bitmap(640,360);
+        using var frame=new CapturedScreen(image,new System.Drawing.Rectangle(-10000,-10000,640,360),"Synthetic");
+        foreach (bool dragging in new[] { false,true })
+        {
+            var overlay=new SelectionWindow(frame);
+            try
+            {
+                overlay.Show();
+                void Mouse(System.Windows.RoutedEvent routedEvent,System.Windows.Input.MouseButton button)=>overlay.RaiseEvent(
+                    new System.Windows.Input.MouseButtonEventArgs(System.Windows.Input.Mouse.PrimaryDevice,0,button) { RoutedEvent=routedEvent });
+                if (dragging) Mouse(System.Windows.Input.Mouse.MouseDownEvent,System.Windows.Input.MouseButton.Left);
+                Mouse(System.Windows.Input.Mouse.MouseDownEvent,System.Windows.Input.MouseButton.Right);
+                // Releasing left during cancellation must not commit the selection.
+                if (dragging) Mouse(System.Windows.Input.Mouse.MouseUpEvent,System.Windows.Input.MouseButton.Left);
+                Assert(overlay.IsVisible,"Right-button cancellation waits for release: dragging="+dragging);
+                Mouse(System.Windows.Input.Mouse.MouseUpEvent,System.Windows.Input.MouseButton.Right);
+                Assert(overlay.Completion.IsCompletedSuccessfully && overlay.Completion.Result is null,
+                    "Right click cancels ordinary selection without returning a region: dragging="+dragging);
+            }
+            finally { overlay.Close(); }
+        }
+    }
+
     private static void RunFocusLayoutChecks()
     {
         // Use real keyboard focus: static previews do not exercise focus triggers.

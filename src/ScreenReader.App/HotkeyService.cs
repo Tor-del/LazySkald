@@ -84,6 +84,7 @@ public sealed class HotkeyService : IDisposable
     });
     public static void Validate(Hotkey key)
     {
+        if (key.IsReserved) throw new ArgumentException(UiText.T("error.hotkeyReserved"));
         if (key.Modifiers>15 || key.Key is 0 or >254 or 0x03 or 0x10 or 0x11 or 0x12 or 0x5B or 0x5C or >=0xA0 and <=0xA5)
             throw new ArgumentException(UiText.T("error.hotkey"));
     }

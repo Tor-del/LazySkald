@@ -3,13 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace ScreenReader.App;
 
-// Installed only while selecting. Close on Escape release so neither edge reaches the game.
+// Close on Escape/right-button release so neither edge reaches the game.
 internal sealed class SelectionInputHook : IDisposable
 {
     private readonly HookProc keyboardCallback,mouseCallback;
     private IntPtr keyboard,mouse;
     private bool selecting;
-    public SelectionInputHook(Action cancel,Action<bool,int,int> click)
+    private bool cancelling;
+    public SelectionInputHook(Action cancel,Action<bool,int,int> click,Action<int,int> move)
     {
         keyboardCallback=(code,message,data)=>
         {
@@ -22,12 +23,22 @@ internal sealed class SelectionInputHook : IDisposable
         };
         mouseCallback=(code,message,data)=>
         {
+            if (code>=0 && message.ToInt32() is 0x204 or 0x205)
+            {
+                cancelling=true;
+                if (message.ToInt32()==0x205) cancel();
+                return new IntPtr(1);
+            }
+            // Games can retain mouse capture after losing focus. WPF then receives no
+            // MouseMove messages, even though this hook receives both button edges.
+            if (code>=0 && message.ToInt32()==0x200 && selecting)
+                move(Marshal.ReadInt32(data),Marshal.ReadInt32(data,4));
             if (code>=0 && message.ToInt32() is 0x201 or 0x202)
             {
                 bool down=message.ToInt32()==0x201;
                 if (!down && !selecting) return CallNextHookEx(mouse,code,message,data);
                 selecting=down;
-                click(down,Marshal.ReadInt32(data),Marshal.ReadInt32(data,4));
+                if (!cancelling) click(down,Marshal.ReadInt32(data),Marshal.ReadInt32(data,4));
                 return new IntPtr(1);
             }
             return CallNextHookEx(mouse,code,message,data);

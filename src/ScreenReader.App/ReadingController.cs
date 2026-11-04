@@ -86,7 +86,7 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
             captureGate.Release(); captureHeld=false;
             Report(UiText.T("status.ocr"),token);
             if (settings.OcrProviderId!="windows") throw new InvalidOperationException(UiText.T("ocr.unknownProvider"));
-            string text=OcrTextFormatter.Format(await ocr.RecognizeAsync(crop,settings.Language,token),settings.OcrReplaceLineBreaks,settings.OcrPreserveParagraphs);
+            string text=OcrTextFormatter.Format(await ocr.RecognizeAsync(crop,settings.Language,token),settings);
             token.ThrowIfCancellationRequested();
             if (string.IsNullOrWhiteSpace(text)) { Report(UiText.T("status.noText"),token); return null; }
             return (text,timer,timer.ElapsedMilliseconds);

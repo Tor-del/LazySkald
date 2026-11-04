@@ -6,6 +6,13 @@ namespace ScreenReader.App;
 
 public static class OcrTextFormatter
 {
+    public static string Format(string text,AppSettings settings)
+    {
+        if (settings.OcrCorrectionsEnabled)
+            text=OcrTextCorrections.Apply(text,settings.OcrCorrectionRules);
+        return Format(text,settings.OcrReplaceLineBreaks,settings.OcrPreserveParagraphs);
+    }
+
     public static string Format(string text,bool replaceLineBreaks=true,bool preserveParagraphs=false)
     {
         if (!replaceLineBreaks) return text;

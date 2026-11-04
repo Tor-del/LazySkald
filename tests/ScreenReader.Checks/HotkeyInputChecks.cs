@@ -78,7 +78,7 @@ internal static partial class Program
                         actions.Clear(); SendTestChord(key,false); await Task.Delay(100);
                         Assert(actions.SequenceEqual(new[] { HotkeyAction.Capture }),"Native single key fires once: "+mode+" / "+key);
                     }
-                    foreach (var (key,down,up,data) in new (uint,uint,uint,uint)[] { (1,2,4,0),(2,8,16,0),(4,32,64,0),(5,128,256,1),(6,128,256,2) })
+                    foreach (var (key,down,up,data) in new (uint,uint,uint,uint)[] { (4,32,64,0),(5,128,256,1),(6,128,256,2) })
                     {
                         if (GetForegroundWindow()!=handle) throw new Exception("Test window lost foreground; no mouse input sent.");
                         service.Configure(new AppSettings { CaptureHotkey=new(0,key),HotkeyMode=mode });
@@ -119,9 +119,12 @@ internal static partial class Program
     [DllImport("user32.dll")] private static extern bool UnhookWindowsHookEx(IntPtr hook);
     [DllImport("user32.dll")] private static extern IntPtr CallNextHookEx(IntPtr hook,int code,IntPtr message,IntPtr data);
     [DllImport("kernel32.dll",CharSet=CharSet.Unicode)] private static extern IntPtr GetModuleHandle(string? name);
+    [DllImport("user32.dll")] private static extern IntPtr SetCapture(IntPtr window);
+    [DllImport("user32.dll")] private static extern IntPtr GetCapture();
+    [DllImport("user32.dll")] private static extern bool ReleaseCapture();
     private static async Task RunExclusiveSelectionChecksAsync(Window host,IntPtr hostHandle)
     {
-        int escaped=0,clicked=0;
+        int escaped=0,clicked=0,rightClicked=0;
         ProbeProc keyboard=(code,message,data)=>
         {
             if (code>=0 && Marshal.ReadInt32(data)==0x1B) escaped++;
@@ -130,6 +133,7 @@ internal static partial class Program
         ProbeProc mouse=(code,message,data)=>
         {
             if (code>=0 && message.ToInt32() is 0x201 or 0x202) clicked++;
+            if (code>=0 && message.ToInt32() is 0x204 or 0x205) rightClicked++;
             return CallNextHookEx(IntPtr.Zero,code,message,data);
         };
         IntPtr keyHook=SetWindowsHookEx(13,keyboard,GetModuleHandle(null),0);
@@ -151,6 +155,12 @@ internal static partial class Program
             Assert(GetForegroundWindow()==hostHandle,"Escape selection restores the original test window");
             overlay=new SelectionWindow(frame,target,true); overlay.Show(); await Task.Delay(100);
             if (GetForegroundWindow()!=new WindowInteropHelper(overlay).Handle) throw new Exception("Selection lost foreground; no mouse input sent.");
+            // Reproduce a game retaining mouse capture: the overlay must draw from
+            // hook coordinates without WPF MouseMove or a right-click to release it.
+            SetCapture(hostHandle);
+            Assert(GetCapture()==hostHandle,"Simulated game retains native mouse capture during selection");
+            int overlayMoves=0;
+            overlay.MouseMove+=(_,_)=>overlayMoves++;
             System.Windows.Forms.Cursor.Position=new System.Drawing.Point(bounds.Left+100,bounds.Top+100);
             await Task.Delay(50);
             void Button(uint flags)
@@ -160,13 +170,35 @@ internal static partial class Program
             }
             Button(2); await Task.Delay(50);
             System.Windows.Forms.Cursor.Position=new System.Drawing.Point(bounds.Left+300,bounds.Top+200); await Task.Delay(50);
+            var canvas=(Canvas)((Grid)overlay.Content).Children[1];
+            var border=canvas.Children.OfType<System.Windows.Shapes.Rectangle>().Single();
+            var from=canvas.PointFromScreen(new Point(bounds.Left+100,bounds.Top+100));
+            var to=canvas.PointFromScreen(new Point(bounds.Left+300,bounds.Top+200));
+            Assert(overlayMoves==0,"Retained capture prevents WPF mouse movement from reaching the overlay");
+            Assert(border.Visibility==Visibility.Visible && Math.Abs(border.Width-(to.X-from.X))<0.01 && Math.Abs(border.Height-(to.Y-from.Y))<0.01,
+                "Selection border follows the first drag while the game holds capture, without a right-click");
+            var expected=SelectionMath.ToPixels(from.X,from.Y,to.X,to.Y,canvas.ActualWidth,canvas.ActualHeight,image.Width,image.Height);
             Button(4);
             result=await overlay.Completion.WaitAsync(TimeSpan.FromSeconds(3));
-            Assert(result is { Width:>0,Height:>0 } && clicked==0,"Exclusive selection consumes both left-button edges and returns a region");
+            Assert(result==expected && clicked==0,"Exclusive selection consumes both left-button edges and returns the exact displayed region");
             Assert(GetForegroundWindow()==hostHandle,"Mouse selection restores the original test window");
+            foreach (bool dragging in new[] { false,true })
+            {
+                overlay=new SelectionWindow(frame,target,true); overlay.Show(); await Task.Delay(100);
+                if (GetForegroundWindow()!=new WindowInteropHelper(overlay).Handle) throw new Exception("Selection lost foreground; no mouse input sent.");
+                if (dragging) { Button(2); await Task.Delay(50); }
+                Button(8); await Task.Delay(50);
+                if (dragging) { Button(4); await Task.Delay(50); }
+                Assert(overlay.IsVisible,"Exclusive right-button cancellation waits for release: dragging="+dragging);
+                Button(16);
+                result=await overlay.Completion.WaitAsync(TimeSpan.FromSeconds(3));
+                Assert(result is null && rightClicked==0 && clicked==0,"Exclusive right click cancels without leaking either button edge: dragging="+dragging);
+                Assert(GetForegroundWindow()==hostHandle,"Right-click cancellation restores the original test window");
+            }
         }
         finally
         {
+            if (GetCapture()==hostHandle) ReleaseCapture();
             if (overlay?.IsVisible==true) overlay.Close();
             UnhookWindowsHookEx(keyHook); UnhookWindowsHookEx(mouseHook);
             GC.KeepAlive(keyboard); GC.KeepAlive(mouse);

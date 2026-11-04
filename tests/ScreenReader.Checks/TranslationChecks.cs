@@ -50,7 +50,49 @@ internal static partial class Program
             Assert(cancelled,"Translation cancellation before HTTP: "+provider);
         }
         var valid=new TranslationSettings { Enabled=true,Providers=new() { ["lmstudio"]=new() { BaseUrl="http://localhost/v1",Model="m" } } };
+        Assert(valid.StripMarkdown,"Markdown removal defaults to enabled");
+        Assert(JsonSerializer.Deserialize<TranslationSettings>("{}") is { StripMarkdown:true },"Existing settings without Markdown option enable cleanup");
+        Assert(JsonSerializer.Deserialize<TranslationSettings>(JsonSerializer.Serialize(valid with { StripMarkdown=false })) is { StripMarkdown:false },"Explicitly disabled Markdown cleanup survives serialization");
+        Assert(JsonSerializer.Deserialize<TranslationSettings>(JsonSerializer.Serialize(valid with { StripMarkdown=true })) is { StripMarkdown:true },"Markdown removal survives settings serialization");
+        foreach (var (markdown,plain) in new[] {
+            ("# Заголовок\n\n**Жирный** и *курсив*, ~~удалённый~~.","Заголовок\nЖирный и курсив, удалённый."),
+            ("> Цитата\n\n- Первый\n- Второй","Цитата\nПервый\nВторой"),
+            ("[Ссылка](https://example.com) и ![описание](image.png)","Ссылка и описание"),
+            ("[Ссылка][ref]\n\n[ref]: https://example.com","Ссылка"),
+            ("```csharp\nvar x = a * b;\n```","var x = a * b;"),
+            ("`a_b * c` и \\*звёздочки\\*","a_b * c и *звёздочки*"),
+            ("Обычный текст: 2 * 3 = 6, snake_case, C# и замо́к.","Обычный текст: 2 * 3 = 6, snake_case, C# и замо́к."),
+            ("| Имя | Значение |\n| --- | --- |\n| Тест | 42 |","Имя\tЗначение\nТест\t42"),
+            ("- [x] Готово\n- [ ] В работе","Готово\nВ работе"),
+            ("Заголовок\n===\n\n1. Один\n2. Два\n\n---","Заголовок\nОдин\nДва"),
+            ("<b>Текст</b> &amp; &lt;пример&gt;","Текст & <пример>"),
+            ("**за\u200Bмо́к**\uFEFF\0\u0001\u001B\u007F\u0085\uFFFF\uD800!","замо́к!"),
+            ("Русский, English, 日本語, 中文, 한국어, café, العربية, हिन्‍दी 👩‍💻.","Русский, English, 日本語, 中文, 한국어, café, العربية, हिन्‍दी 👩‍💻."),
+            ("Цена: 1 200 ₽; 25%, +3, −2, 10/2, A & B < C > D.\nНовая строка.","Цена: 1 200 ₽; 25%, +3, −2, 10/2, A & B < C > D.\nНовая строка."),
+            ("\u202EПривет\u202C, мяг\u00ADкий текст\u2066!\u2069","Привет, мягкий текст!") })
+        {
+            string actual=TranslationPlainText.Convert(markdown).Replace("\r\n","\n");
+            Assert(actual==plain,"Markdown plain text: "+markdown+" => "+actual);
+        }
+        foreach (string provider in new[] { "lmstudio","ollama","openai" })
+        {
+            string markdown="**Привет**, *мир*!";
+            string payload=provider=="ollama" ? JsonSerializer.Serialize(new { message=new { content=markdown } }) : JsonSerializer.Serialize(new { choices=new[] { new { message=new { content=markdown } } } });
+            using var http=new HttpClient(new Handler((_,_)=>Task.FromResult(JsonResponse(payload))));
+            var client=new LlmTranslationClient(http);
+            var settings=valid with { Provider=provider,Providers=new() { [provider]=new() { BaseUrl="http://localhost/v1",Model="m" } } };
+            Assert(await client.TranslateAsync("Hello",settings with { StripMarkdown=false },CancellationToken.None)==markdown,"Disabled cleanup preserves Markdown: "+provider);
+            Assert(await client.TranslateAsync("Hello",settings with { StripMarkdown=true },CancellationToken.None)=="Привет, мир!","Enabled cleanup removes Markdown: "+provider);
+            Assert(await client.TranslateAsync(markdown,settings with { Enabled=false,StripMarkdown=true },CancellationToken.None)==markdown,"Disabled translation preserves original Markdown: "+provider);
+        }
         var restored=JsonSerializer.Deserialize<TranslationSettings>(JsonSerializer.Serialize(valid with { AddStressMarks=true }));
+        using (var http=new HttpClient(new Handler((_,_)=>Task.FromResult(JsonResponse("{\"choices\":[{\"message\":{\"content\":\"---\"}}]}")))))
+        {
+            bool rejected=false;
+            try { await new LlmTranslationClient(http).TranslateAsync("Hello",valid with { StripMarkdown=true },CancellationToken.None); }
+            catch (InvalidOperationException) { rejected=true; }
+            Assert(rejected,"Translation containing only Markdown is rejected after cleanup");
+        }
         Assert(restored is { AddStressMarks:true },"Stress mark setting survives settings serialization");
         Throws<ArgumentException>(()=>LlmTranslationClient.Validate(valid with { Temperature=double.NaN }),"Invalid translation temperature rejected");
         foreach (string payload in new[] { "{}","{\"choices\":[{\"message\":{\"content\":\" \"}}]}","{\"choices\":[{\"message\":{\"content\":\"partial\"},\"finish_reason\":\"length\"}]}" })
@@ -85,6 +127,16 @@ internal static partial class Program
         reader.TextTranslated+=value=>preview=value; reader.Failed+=e=>failed=e;
         await reader.ReadTextAsync("Hello",appSettings);
         Assert(speech.Last is { Text:"Перевод",Language:"ru-RU",Voice:"ru-voice" } && preview=="Перевод","Pipeline sends translated text and target language to TTS");
+        using (var cleanHttp=new HttpClient(new Handler((_,_)=>Task.FromResult(JsonResponse(JsonSerializer.Serialize(new { choices=new[] { new { message=new { content="# **За\u200Bмо́к**\u0001\uFEFF &amp; <b>ключ</b>." } } } }))))))
+        {
+            var cleanReader=new ReadingController(capture,new NoOcr(),new IdentityTextTransform(),registry,new ConsumingAudio(),new NoFocus(),new LlmTranslationClient(cleanHttp));
+            string? cleanPreview=null;
+            cleanReader.TextTranslated+=value=>cleanPreview=value;
+            speech.Last=null;
+            await cleanReader.ReadTextAsync("Source",appSettings);
+            Assert(speech.Last is { Text:"Замо́к & ключ." } && cleanPreview=="Замо́к & ключ.","Default cleanup sends identical clean Unicode text to preview and actual TTS request");
+            System.Xml.XmlConvert.VerifyXmlChars(speech.Last!.Text);
+        }
         translator.Fail=true; speech.Last=null;
         await reader.ReadTextAsync("Hello",appSettings);
         Assert(failed is not null && speech.Last is null && preview=="","Translation failure prevents speech and clears old preview");

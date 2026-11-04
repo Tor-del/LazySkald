@@ -1,4 +1,24 @@
 {
+  "tab.textCorrection": {
+    "ru": "Коррекция текста",
+    "en": "Text correction"
+  },
+  "ocr.correctionsEnabled": {
+    "ru": "Исправлять ошибки распознавания",
+    "en": "Correct recognition errors"
+  },
+  "ocr.correctionRules": {
+    "ru": "Правила замены",
+    "en": "Replacement rules"
+  },
+  "ocr.correctionsHint": {
+    "ru": "Одна замена на строку: ошибка => исправление. Например, / => l исправляет курсивную латинскую l. Замены учитывают регистр и применяются ко всему распознанному тексту до перевода и озвучивания, включая ссылки и дроби. Для удаления оставьте правую часть пустой. Пробелы по краям частей игнорируются; результат замены повторно не обрабатывается. По умолчанию выключено.",
+    "en": "One replacement per line: error => correction. For example, / => l fixes an italic Latin l. Replacements are case-sensitive and apply to all recognized text before translation and speech, including links and fractions. Leave the right side empty to delete. Spaces around each side are ignored; replacement output is not processed again. Disabled by default."
+  },
+  "ocr.correctionsInvalid": {
+    "ru": "Некорректное правило в строке {0}. Используйте ошибка => исправление с непустой и уникальной левой частью.",
+    "en": "Invalid rule on line {0}. Use error => correction with a nonempty, unique left side."
+  },
   "ocr.replaceLineBreaks": {
     "ru": "Заменять переносы строк пробелами",
     "en": "Replace line breaks with spaces",
@@ -341,6 +361,16 @@
     "ru": "Нажмите клавишу или кнопку мыши, при желании с Ctrl, Alt, Shift или Win. Один модификатор назначить нельзя.",
     "en": "Press a key or mouse button, optionally with Ctrl, Alt, Shift, or Win. A modifier alone cannot be assigned."
   },
+  "error.hotkeyReserved": {
+    "ru": "ЛКМ, ПКМ и Escape нельзя назначать горячими клавишами, в том числе с модификаторами.",
+    "en": "Left click, right click, and Escape cannot be assigned as hotkeys, including with modifiers.",
+    "de": "Linke Maustaste, rechte Maustaste und Escape können auch mit Zusatztasten nicht als Tastenkürzel zugewiesen werden.",
+    "es": "No se pueden asignar el botón izquierdo, el derecho ni Escape como atajos, tampoco con modificadores.",
+    "fr": "Le clic gauche, le clic droit et Échap ne peuvent pas être attribués comme raccourcis, même avec des modificateurs.",
+    "ja": "左クリック、右クリック、Escape は修飾キーとの組み合わせでもショートカットに設定できません。",
+    "ko": "왼쪽 클릭, 오른쪽 클릭, Escape는 보조 키와 조합해도 단축키로 지정할 수 없습니다.",
+    "zh": "鼠标左键、右键和 Escape 不能设为快捷键，也不能与修饰键组合使用。"
+  },
   "error.hotkeyMode": {
     "ru": "Неизвестный режим горячей клавиши.",
     "en": "Unknown hotkey mode."
@@ -410,8 +440,8 @@
     "en": "OCR runs locally. Speech text is sent to Microsoft Edge TTS. Text and screenshots are not saved in the log."
   },
   "selection.hint": {
-    "ru": "Выделите текст мышью  ·  Esc — отмена",
-    "en": "Drag to select text  ·  Esc to cancel"
+    "ru": "Выделите текст мышью  ·  Esc или ПКМ — отмена",
+    "en": "Drag to select text  ·  Esc or right-click to cancel"
   },
   "tray.toggle": {
     "ru": "Запустить / остановить",
@@ -516,6 +546,14 @@
   "translation.stressMarksHint": {
     "ru": "Просить модель расставить ударения в переводе: например, замо́к. Результат зависит от модели и поддержки ударений выбранным TTS.",
     "en": "Ask the model to add word stress marks to the translation (e.g. замо́к). Results depend on the model and stress mark support in the selected TTS."
+  },
+  "translation.stripMarkdown": {
+    "ru": "Удалять Markdown из перевода",
+    "en": "Remove Markdown from translation"
+  },
+  "translation.stripMarkdownHint": {
+    "ru": "Преобразовывать ответ модели в обычный текст перед показом и озвучиванием, сохраняя содержимое. По умолчанию включено.",
+    "en": "Convert the model response to plain text before displaying and speaking it, preserving the content. Enabled by default."
   },
   "translation.temperature": {
     "ru": "Отправлять температуру (0–2; отключите, если модель не поддерживает)",
@@ -1022,8 +1060,8 @@
     "en": "In Controls, assign a shortcut for Recognize and add to queue, then save. Move the pointer to the desired monitor and press that shortcut."
   },
   "help.read": {
-    "ru": "Выделите текст левой кнопкой мыши — чтение начнётся автоматически. Esc отменяет выделение. Следующие фрагменты добавляются в очередь; управлять чтением можно на вкладке «Очередь».",
-    "en": "Select text with the left mouse button; reading starts automatically. Esc cancels selection. Further selections join the queue; manage reading in Queue."
+    "ru": "Выделите текст левой кнопкой мыши — чтение начнётся автоматически. Esc или правая кнопка мыши отменяют выделение. Следующие фрагменты добавляются в очередь; управлять чтением можно на вкладке «Очередь».",
+    "en": "Select text with the left mouse button; reading starts automatically. Esc or right-click cancels selection. Further selections join the queue; manage reading in Queue."
   },
   "help.moreTitle": {
     "ru": "Дополнительные возможности",
@@ -1106,8 +1144,8 @@
     "de": "Tastenkürzel exklusiv abfangen"
   },
   "controls.exclusiveHint": {
-    "ru": "Перехватывать назначенные клавиши и кнопки, а также Esc и левую кнопку мыши при выделении. Использует хуки независимо от режима. Модификаторы Ctrl/Alt/Shift/Win отдельно не блокируются.",
-    "en": "Suppress assigned keys and buttons, plus Esc and the left mouse button during selection. Uses hooks in either mode. Ctrl/Alt/Shift/Win modifiers are not separately blocked.",
+    "ru": "Перехватывать назначенные клавиши и кнопки, а также Esc, левую и правую кнопки мыши при выделении. Использует хуки независимо от режима. Модификаторы Ctrl/Alt/Shift/Win отдельно не блокируются.",
+    "en": "Suppress assigned keys and buttons, plus Esc and both left and right mouse buttons during selection. Uses hooks in either mode. Ctrl/Alt/Shift/Win modifiers are not separately blocked.",
     "zh": "拦截指定按键和鼠标按钮，以及选区时的 Esc 和鼠标左键。两种模式均使用钩子。不会单独拦截 Ctrl/Alt/Shift/Win。",
     "ja": "割り当てたキーとボタン、選択中の Esc と左クリックを抑止します。両モードでフックを使います。Ctrl/Alt/Shift/Win 単独は抑止しません。",
     "es": "Bloquea las teclas y botones asignados, además de Esc y el botón izquierdo al seleccionar. Usa hooks en ambos modos. No bloquea Ctrl/Alt/Shift/Win por separado.",

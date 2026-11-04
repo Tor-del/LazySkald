@@ -26,6 +26,7 @@ internal static partial class Program
             RunTranslationChecksAsync().GetAwaiter().GetResult();
             RunGenderizationChecksAsync().GetAwaiter().GetResult();
             RunHotkeyChecks();
+            RunSelectionCancellationChecks();
             RunQueueChecksAsync().GetAwaiter().GetResult();
             RunCacheChecksAsync().GetAwaiter().GetResult();
             RunLocalizationChecks();
@@ -234,7 +235,22 @@ internal static partial class Program
         var settings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(settings.SelectedVoice=="custom-ui-voice" && settings.OpenAiEndpoint=="http://127.0.0.1:9876/v1/audio/speech" && SecretProtection.Unprotect(settings.OpenAiApiKeyProtected)=="fake-ui-secret","Server settings round-trip from UI with encrypted key");
         var tabs=(System.Windows.Controls.TabControl)window.FindName("MainTabs");
-        Assert(tabs.Items.Count==11,"Settings include the help tab");
+        Assert(tabs.Items.Count==12,"Settings include text correction and help tabs");
+        var corrections=(System.Windows.Controls.CheckBox)window.FindName("OcrCorrectionsEnabledBox");
+        var correctionRules=(System.Windows.Controls.TextBox)window.FindName("OcrCorrectionRulesBox");
+        tabs.SelectedIndex=1; content.UpdateLayout();
+        Assert(((System.Windows.Controls.TabItem)tabs.SelectedItem).Header.ToString()==UiText.T("tab.textCorrection"),"Corrections have a dedicated tab");
+        Assert(corrections.IsChecked==false && !correctionRules.IsEnabled && correctionRules.Text=="/ => l","Correction tab loads opt-in defaults");
+        corrections.IsChecked=true; content.UpdateLayout();
+        Assert(correctionRules.IsEnabled,"Enabling corrections unlocks custom rules");
+        correctionRules.Text="/ => l\nrn => m";
+        var correctionSettings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
+        Assert(correctionSettings.OcrCorrectionsEnabled && correctionSettings.OcrCorrectionRules==correctionRules.Text,"Correction controls round-trip through saved settings");
+        content.UpdateLayout();
+        var correctionImage=new System.Windows.Media.Imaging.RenderTargetBitmap(previewWidth,previewHeight,96,96,System.Windows.Media.PixelFormats.Pbgra32);
+        correctionImage.Render(content);
+        var correctionEncoder=new System.Windows.Media.Imaging.PngBitmapEncoder(); correctionEncoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(correctionImage));
+        using (var correctionOutput=File.Create(Path.Combine(directory,"text-correction-preview.png"))) correctionEncoder.Save(correctionOutput);
         var helpCapture=(System.Windows.Controls.TextBlock)window.FindName("HelpCaptureText");
         var captureField=typeof(MainWindow).GetField("captureKey",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!;
         var updateHotkeys=typeof(MainWindow).GetMethod("UpdateHotkeyFields",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!;
@@ -243,7 +259,7 @@ internal static partial class Program
         captureField.SetValue(window,null); updateHotkeys.Invoke(window,null);
         Assert(helpCapture.Text==UiText.T("help.captureUnassigned"),"Help explains how to assign a missing shortcut");
         captureField.SetValue(window,new Hotkey(3,0x52)); updateHotkeys.Invoke(window,null);
-        tabs.SelectedIndex=10;
+        tabs.SelectedIndex=tabs.Items.Count-1;
         content.Measure(new System.Windows.Size(previewWidth,previewHeight));
         content.Arrange(new System.Windows.Rect(0,0,previewWidth,previewHeight)); content.UpdateLayout();
         var helpImage=new System.Windows.Media.Imaging.RenderTargetBitmap(previewWidth,previewHeight,96,96,System.Windows.Media.PixelFormats.Pbgra32);
@@ -257,8 +273,8 @@ internal static partial class Program
         string selectedDevice=((AudioOutputChoice)devices.SelectedItem).Id;
         var uiLanguage=(System.Windows.Controls.ComboBox)window.FindName("UiLanguageBox");
         uiLanguage.SelectedItem=((System.Collections.Generic.IEnumerable<UiLanguageChoice>)uiLanguage.ItemsSource).First(l=>l.Id=="en");
-        Assert(((System.Windows.Controls.TabItem)tabs.Items[0]).Header.ToString()=="Recognition" && ((System.Windows.Controls.TabItem)tabs.Items[9]).Header.ToString()=="Application","English localization updates tab headers immediately");
-        Assert(((System.Windows.Controls.TabItem)tabs.Items[10]).Header.ToString()=="How to use" && helpCapture.Text==UiText.T("help.capture","Ctrl + Alt + R"),"Help header and shortcut instructions follow language changes");
+        Assert(((System.Windows.Controls.TabItem)tabs.Items[0]).Header.ToString()=="Recognition" && ((System.Windows.Controls.TabItem)tabs.Items[1]).Header.ToString()=="Text correction" && ((System.Windows.Controls.TabItem)tabs.Items[10]).Header.ToString()=="Application","English localization updates tab headers immediately");
+        Assert(((System.Windows.Controls.TabItem)tabs.Items[11]).Header.ToString()=="How to use" && helpCapture.Text==UiText.T("help.capture","Ctrl + Alt + R"),"Help header and shortcut instructions follow language changes");
         Assert(((AudioOutputChoice)devices.SelectedItem).Id==selectedDevice && voiceBox.Text=="custom-ui-voice","Changing UI language preserves device and provider settings");
         var englishSettings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(englishSettings.UiLanguage=="en" && englishSettings.AudioOutputDeviceId==selectedDevice,"Interface language and playback device are included in saved settings");
@@ -274,7 +290,7 @@ internal static partial class Program
         ((System.Windows.Controls.CheckBox)window.FindName("TranslateEnabledBox")).IsChecked=true;
         var translatedSettings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(translatedSettings.Translation.Enabled && translatedSettings.Translation.Selected.Model=="lm-model" && SecretProtection.Unprotect(translatedSettings.Translation.Selected.ApiKeyProtected)=="llm-test-key" && translatedSettings.Translation.Providers["ollama"].Model=="ollama-model","Translation UI saves provider profiles with encrypted keys");
-        Assert(tabs.Items.Cast<System.Windows.Controls.TabItem>().Select(t=>t.Header.ToString()).SequenceEqual(new[] { "Recognition","Translation","Genderization","Speech","Checks","Cache","Queue","Controls","Ollama","Application","How to use" }),"Tabs follow pipeline order with help at the end");
+        Assert(tabs.Items.Cast<System.Windows.Controls.TabItem>().Select(t=>t.Header.ToString()).SequenceEqual(new[] { "Recognition","Text correction","Translation","Genderization","Speech","Checks","Cache","Queue","Controls","Ollama","Application","How to use" }),"Tabs follow pipeline order with help at the end");
         Assert(((System.Windows.Controls.ComboBox)window.FindName("OcrProviderBox")).SelectedItem is OcrProviderChoice { Id:"windows" },"Recognition defaults to Windows OCR");
         var genderEnabled=(System.Windows.Controls.CheckBox)window.FindName("GenderEnabledBox");
         var roleList=(System.Windows.Controls.ListBox)window.FindName("SpeechRolesBox");
@@ -411,7 +427,7 @@ internal static partial class Program
                 tabs.SelectedIndex=tab; content.UpdateLayout();
                 var host=(System.Windows.Controls.ContentPresenter)tabs.Template.FindName("PART_SelectedContentHost",tabs);
                 var page=(System.Windows.FrameworkElement)((System.Windows.Controls.TabItem)tabs.Items[tab]).Content;
-                if (tab==3)
+                if (tab==4)
                 {
                     System.Collections.Generic.IEnumerable<System.Windows.DependencyObject> Visuals(System.Windows.DependencyObject node)
                     {

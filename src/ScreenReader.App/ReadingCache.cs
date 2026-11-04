@@ -28,9 +28,10 @@ public sealed class ReadingCache(string? directory=null)
         object? Llm(LlmSettings value)=>!value.Enabled ? null : new { value.Provider,value.Prompt,value.Temperature,value.TimeoutSeconds,value.Selected.BaseUrl,value.Selected.Model,Credential=Credential(value.Selected.ApiKeyProtected) };
         object Speech(AppSettings value)=>new { value.SpeechProviderId,value.SelectedVoice,value.RatePercent,
             Server=value.SpeechProviderId=="openai-compatible" ? new { value.OpenAiEndpoint,value.OpenAiModel,value.OpenAiFormat,Credential=Credential(value.OpenAiApiKeyProtected) } : null };
-        var identity=new { Version=1,Text=text,settings.Language,Translation=Llm(settings.Translation),
+        var identity=new { Version=2,Text=text,settings.Language,Translation=Llm(settings.Translation),
             Target=settings.Translation.Enabled ? settings.Translation.TargetLanguage : null,
             StressMarks=settings.Translation.Enabled && settings.Translation.AddStressMarks,Gender=Llm(settings.Genderization),
+            StripMarkdown=settings.Translation.Enabled && settings.Translation.StripMarkdown,
             Default=Speech(settings),Female=settings.Genderization.Enabled ? Speech(settings.SpeechFor(SpeakerGender.Female)) : null,
             Male=settings.Genderization.Enabled ? Speech(settings.SpeechFor(SpeakerGender.Male)) : null };
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(identity))));

@@ -18,6 +18,7 @@ public sealed class SelectionWindow : Window
     private readonly WpfRectangle selection = new() { Stroke = Brushes.DeepSkyBlue, StrokeThickness = 2, Fill = new SolidColorBrush(System.Windows.Media.Color.FromArgb(25,0,170,255)), Visibility = Visibility.Collapsed };
     private readonly CapturedScreen screenshot;
     private WpfPoint? start;
+    private bool cancelling;
     private SelectionInputHook? inputHook;
     private Exception? inputFailure;
     private Rectangle? selectedRegion;
@@ -49,17 +50,28 @@ public sealed class SelectionWindow : Window
                         if (!IsVisible) return;
                         var point=canvas.PointFromScreen(new WpfPoint(x,y));
                         if (down) BeginSelection(point); else EndSelection(point);
+                    }), (x,y)=>Dispatcher.BeginInvoke(()=>
+                    {
+                        if (IsVisible) Update(canvas.PointFromScreen(new WpfPoint(x,y)));
                     }));
                 }
                 catch (Exception error) { inputFailure=error; Close(); }
             }
         };
         PreviewKeyDown += (_,e) => { if (!exclusiveInput && e.Key==Key.Escape) { e.Handled=true; Close(); } };
-        MouseLeftButtonDown += (_,e) => { if (!exclusiveInput) { BeginSelection(e.GetPosition(canvas)); CaptureMouse(); } };
-        MouseMove += (_,e) => { if (start is not null) Update(e.GetPosition(canvas)); };
+        MouseRightButtonDown += (_,e) =>
+        {
+            if (!exclusiveInput) { e.Handled=true; cancelling=true; start=null; selection.Visibility=Visibility.Collapsed; CaptureMouse(); }
+        };
+        MouseRightButtonUp += (_,e) =>
+        {
+            if (!exclusiveInput) { e.Handled=true; ReleaseMouseCapture(); Close(); }
+        };
+        MouseLeftButtonDown += (_,e) => { if (!exclusiveInput && !cancelling) { BeginSelection(e.GetPosition(canvas)); CaptureMouse(); } };
+        MouseMove += (_,e) => { if (!exclusiveInput && start is not null) Update(e.GetPosition(canvas)); };
         MouseLeftButtonUp += (_,e) =>
         {
-            if (!exclusiveInput) { ReleaseMouseCapture(); EndSelection(e.GetPosition(canvas)); }
+            if (!exclusiveInput && !cancelling) { ReleaseMouseCapture(); EndSelection(e.GetPosition(canvas)); }
         };
         Closed += async (_,_) =>
         {
