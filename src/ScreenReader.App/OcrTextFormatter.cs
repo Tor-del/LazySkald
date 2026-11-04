@@ -9,7 +9,7 @@ public static class OcrTextFormatter
     public static string Format(string text,AppSettings settings)
     {
         if (settings.OcrCorrectionsEnabled)
-            text=OcrTextCorrections.Apply(text,settings.OcrCorrectionRules);
+            text=OcrTextCorrections.Apply(text,OcrTextCorrections.EntriesFor(settings));
         return Format(text,settings.OcrReplaceLineBreaks,settings.OcrPreserveParagraphs);
     }
 

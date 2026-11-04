@@ -12,8 +12,8 @@
     "en": "Replacement rules"
   },
   "ocr.correctionsHint": {
-    "ru": "Одна замена на строку: ошибка => исправление. Например, / => l исправляет курсивную латинскую l. Замены учитывают регистр и применяются ко всему распознанному тексту до перевода и озвучивания, включая ссылки и дроби. Для удаления оставьте правую часть пустой. Пробелы по краям частей игнорируются; результат замены повторно не обрабатывается. По умолчанию выключено.",
-    "en": "One replacement per line: error => correction. For example, / => l fixes an italic Latin l. Replacements are case-sensitive and apply to all recognized text before translation and speech, including links and fractions. Leave the right side empty to delete. Spaces around each side are ignored; replacement output is not processed again. Disabled by default."
+    "ru": "Добавьте текст для поиска и замену. Например, / → l исправляет курсивную латинскую l. Для удаления оставьте замену пустой. Регистр настраивается для каждого правила; по умолчанию учитывается. Замены действуют во всём тексте, включая части слов, ссылки и дроби, до перевода и озвучивания. Приоритет у самой длинной записи; результат замены повторно не обрабатывается. Нажмите «Сохранить», чтобы применить правила.",
+    "en": "Add text to find and its replacement. For example, / → l corrects an italic Latin l. Leave the replacement empty to delete text. Case matching is set per rule and is sensitive by default. Replacements apply everywhere, including word fragments, links and fractions, before translation and speech. The longest match wins; replacement output is not processed again. Click Save to apply."
   },
   "ocr.correctionsInvalid": {
     "ru": "Некорректное правило в строке {0}. Используйте ошибка => исправление с непустой и уникальной левой частью.",
@@ -1162,5 +1162,93 @@
     "ko": "Windows 저수준 후크로 입력을 차단합니다. 독점 가로채기를 끄면 모드를 선택할 수 있습니다.",
     "fr": "Utilise un hook Windows de bas niveau pour bloquer les frappes. Le choix du mode est disponible lorsque l’interception exclusive est désactivée.",
     "de": "Verwendet einen Windows-Hook auf niedriger Ebene, um Eingaben zu unterdrücken. Die Modusauswahl ist bei ausgeschaltetem exklusivem Abfangen verfügbar."
+  },
+  "tab.translationCorrection": {
+    "ru": "Коррекция перевода",
+    "en": "Translation correction"
+  },
+  "translation.correctionsEnabled": {
+    "ru": "Использовать словарь перевода",
+    "en": "Use translation glossary"
+  },
+  "translation.correctionRules": {
+    "ru": "Словарь слов и выражений",
+    "en": "Words and phrases"
+  },
+  "translation.correctionsHint": {
+    "ru": "Добавьте слово, задайте замену или выберите «Оставить без изменений». Регистр настраивается для каждой записи. Перед переводом в промпт попадают только найденные целые слова и выражения. Требуется включённый перевод. Нажмите «Сохранить», чтобы применить словарь.",
+    "en": "Add a term and a replacement, or select Leave unchanged. Set case matching for each entry. Only whole words and phrases found in the source are added to the translation prompt. Translation must be enabled. Click Save to apply the glossary."
+  },
+  "translation.correctionsInvalid": {
+    "ru": "Некорректная запись в строке {0}. Укажите слово или слово => свой вариант. Обе части должны быть непустыми; исходные слова не должны повторяться без учёта регистра.",
+    "en": "Invalid entry on line {0}. Use word or word => preferred version. Both sides must be nonempty; source terms must be unique ignoring case."
+  },
+  "translation.entrySource": {
+    "ru": "Искать слово или выражение",
+    "en": "Find word or phrase"
+  },
+  "translation.entryReplacement": {
+    "ru": "Заменить на",
+    "en": "Replace with"
+  },
+  "translation.entryPreserve": {
+    "ru": "Оставить без изменений",
+    "en": "Leave unchanged"
+  },
+  "translation.entryIgnoreCase": {
+    "ru": "Не учитывать регистр",
+    "en": "Ignore case"
+  },
+  "translation.entryCaseSensitive": {
+    "ru": "Учитывать регистр",
+    "en": "Case sensitive"
+  },
+  "translation.entryAdd": {
+    "ru": "Добавить",
+    "en": "Add"
+  },
+  "translation.entryApply": {
+    "ru": "Применить изменения",
+    "en": "Apply changes"
+  },
+  "translation.entryCancel": {
+    "ru": "Отмена",
+    "en": "Cancel"
+  },
+  "translation.entryEdit": {
+    "ru": "Редактировать запись",
+    "en": "Edit entry"
+  },
+  "translation.entryDelete": {
+    "ru": "Удалить запись",
+    "en": "Delete entry"
+  },
+  "translation.entryInvalid": {
+    "ru": "Укажите искомое слово и вариант замены либо выберите «Оставить без изменений». Используйте одну строку в каждом поле.",
+    "en": "Enter a source term and replacement, or select Leave unchanged. Use one line per field."
+  },
+  "translation.entryDuplicate": {
+    "ru": "Для этого слова уже есть запись с пересекающимся правилом регистра. Отредактируйте её или измените искомое слово.",
+    "en": "An entry already covers this term with overlapping case settings. Edit it or change the source term."
+  },
+  "translation.entriesHint": {
+    "ru": "Слева — искомое слово и настройка регистра, справа — замена или сохранение оригинала. Кнопки в строке позволяют изменить или удалить запись.",
+    "en": "Source term and case setting on the left; replacement or preservation on the right. Use the row buttons to edit or delete."
+  },
+  "ocr.entrySource": {
+    "ru": "Искать текст",
+    "en": "Find text"
+  },
+  "ocr.entryDeleteText": {
+    "ru": "Удалить найденный текст",
+    "en": "Delete matched text"
+  },
+  "ocr.entryInvalid": {
+    "ru": "Укажите текст для поиска. Используйте одну строку в каждом поле; пустая замена удаляет найденный текст.",
+    "en": "Enter text to find. Use one line per field; an empty replacement deletes matched text."
+  },
+  "ocr.entriesHint": {
+    "ru": "Слева — искомый текст и настройка регистра, справа — замена или удаление текста. Кнопки в строке позволяют изменить или удалить правило.",
+    "en": "Source text and case setting on the left; replacement or deletion on the right. Use the row buttons to edit or delete a rule."
   }
 }

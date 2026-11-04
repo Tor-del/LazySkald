@@ -72,10 +72,45 @@
    </TabItem>
    <TabItem Header="{DynamicResource tab.textCorrection}" Tag="&#xE70F;">
     <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="28,24">
-      <CheckBox x:Name="OcrCorrectionsEnabledBox" Content="{DynamicResource ocr.correctionsEnabled}" Margin="0,0,0,12"/>
-      <TextBlock Text="{DynamicResource ocr.correctionRules}" Style="{StaticResource FieldLabel}"/>
-      <TextBox x:Name="OcrCorrectionRulesBox" IsEnabled="{Binding IsChecked, ElementName=OcrCorrectionsEnabledBox}" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="112" Margin="0,0,0,8"/>
-      <TextBlock Text="{DynamicResource ocr.correctionsHint}" Foreground="{StaticResource FluentSecondary}" TextWrapping="Wrap" FontSize="12" Margin="0,0,0,20"/>
+     <CheckBox x:Name="OcrCorrectionsEnabledBox" Content="{DynamicResource ocr.correctionsEnabled}" Margin="0,0,0,12"/>
+     <TextBlock Text="{DynamicResource ocr.correctionsHint}" Foreground="{StaticResource FluentSecondary}" TextWrapping="Wrap" FontSize="12" Margin="0,0,0,20"/>
+     <StackPanel IsEnabled="{Binding IsChecked, ElementName=OcrCorrectionsEnabledBox}">
+      <TextBlock Text="{DynamicResource ocr.entrySource}" Style="{StaticResource FieldLabel}"/>
+      <TextBox x:Name="OcrSourceBox" Margin="0,0,0,12"/>
+      <TextBlock Text="{DynamicResource translation.entryReplacement}" Style="{StaticResource FieldLabel}"/>
+      <TextBox x:Name="OcrReplacementBox" Margin="0,0,0,12"/>
+      <WrapPanel Margin="0,0,0,12">
+       <CheckBox x:Name="OcrIgnoreCaseBox" Content="{DynamicResource translation.entryIgnoreCase}" IsChecked="False" Margin="0,0,0,8"/>
+      </WrapPanel>
+      <WrapPanel Margin="0,0,0,8">
+       <Button x:Name="OcrCorrectionAddButton" Content="{DynamicResource translation.entryAdd}" Click="AddOcrCorrection" Style="{StaticResource AccentButton}"/>
+       <Button x:Name="OcrCorrectionCancelButton" Content="{DynamicResource translation.entryCancel}" Click="CancelOcrCorrection" Visibility="Collapsed"/>
+      </WrapPanel>
+      <TextBlock x:Name="OcrCorrectionError" Foreground="#B42318" TextWrapping="Wrap" Margin="0,0,0,12"/>
+     </StackPanel>
+     <TextBlock Text="{DynamicResource ocr.correctionRules}" Style="{StaticResource FieldLabel}"/>
+     <TextBlock Text="{DynamicResource ocr.entriesHint}" Foreground="{StaticResource FluentSecondary}" TextWrapping="Wrap" FontSize="12" Margin="0,0,0,8"/>
+     <ListBox x:Name="OcrCorrectionsList" MinHeight="130" MaxHeight="320" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+      <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem"><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style></ListBox.ItemContainerStyle>
+      <ListBox.ItemTemplate><DataTemplate>
+       <Grid Margin="4,8">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel Margin="0,0,12,0">
+         <TextBlock Text="{Binding Source}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+         <TextBlock FontSize="11" Foreground="{StaticResource FluentSecondary}">
+          <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Text" Value="{DynamicResource translation.entryCaseSensitive}"/><Style.Triggers><DataTrigger Binding="{Binding IgnoreCase}" Value="True"><Setter Property="Text" Value="{DynamicResource translation.entryIgnoreCase}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+         </TextBlock>
+        </StackPanel>
+        <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,8,0">
+         <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Text" Value="{Binding Replacement}"/><Style.Triggers><DataTrigger Binding="{Binding Replacement}" Value=""><Setter Property="Text" Value="{DynamicResource ocr.entryDeleteText}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+        </TextBlock>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+         <Button Content="&#xE70F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" ToolTip="{DynamicResource translation.entryEdit}" AutomationProperties.Name="{DynamicResource translation.entryEdit}" Tag="{Binding}" Click="EditOcrCorrection" Padding="8,4" MinWidth="30" MinHeight="30"/>
+         <Button Content="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" ToolTip="{DynamicResource translation.entryDelete}" AutomationProperties.Name="{DynamicResource translation.entryDelete}" Tag="{Binding}" Click="DeleteOcrCorrection" Padding="8,4" MinWidth="30" MinHeight="30" Margin="4,0,0,0"/>
+        </StackPanel>
+       </Grid>
+      </DataTemplate></ListBox.ItemTemplate>
+     </ListBox>
     </StackPanel></ScrollViewer>
    </TabItem>
    <TabItem Header="{DynamicResource tab.translation}" Tag="&#xE8C1;">
@@ -98,6 +133,50 @@
      <TextBox x:Name="TranslationTemperatureBox" Margin="0,8,0,20"/>
      <TextBlock Text="{DynamicResource translation.timeoutLabel}" Style="{StaticResource FieldLabel}"/><TextBox x:Name="TranslationTimeoutBox" Margin="0,0,0,20"/>
      <TextBlock Text="{DynamicResource translation.privacy}" Foreground="{StaticResource FluentSecondary}" TextWrapping="Wrap" FontSize="12"/>
+    </StackPanel></ScrollViewer>
+   </TabItem>
+   <TabItem Header="{DynamicResource tab.translationCorrection}" Tag="&#xE70F;">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="28,24">
+     <CheckBox x:Name="TranslationCorrectionsEnabledBox" Content="{DynamicResource translation.correctionsEnabled}" Margin="0,0,0,12"/>
+     <TextBlock Text="{DynamicResource translation.correctionsHint}" Foreground="{StaticResource FluentSecondary}" TextWrapping="Wrap" FontSize="12" Margin="0,0,0,20"/>
+     <StackPanel IsEnabled="{Binding IsChecked, ElementName=TranslationCorrectionsEnabledBox}">
+      <TextBlock Text="{DynamicResource translation.entrySource}" Style="{StaticResource FieldLabel}"/>
+      <TextBox x:Name="TranslationSourceBox" Margin="0,0,0,12"/>
+      <TextBlock Text="{DynamicResource translation.entryReplacement}" Style="{StaticResource FieldLabel}"/>
+      <TextBox x:Name="TranslationReplacementBox" Margin="0,0,0,12"/>
+      <WrapPanel Margin="0,0,0,12">
+       <CheckBox x:Name="TranslationPreserveBox" Content="{DynamicResource translation.entryPreserve}" Checked="TranslationPreserveChanged" Unchecked="TranslationPreserveChanged" Margin="0,0,20,8"/>
+       <CheckBox x:Name="TranslationIgnoreCaseBox" Content="{DynamicResource translation.entryIgnoreCase}" IsChecked="True" Margin="0,0,0,8"/>
+      </WrapPanel>
+      <WrapPanel Margin="0,0,0,8">
+       <Button x:Name="TranslationCorrectionAddButton" Content="{DynamicResource translation.entryAdd}" Click="AddTranslationCorrection" Style="{StaticResource AccentButton}"/>
+       <Button x:Name="TranslationCorrectionCancelButton" Content="{DynamicResource translation.entryCancel}" Click="CancelTranslationCorrection" Visibility="Collapsed"/>
+      </WrapPanel>
+      <TextBlock x:Name="TranslationCorrectionError" Foreground="#B42318" TextWrapping="Wrap" Margin="0,0,0,12"/>
+     </StackPanel>
+     <TextBlock Text="{DynamicResource translation.correctionRules}" Style="{StaticResource FieldLabel}"/>
+     <TextBlock Text="{DynamicResource translation.entriesHint}" Foreground="{StaticResource FluentSecondary}" TextWrapping="Wrap" FontSize="12" Margin="0,0,0,8"/>
+     <ListBox x:Name="TranslationCorrectionsList" MinHeight="130" MaxHeight="320" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+      <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem"><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style></ListBox.ItemContainerStyle>
+      <ListBox.ItemTemplate><DataTemplate>
+       <Grid Margin="4,8">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel Margin="0,0,12,0">
+         <TextBlock Text="{Binding Source}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+         <TextBlock FontSize="11" Foreground="{StaticResource FluentSecondary}">
+          <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Text" Value="{DynamicResource translation.entryCaseSensitive}"/><Style.Triggers><DataTrigger Binding="{Binding IgnoreCase}" Value="True"><Setter Property="Text" Value="{DynamicResource translation.entryIgnoreCase}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+         </TextBlock>
+        </StackPanel>
+        <TextBlock Grid.Column="1" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,8,0">
+         <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Text" Value="{Binding Replacement}"/><Style.Triggers><DataTrigger Binding="{Binding Preserve}" Value="True"><Setter Property="Text" Value="{DynamicResource translation.entryPreserve}"/></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+        </TextBlock>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+         <Button Content="&#xE70F;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" ToolTip="{DynamicResource translation.entryEdit}" AutomationProperties.Name="{DynamicResource translation.entryEdit}" Tag="{Binding}" Click="EditTranslationCorrection" Padding="8,4" MinWidth="30" MinHeight="30"/>
+         <Button Content="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" ToolTip="{DynamicResource translation.entryDelete}" AutomationProperties.Name="{DynamicResource translation.entryDelete}" Tag="{Binding}" Click="DeleteTranslationCorrection" Padding="8,4" MinWidth="30" MinHeight="30" Margin="4,0,0,0"/>
+        </StackPanel>
+       </Grid>
+      </DataTemplate></ListBox.ItemTemplate>
+     </ListBox>
     </StackPanel></ScrollViewer>
    </TabItem>
    <TabItem Header="{DynamicResource tab.genderization}" Tag="&#xE716;">

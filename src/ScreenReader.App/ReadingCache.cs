@@ -32,6 +32,7 @@ public sealed class ReadingCache(string? directory=null)
             Target=settings.Translation.Enabled ? settings.Translation.TargetLanguage : null,
             StressMarks=settings.Translation.Enabled && settings.Translation.AddStressMarks,Gender=Llm(settings.Genderization),
             StripMarkdown=settings.Translation.Enabled && settings.Translation.StripMarkdown,
+            TranslationCorrections=settings.Translation.Enabled ? ScreenReader.App.TranslationCorrections.PromptFor(text,settings.Translation) : "",
             Default=Speech(settings),Female=settings.Genderization.Enabled ? Speech(settings.SpeechFor(SpeakerGender.Female)) : null,
             Male=settings.Genderization.Enabled ? Speech(settings.SpeechFor(SpeakerGender.Male)) : null };
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(identity))));

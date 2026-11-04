@@ -44,10 +44,23 @@ public static class TranslationPlainText
         using var writer=new StringWriter();
         var renderer=new HtmlRenderer(writer) { EnableHtmlForBlock=false,EnableHtmlForInline=false,EnableHtmlEscape=false };
         Pipeline.Setup(renderer);
+        renderer.ObjectRenderers.Insert(0,new PlainParagraphRenderer());
         renderer.ObjectRenderers.Insert(0,new PlainTableRenderer());
         renderer.ObjectRenderers.Insert(0,new PlainTaskRenderer());
         renderer.Render(node);
         return writer.ToString().Trim();
+    }
+
+    private sealed class PlainParagraphRenderer : HtmlObjectRenderer<ParagraphBlock>
+    {
+        protected override void Write(HtmlRenderer renderer,ParagraphBlock paragraph)
+        {
+            renderer.EnsureLine();
+            if (paragraph.Parent is ContainerBlock parent && parent.IndexOf(paragraph) is int index && index>0 && parent[index-1] is ParagraphBlock)
+                renderer.WriteLine();
+            renderer.WriteLeafInline(paragraph);
+            renderer.EnsureLine();
+        }
     }
 
     private sealed class PlainTaskRenderer : HtmlObjectRenderer<TaskList>

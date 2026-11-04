@@ -24,6 +24,7 @@ internal static partial class Program
             RunProviderChecksAsync().GetAwaiter().GetResult();
             RunSpeechFallbackChecksAsync().GetAwaiter().GetResult();
             RunTranslationChecksAsync().GetAwaiter().GetResult();
+            RunTranslationCorrectionChecksAsync().GetAwaiter().GetResult();
             RunGenderizationChecksAsync().GetAwaiter().GetResult();
             RunHotkeyChecks();
             RunSelectionCancellationChecks();
@@ -235,17 +236,74 @@ internal static partial class Program
         var settings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(settings.SelectedVoice=="custom-ui-voice" && settings.OpenAiEndpoint=="http://127.0.0.1:9876/v1/audio/speech" && SecretProtection.Unprotect(settings.OpenAiApiKeyProtected)=="fake-ui-secret","Server settings round-trip from UI with encrypted key");
         var tabs=(System.Windows.Controls.TabControl)window.FindName("MainTabs");
-        Assert(tabs.Items.Count==12,"Settings include text correction and help tabs");
+        Assert(tabs.Items.Count==13,"Settings include text correction, translation correction and help tabs");
+        var translationCorrections=(System.Windows.Controls.CheckBox)window.FindName("TranslationCorrectionsEnabledBox");
+        var glossaryList=(System.Windows.Controls.ListBox)window.FindName("TranslationCorrectionsList");
+        var glossarySource=(System.Windows.Controls.TextBox)window.FindName("TranslationSourceBox");
+        var glossaryReplacement=(System.Windows.Controls.TextBox)window.FindName("TranslationReplacementBox");
+        var glossaryPreserve=(System.Windows.Controls.CheckBox)window.FindName("TranslationPreserveBox");
+        var glossaryIgnoreCase=(System.Windows.Controls.CheckBox)window.FindName("TranslationIgnoreCaseBox");
+        void GlossaryClick(string name)=>((System.Windows.Controls.Button)window.FindName(name)).RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
+        void GlossaryRowAction(string method,TranslationCorrectionEntry entry)=>typeof(MainWindow).GetMethod(method,System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,new object[] { new System.Windows.Controls.Button { Tag=entry },new System.Windows.RoutedEventArgs() });
+        AppSettings GlossarySettings()=>(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
+        tabs.SelectedIndex=3; content.UpdateLayout();
+        Assert(((System.Windows.Controls.TabItem)tabs.SelectedItem).Header.ToString()==UiText.T("tab.translationCorrection") && translationCorrections.IsChecked==false && !glossarySource.IsEnabled && glossaryList.Items.Count==0,"Translation glossary starts with disabled editor and empty list");
+        translationCorrections.IsChecked=true; content.UpdateLayout();
+        Assert(glossarySource.IsEnabled && glossaryIgnoreCase.IsChecked==true,"Enabling glossary unlocks editor with case-insensitive default");
+        glossarySource.Text="Skyrim"; glossaryPreserve.IsChecked=true;
+        Assert(!glossaryReplacement.IsEnabled,"Preserve checkbox disables replacement field");
+        GlossaryClick("TranslationCorrectionAddButton");
+        glossarySource.Text="Dragonborn"; glossaryReplacement.Text="Довакин";
+        GlossaryClick("TranslationCorrectionAddButton");
+        Assert(glossaryList.Items.Count==2 && GlossarySettings().Translation.CorrectionEntries is { Count:2 } && GlossarySettings().Translation.CorrectionRules=="","Glossary form adds typed entries and saves without legacy text");
+        GlossaryRowAction("EditTranslationCorrection",(TranslationCorrectionEntry)glossaryList.Items[1]);
+        glossaryIgnoreCase.IsChecked=false; glossaryReplacement.Text="Драконорождённый";
+        GlossaryClick("TranslationCorrectionAddButton");
+        Assert(glossaryList.Items.Count==2 && glossaryList.Items[1] is TranslationCorrectionEntry { IgnoreCase:false,Replacement:"Драконорождённый" },"Editing updates selected entry without duplication");
+        glossarySource.Text="skyrim"; glossaryPreserve.IsChecked=true;
+        GlossaryClick("TranslationCorrectionAddButton");
+        Assert(glossaryList.Items.Count==2 && !string.IsNullOrEmpty(((System.Windows.Controls.TextBlock)window.FindName("TranslationCorrectionError")).Text),"Overlapping glossary duplicates show inline validation");
+        GlossaryRowAction("EditTranslationCorrection",(TranslationCorrectionEntry)glossaryList.Items[1]);
+        glossaryReplacement.Text="Unsaved"; GlossaryClick("TranslationCorrectionCancelButton");
+        Assert(glossaryList.Items[1] is TranslationCorrectionEntry { Replacement:"Драконорождённый" } && glossarySource.Text=="","Cancelling an edit preserves saved list entry");
+        GlossaryRowAction("DeleteTranslationCorrection",(TranslationCorrectionEntry)glossaryList.Items[1]);
+        Assert(glossaryList.Items.Count==1,"Row delete removes a glossary entry");
+        glossarySource.Text="Dragonborn"; glossaryReplacement.Text="Довакин";
+        GlossaryClick("TranslationCorrectionAddButton");
+        content.UpdateLayout();
+        var glossaryImage=new System.Windows.Media.Imaging.RenderTargetBitmap(previewWidth,previewHeight,96,96,System.Windows.Media.PixelFormats.Pbgra32);
+        glossaryImage.Render(content);
+        var glossaryEncoder=new System.Windows.Media.Imaging.PngBitmapEncoder(); glossaryEncoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(glossaryImage));
+        using (var glossaryOutput=File.Create(Path.Combine(directory,"translation-correction-preview.png"))) glossaryEncoder.Save(glossaryOutput);
         var corrections=(System.Windows.Controls.CheckBox)window.FindName("OcrCorrectionsEnabledBox");
-        var correctionRules=(System.Windows.Controls.TextBox)window.FindName("OcrCorrectionRulesBox");
+        var ocrList=(System.Windows.Controls.ListBox)window.FindName("OcrCorrectionsList");
+        var ocrSource=(System.Windows.Controls.TextBox)window.FindName("OcrSourceBox");
+        var ocrReplacement=(System.Windows.Controls.TextBox)window.FindName("OcrReplacementBox");
+        var ocrIgnoreCase=(System.Windows.Controls.CheckBox)window.FindName("OcrIgnoreCaseBox");
+        void OcrClick(string name)=>((System.Windows.Controls.Button)window.FindName(name)).RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
+        void OcrRowAction(string method,OcrCorrectionEntry entry)=>typeof(MainWindow).GetMethod(method,System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,new object[] { new System.Windows.Controls.Button { Tag=entry },new System.Windows.RoutedEventArgs() });
         tabs.SelectedIndex=1; content.UpdateLayout();
         Assert(((System.Windows.Controls.TabItem)tabs.SelectedItem).Header.ToString()==UiText.T("tab.textCorrection"),"Corrections have a dedicated tab");
-        Assert(corrections.IsChecked==false && !correctionRules.IsEnabled && correctionRules.Text=="/ => l","Correction tab loads opt-in defaults");
+        Assert(corrections.IsChecked==false && !ocrSource.IsEnabled && ocrList.Items.Count==1 && ocrList.Items[0] is OcrCorrectionEntry { Source:"/",Replacement:"l",IgnoreCase:false },"OCR editor imports the default italic l rule with case sensitivity");
         corrections.IsChecked=true; content.UpdateLayout();
-        Assert(correctionRules.IsEnabled,"Enabling corrections unlocks custom rules");
-        correctionRules.Text="/ => l\nrn => m";
+        ocrSource.Text="rn"; ocrReplacement.Text="m"; ocrIgnoreCase.IsChecked=true;
+        OcrClick("OcrCorrectionAddButton");
+        Assert(ocrList.Items.Count==2 && ocrList.Items[1] is OcrCorrectionEntry { Source:"rn",Replacement:"m",IgnoreCase:true },"OCR form adds replacements with individual case settings");
+        OcrRowAction("EditOcrCorrection",(OcrCorrectionEntry)ocrList.Items[1]);
+        ocrReplacement.Text="M"; OcrClick("OcrCorrectionAddButton");
+        Assert(ocrList.Items.Count==2 && ocrList.Items[1] is OcrCorrectionEntry { Replacement:"M" },"OCR rule edits update existing entry");
+        OcrRowAction("EditOcrCorrection",(OcrCorrectionEntry)ocrList.Items[1]);
+        ocrReplacement.Text="Unsaved"; OcrClick("OcrCorrectionCancelButton");
+        Assert(ocrList.Items[1] is OcrCorrectionEntry { Replacement:"M" },"Cancelling OCR rule edit preserves previous value");
+        ocrSource.Text="RN"; ocrReplacement.Text="duplicate";
+        OcrClick("OcrCorrectionAddButton");
+        Assert(ocrList.Items.Count==2 && !string.IsNullOrEmpty(((System.Windows.Controls.TextBlock)window.FindName("OcrCorrectionError")).Text),"OCR duplicate rules display inline validation");
+        ocrSource.Text="noise"; ocrReplacement.Text="";
+        OcrClick("OcrCorrectionAddButton");
+        Assert(ocrList.Items.Count==3 && ocrList.Items[2] is OcrCorrectionEntry { Replacement:"" },"OCR editor supports deletion through an empty replacement");
+        OcrRowAction("DeleteOcrCorrection",(OcrCorrectionEntry)ocrList.Items[2]);
         var correctionSettings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
-        Assert(correctionSettings.OcrCorrectionsEnabled && correctionSettings.OcrCorrectionRules==correctionRules.Text,"Correction controls round-trip through saved settings");
+        Assert(correctionSettings.OcrCorrectionsEnabled && correctionSettings.OcrCorrectionEntries is { Count:2 } && correctionSettings.OcrCorrectionRules=="","OCR list deletion and settings round-trip preserve typed rules");
         content.UpdateLayout();
         var correctionImage=new System.Windows.Media.Imaging.RenderTargetBitmap(previewWidth,previewHeight,96,96,System.Windows.Media.PixelFormats.Pbgra32);
         correctionImage.Render(content);
@@ -273,8 +331,8 @@ internal static partial class Program
         string selectedDevice=((AudioOutputChoice)devices.SelectedItem).Id;
         var uiLanguage=(System.Windows.Controls.ComboBox)window.FindName("UiLanguageBox");
         uiLanguage.SelectedItem=((System.Collections.Generic.IEnumerable<UiLanguageChoice>)uiLanguage.ItemsSource).First(l=>l.Id=="en");
-        Assert(((System.Windows.Controls.TabItem)tabs.Items[0]).Header.ToString()=="Recognition" && ((System.Windows.Controls.TabItem)tabs.Items[1]).Header.ToString()=="Text correction" && ((System.Windows.Controls.TabItem)tabs.Items[10]).Header.ToString()=="Application","English localization updates tab headers immediately");
-        Assert(((System.Windows.Controls.TabItem)tabs.Items[11]).Header.ToString()=="How to use" && helpCapture.Text==UiText.T("help.capture","Ctrl + Alt + R"),"Help header and shortcut instructions follow language changes");
+        Assert(((System.Windows.Controls.TabItem)tabs.Items[0]).Header.ToString()=="Recognition" && ((System.Windows.Controls.TabItem)tabs.Items[1]).Header.ToString()=="Text correction" && ((System.Windows.Controls.TabItem)tabs.Items[11]).Header.ToString()=="Application","English localization updates tab headers immediately");
+        Assert(((System.Windows.Controls.TabItem)tabs.Items[12]).Header.ToString()=="How to use" && helpCapture.Text==UiText.T("help.capture","Ctrl + Alt + R"),"Help header and shortcut instructions follow language changes");
         Assert(((AudioOutputChoice)devices.SelectedItem).Id==selectedDevice && voiceBox.Text=="custom-ui-voice","Changing UI language preserves device and provider settings");
         var englishSettings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(englishSettings.UiLanguage=="en" && englishSettings.AudioOutputDeviceId==selectedDevice,"Interface language and playback device are included in saved settings");
@@ -290,7 +348,7 @@ internal static partial class Program
         ((System.Windows.Controls.CheckBox)window.FindName("TranslateEnabledBox")).IsChecked=true;
         var translatedSettings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(translatedSettings.Translation.Enabled && translatedSettings.Translation.Selected.Model=="lm-model" && SecretProtection.Unprotect(translatedSettings.Translation.Selected.ApiKeyProtected)=="llm-test-key" && translatedSettings.Translation.Providers["ollama"].Model=="ollama-model","Translation UI saves provider profiles with encrypted keys");
-        Assert(tabs.Items.Cast<System.Windows.Controls.TabItem>().Select(t=>t.Header.ToString()).SequenceEqual(new[] { "Recognition","Text correction","Translation","Genderization","Speech","Checks","Cache","Queue","Controls","Ollama","Application","How to use" }),"Tabs follow pipeline order with help at the end");
+        Assert(tabs.Items.Cast<System.Windows.Controls.TabItem>().Select(t=>t.Header.ToString()).SequenceEqual(new[] { "Recognition","Text correction","Translation","Translation correction","Genderization","Speech","Checks","Cache","Queue","Controls","Ollama","Application","How to use" }),"Tabs follow pipeline order with help at the end");
         Assert(((System.Windows.Controls.ComboBox)window.FindName("OcrProviderBox")).SelectedItem is OcrProviderChoice { Id:"windows" },"Recognition defaults to Windows OCR");
         var genderEnabled=(System.Windows.Controls.CheckBox)window.FindName("GenderEnabledBox");
         var roleList=(System.Windows.Controls.ListBox)window.FindName("SpeechRolesBox");
@@ -411,6 +469,8 @@ internal static partial class Program
         {
             uiLanguage.SelectedItem=locale;
             Assert(UiText.Language==locale.Id && ReadUi().UiLanguage==locale.Id,"UI language selection is saved: "+locale.Id);
+            Assert(ReadUi().OcrCorrectionEntries is { Count:2 } && ocrList.Items[1] is OcrCorrectionEntry { IgnoreCase:true,Replacement:"M" },"UI language preserves OCR correction list: "+locale.Id);
+            Assert(ReadUi().Translation is { CorrectionsEnabled:true,CorrectionEntries.Count:2 } && glossaryList.Items[0] is TranslationCorrectionEntry { Source:"Skyrim",Preserve:true },"UI language changes preserve translation glossary: "+locale.Id);
             Assert(((System.Windows.Controls.TabItem)tabs.Items[0]).Header.ToString()==UiText.Get("tab.recognition",locale.Id)
                 && window.Title==UiText.Get("app.title",locale.Id),"Localized title and tabs update immediately: "+locale.Id);
             Assert(voiceBox.Text==currentVoice && endpoint.Text==currentEndpoint && targetLanguages.Text==targetLocale
@@ -427,7 +487,7 @@ internal static partial class Program
                 tabs.SelectedIndex=tab; content.UpdateLayout();
                 var host=(System.Windows.Controls.ContentPresenter)tabs.Template.FindName("PART_SelectedContentHost",tabs);
                 var page=(System.Windows.FrameworkElement)((System.Windows.Controls.TabItem)tabs.Items[tab]).Content;
-                if (tab==4)
+                if (tab==5)
                 {
                     System.Collections.Generic.IEnumerable<System.Windows.DependencyObject> Visuals(System.Windows.DependencyObject node)
                     {

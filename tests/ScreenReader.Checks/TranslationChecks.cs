@@ -13,6 +13,12 @@ internal static partial class Program
 {
     private static async Task RunTranslationChecksAsync()
     {
+        var legacy=new TranslationSettings { Prompt=TranslationSettings.LegacyDefaultPrompt,AddStressMarks=true,CorrectionsEnabled=true,TargetLanguage="de-DE" };
+        Assert(legacy.UpgradeDefaultPrompt()==legacy with { Prompt=TranslationSettings.DefaultPrompt },"Old default prompt upgrades without changing translation options");
+        var custom=legacy with { Prompt="My custom prompt: {targetLanguage}" };
+        Assert(custom.UpgradeDefaultPrompt()==custom,"Custom translation prompts survive migration");
+        Assert(JsonSerializer.Deserialize<TranslationSettings>("{}")!.Prompt==TranslationSettings.DefaultPrompt,"Missing prompt uses literary default");
+        Assert(ReadingCache.KeyFor("Source",new() { Translation=legacy with { Enabled=true } })!=ReadingCache.KeyFor("Source",new() { Translation=legacy.UpgradeDefaultPrompt() with { Enabled=true } }),"New default prompt invalidates old translation cache");
         foreach (string provider in new[] { "lmstudio","ollama","openai" })
         {
             bool ollama=provider=="ollama";
@@ -55,6 +61,7 @@ internal static partial class Program
         Assert(JsonSerializer.Deserialize<TranslationSettings>(JsonSerializer.Serialize(valid with { StripMarkdown=false })) is { StripMarkdown:false },"Explicitly disabled Markdown cleanup survives serialization");
         Assert(JsonSerializer.Deserialize<TranslationSettings>(JsonSerializer.Serialize(valid with { StripMarkdown=true })) is { StripMarkdown:true },"Markdown removal survives settings serialization");
         foreach (var (markdown,plain) in new[] {
+            ("Ты входишь в замо́к.\n\n— Кто здесь? — спрашиваешь ты.\n\n«Неужели он вернулся?»","Ты входишь в замо́к.\n\n— Кто здесь? — спрашиваешь ты.\n\n«Неужели он вернулся?»"),
             ("# Заголовок\n\n**Жирный** и *курсив*, ~~удалённый~~.","Заголовок\nЖирный и курсив, удалённый."),
             ("> Цитата\n\n- Первый\n- Второй","Цитата\nПервый\nВторой"),
             ("[Ссылка](https://example.com) и ![описание](image.png)","Ссылка и описание"),

@@ -31,6 +31,8 @@ public partial class MainWindow
         TranslationPromptBox.Text=settings.Prompt;
         TranslationStressMarksBox.IsChecked=settings.AddStressMarks;
         TranslationStripMarkdownBox.IsChecked=settings.StripMarkdown;
+        TranslationCorrectionsEnabledBox.IsChecked=settings.CorrectionsEnabled;
+        InitializeTranslationCorrections(settings);
         TranslationTemperatureEnabledBox.IsChecked=settings.Temperature.HasValue;
         TranslationTemperatureBox.Text=(settings.Temperature ?? 0.2).ToString(CultureInfo.InvariantCulture);
         TranslationTimeoutBox.Text=settings.TimeoutSeconds.ToString(CultureInfo.InvariantCulture);
@@ -72,6 +74,8 @@ public partial class MainWindow
         }
         if (!int.TryParse(TranslationTimeoutBox.Text,out var timeout)) throw new ArgumentException(UiText.T("translation.invalid"));
         var settings=new TranslationSettings { Enabled=TranslateEnabledBox.IsChecked==true,Provider=translationProvider,Providers=new(translationProviders),TargetLanguage=TranslationTargetBox.Text.Trim(),Prompt=TranslationPromptBox.Text,AddStressMarks=TranslationStressMarksBox.IsChecked==true,StripMarkdown=TranslationStripMarkdownBox.IsChecked==true,Temperature=temperature,TimeoutSeconds=timeout };
+        settings=settings with { CorrectionsEnabled=TranslationCorrectionsEnabledBox.IsChecked==true,CorrectionEntries=translationCorrectionEntries.ToList(),CorrectionRules="" };
+        if (!forModels) TranslationCorrections.ValidateEntries(settings.CorrectionEntries);
         if (settings.Enabled || forModels) LlmTranslationClient.Validate(settings,!forModels);
         return settings;
     }

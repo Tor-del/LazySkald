@@ -26,6 +26,7 @@ public sealed record AppSettings
     public bool OcrPreserveParagraphs { get; init; }
     public bool OcrCorrectionsEnabled { get; init; }
     public string OcrCorrectionRules { get; init; }="/ => l";
+    public List<OcrCorrectionEntry>? OcrCorrectionEntries { get; init; }
     public GenderizationSettings Genderization { get; init; }=new();
     public Dictionary<string,string> FemaleProviderVoices { get; init; }=new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string,string> MaleProviderVoices { get; init; }=new(StringComparer.OrdinalIgnoreCase);
@@ -81,8 +82,12 @@ public static class SettingsStore
             if (value.VolumePercent is < 0 or > 100 || value.FallbackRole?.IsStructurallyValid()==false || value.FemaleRole?.IsStructurallyValid()==false || value.MaleRole?.IsStructurallyValid()==false || value.Genderization is null || value.Genderization.Providers is null || value.FemaleProviderVoices is null || value.MaleProviderVoices is null || value.OcrProviderId!="windows" || value.Translation is null || value.Translation.Providers is null || string.IsNullOrWhiteSpace(value.Language) || string.IsNullOrWhiteSpace(value.SpeechProviderId) || value.RatePercent is < -50 or > 100 || !Enum.IsDefined(value.CaptureMode) || !Enum.IsDefined(value.HotkeyMode) || !Enum.IsDefined(value.OpenAiFormat))
                 throw new InvalidDataException("Некорректные параметры.");
             if (value.OcrCorrectionRules is null) throw new InvalidDataException("Некорректные правила коррекции текста.");
-            if (value.OcrCorrectionsEnabled) OcrTextCorrections.Parse(value.OcrCorrectionRules);
-            return ClearReservedHotkeys(value);
+            if (value.OcrCorrectionsEnabled || value.OcrCorrectionEntries is not null)
+                OcrTextCorrections.ValidateEntries(OcrTextCorrections.EntriesFor(value));
+            if (value.Translation.CorrectionRules is null) throw new InvalidDataException("Некорректный словарь перевода.");
+            if (value.Translation.CorrectionsEnabled || value.Translation.CorrectionEntries is not null)
+                TranslationCorrections.ValidateEntries(TranslationCorrections.EntriesFor(value.Translation));
+            return ClearReservedHotkeys(value with { Translation=value.Translation.UpgradeDefaultPrompt() });
         }
         catch (Exception e) { AppLog.Write("Настройки повреждены; использованы значения по умолчанию.",e); return new(); }
     }

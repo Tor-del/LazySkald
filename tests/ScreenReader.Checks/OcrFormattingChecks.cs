@@ -44,5 +44,15 @@ internal static partial class Program
         Assert(OcrTextFormatter.Format(misread,defaults with { OcrCorrectionRules="bad" })==OcrTextFormatter.Format(misread),"Dormant invalid rules do not affect reading");
         var correctionRestored=JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(corrected with { OcrCorrectionRules="/ => l\nrn => m" }))!;
         Assert(correctionRestored.OcrCorrectionsEnabled && correctionRestored.OcrCorrectionRules=="/ => l\nrn => m","Correction toggle and custom rules survive settings serialization");
+        var migrated=OcrTextCorrections.EntriesFor(correctionRestored);
+        Assert(migrated.Count==2 && migrated[0] is { Source:"/",Replacement:"l",IgnoreCase:false },"Legacy OCR rules migrate with case-sensitive behavior");
+        var typed=corrected with { OcrCorrectionRules="",OcrCorrectionEntries=[new() { Source="rn",Replacement="m",IgnoreCase=true },new() { Source="M",Replacement="n" },new() { Source="[noise]",Replacement="" }] };
+        Assert(OcrTextFormatter.Format("RN rn M m [noise]",typed)=="m m n m","OCR typed rules support mixed case flags and deletion without reprocessing output");
+        Assert(OcrTextCorrections.Apply("rn R r",new OcrCorrectionEntry[] { new() { Source="r",Replacement="$1",IgnoreCase=true },new() { Source="rn",Replacement="long" } })=="long $1 $1","Typed OCR rules prefer longest matches and treat replacement as literal");
+        Assert(OcrTextFormatter.Format("rn",typed with { OcrCorrectionEntries=[] })=="rn","Deleting every typed OCR rule does not restore legacy rules");
+        Throws<ArgumentException>(()=>OcrTextCorrections.ValidateEntries([new() { Source="RN",Replacement="m",IgnoreCase=true },new() { Source="rn",Replacement="n" }]),"OCR case-overlapping duplicates rejected");
+        Throws<ArgumentException>(()=>OcrTextCorrections.ValidateEntries([new() { Source="",Replacement="x" }]),"Empty typed OCR source rejected");
+        var typedRestored=JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(typed))!;
+        Assert(typedRestored.OcrCorrectionEntries is { Count:3 } && typedRestored.OcrCorrectionEntries[0].IgnoreCase && OcrTextFormatter.Format("RN",typedRestored)=="m","OCR typed entries and case flags survive serialization");
     }
 }
