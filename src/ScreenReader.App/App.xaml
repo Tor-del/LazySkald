@@ -2,6 +2,7 @@
   <Application.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Themes/Light.xaml"/>
         <ResourceDictionary Source="Themes/Fluent.xaml"/>
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>

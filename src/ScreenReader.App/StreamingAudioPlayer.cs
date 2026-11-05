@@ -11,13 +11,15 @@ public interface IAudioPlayer
     Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,Action started,CancellationToken cancellationToken);
     Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,string deviceId,Action started,CancellationToken cancellationToken)=>PlayAsync(audio,format,started,cancellationToken);
     Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,string deviceId,float volume,Action started,CancellationToken cancellationToken)=>PlayAsync(audio,format,deviceId,started,cancellationToken);
+    Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,string deviceId,float volume,PlaybackSession playback,Action started,CancellationToken cancellationToken)=>PlayAsync(audio,format,deviceId,volume,started,cancellationToken);
 }
 public sealed class StreamingAudioPlayer(float volume = 1f) : IAudioPlayer
 {
     public Task PlayAsync(IAsyncEnumerable<byte[]> audio,Action started,CancellationToken cancellationToken)=>PlayAsync(audio,SpeechAudioFormat.Mp3,started,cancellationToken);
     public Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,Action started,CancellationToken cancellationToken)=>PlayAsync(audio,format,"",started,cancellationToken);
     public Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,string deviceId,Action started,CancellationToken cancellationToken)=>PlayAsync(audio,format,deviceId,1f,started,cancellationToken);
-    public async Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,string deviceId,float gain,Action started,CancellationToken cancellationToken)
+    public Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,string deviceId,float gain,Action started,CancellationToken cancellationToken)=>PlayAsync(audio,format,deviceId,gain,new PlaybackSession(),started,cancellationToken);
+    public async Task PlayAsync(IAsyncEnumerable<byte[]> audio,SpeechAudioFormat format,string deviceId,float gain,PlaybackSession playback,Action started,CancellationToken cancellationToken)
     {
         using var stop = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         var channel = Channel.CreateBounded<byte[]>(new BoundedChannelOptions(16) { SingleReader=true,SingleWriter=true,FullMode=BoundedChannelFullMode.Wait });
@@ -30,7 +32,7 @@ public sealed class StreamingAudioPlayer(float volume = 1f) : IAudioPlayer
         },CancellationToken.None);
         var consumer = Task.Run(() =>
         {
-            try { DecodeAndPlay(channel.Reader,format,deviceId,gain,started,stop.Token); }
+            try { DecodeAndPlay(channel.Reader,format,deviceId,gain,playback,started,stop.Token); }
             finally { stop.Cancel(); }
         },CancellationToken.None);
         try { await Task.WhenAll(producer,consumer).ConfigureAwait(false); }
@@ -44,13 +46,14 @@ public sealed class StreamingAudioPlayer(float volume = 1f) : IAudioPlayer
             throw;
         }
     }
-    private void DecodeAndPlay(ChannelReader<byte[]> reader,SpeechAudioFormat format,string deviceId,float roleGain,Action started,CancellationToken ct)
+    private void DecodeAndPlay(ChannelReader<byte[]> reader,SpeechAudioFormat format,string deviceId,float roleGain,PlaybackSession playback,Action started,CancellationToken ct)
     {
         using var stream = new ChunkStream(reader,ct);
         using var device=AudioOutputDevices.Resolve(deviceId);
         using var output=new WasapiOut(device,AudioClientShareMode.Shared,true,100);
         IMp3FrameDecompressor? decoder=null; BufferedWaveProvider? provider=null;
         Exception? playbackFailure=null;
+        long decodedBytes=0;
         output.PlaybackStopped += (_,e) => { if (e.Exception is not null) Volatile.Write(ref playbackFailure,e.Exception); };
         try
         {
@@ -59,6 +62,7 @@ public sealed class StreamingAudioPlayer(float volume = 1f) : IAudioPlayer
             if (wave is not null)
             {
                 provider=new BufferedWaveProvider(wave.Format) { BufferDuration=TimeSpan.FromSeconds(5),ReadFully=true,DiscardOnBufferOverflow=false };
+                playback.SetDuration(wave.TotalDuration);
                 InitOutput(provider);
             }
             while (true)
@@ -82,23 +86,35 @@ public sealed class StreamingAudioPlayer(float volume = 1f) : IAudioPlayer
                 while (provider!.BufferedDuration.TotalSeconds>2)
                 { ct.ThrowIfCancellationRequested(); CheckOutput(); ct.WaitHandle.WaitOne(20); }
                 provider.AddSamples(pcm,0,count);
+                Interlocked.Add(ref decodedBytes,count);
                 if (!playing && provider.BufferedDuration.TotalMilliseconds>=80)
-                { output.Play(); playing=true; started(); }
+                { playback.Start(); playing=true; started(); }
                 CheckOutput();
             }
             if (provider is null) throw new InvalidDataException(UiText.T("audio.empty"));
-            if (!playing) { output.Play(); started(); }
-            while (provider.BufferedBytes>0) { ct.ThrowIfCancellationRequested(); CheckOutput(); ct.WaitHandle.WaitOne(20); }
-            // WaveOut has a small native buffer after the provider has drained.
-            if (ct.WaitHandle.WaitOne(150)) ct.ThrowIfCancellationRequested();
+            playback.SetDuration(TimeSpan.FromSeconds((double)Interlocked.Read(ref decodedBytes)/provider.WaveFormat.AverageBytesPerSecond));
+            if (!playing) { playback.Start(); started(); }
+            while (provider.BufferedBytes>0 || playback.Progress.Paused) { ct.ThrowIfCancellationRequested(); CheckOutput(); ct.WaitHandle.WaitOne(20); }
+            // Let the native output drain, excluding time spent on pause.
+            var drain=System.Diagnostics.Stopwatch.StartNew();
+            double remainingMs=150;
+            while (remainingMs>0)
+            {
+                ct.ThrowIfCancellationRequested(); CheckOutput();
+                if (!playback.Progress.Paused) remainingMs-=drain.Elapsed.TotalMilliseconds;
+                drain.Restart();
+                ct.WaitHandle.WaitOne(20);
+            }
         }
-        finally { output.Stop(); decoder?.Dispose(); }
+        finally { playback.Detach(); output.Stop(); decoder?.Dispose(); }
         void CheckOutput() { if (Volatile.Read(ref playbackFailure) is { } e) throw new IOException(UiText.T("audio.failed"),e); }
         void InitOutput(BufferedWaveProvider source)
         {
             // Software gain: never change the user's endpoint/master volume.
             var gain=new VolumeSampleProvider(source.ToSampleProvider()) { Volume=Math.Clamp(volume*roleGain,0,1) };
             output.Init(gain.ToWaveProvider());
+            playback.Attach(paused=> { if (paused) output.Pause(); else output.Play(); },
+                ()=>TimeSpan.FromSeconds(Math.Max(0,Interlocked.Read(ref decodedBytes)-source.BufferedBytes)/(double)source.WaveFormat.AverageBytesPerSecond));
         }
     }
 

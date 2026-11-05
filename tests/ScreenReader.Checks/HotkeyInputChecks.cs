@@ -106,6 +106,7 @@ internal static partial class Program
                 service.Configure(new AppSettings { CaptureHotkey=null });
                 actions.Clear(); SendTestChord(); await Task.Delay(100);
                 Assert(actions.Count==0,"Clearing every binding disables shortcut delivery");
+                await RunCompetingHotkeyHookChecksAsync(service,window,handle);
                 await RunExclusiveSelectionChecksAsync(window,handle);
             }
             catch (Exception e) { error=e; }
@@ -122,6 +123,45 @@ internal static partial class Program
     [DllImport("user32.dll")] private static extern IntPtr SetCapture(IntPtr window);
     [DllImport("user32.dll")] private static extern IntPtr GetCapture();
     [DllImport("user32.dll")] private static extern bool ReleaseCapture();
+    private static async Task RunCompetingHotkeyHookChecksAsync(HotkeyService service,Window window,IntPtr handle)
+    {
+        var actions=new System.Collections.Generic.List<HotkeyAction>();
+        service.ActionRequested+=actions.Add;
+        ProbeProc competing=(code,message,data)=>
+        {
+            if (code>=0 && Marshal.ReadInt32(data) is 0x76 or 0x25) return new IntPtr(1);
+            return CallNextHookEx(IntPtr.Zero,code,message,data);
+        };
+        IntPtr competitor=IntPtr.Zero;
+        try
+        {
+            foreach (bool exclusive in new[] { false,true })
+            {
+                service.Configure(new AppSettings { CaptureHotkey=new(0,0x76),RepeatCaptureHotkey=new(0,0x25),HotkeyMode=HotkeyMode.GameHook,ExclusiveHotkeys=exclusive });
+                competitor=SetWindowsHookEx(13,competing,GetModuleHandle(null),0);
+                if (competitor==IntPtr.Zero) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+                window.Activate(); await Task.Delay(50);
+                if (GetForegroundWindow()!=handle) throw new Exception("Test window lost foreground; no input sent.");
+                actions.Clear();
+                SendTestChord(0x76,false); SendTestChord(0x25,false); await Task.Delay(100);
+                Assert(actions.Count==0,"Later competing hook reproduces blocked F7 and Left Arrow: exclusive="+exclusive);
+                service.RefreshInputHooks();
+                SendTestChord(0x76,false); SendTestChord(0x25,false); await Task.Delay(100);
+                Assert(actions.SequenceEqual(new[] { HotkeyAction.Capture,HotkeyAction.RepeatCapture }),"Hook recovery restores F7 and Left Arrow exactly once ahead of competing hook: exclusive="+exclusive);
+                service.SetSuspended(true); service.RefreshInputHooks();
+                actions.Clear(); SendTestChord(0x76,false); await Task.Delay(100);
+                Assert(actions.Count==0,"Recovery cannot reactivate shortcuts while editing");
+                service.SetSuspended(false);
+                UnhookWindowsHookEx(competitor); competitor=IntPtr.Zero;
+            }
+        }
+        finally
+        {
+            service.ActionRequested-=actions.Add;
+            if (competitor!=IntPtr.Zero) UnhookWindowsHookEx(competitor);
+            GC.KeepAlive(competing);
+        }
+    }
     private static async Task RunExclusiveSelectionChecksAsync(Window host,IntPtr hostHandle)
     {
         int escaped=0,clicked=0,rightClicked=0;
@@ -203,6 +243,88 @@ internal static partial class Program
             UnhookWindowsHookEx(keyHook); UnhookWindowsHookEx(mouseHook);
             GC.KeepAlive(keyboard); GC.KeepAlive(mouse);
             System.Windows.Forms.Cursor.Position=cursor;
+        }
+    }
+
+    private static void RunOverlayInteractionInput()
+    {
+        var loop=new DispatcherFrame(); Exception? error=null;
+        var original=new ForegroundWindowService().Capture();
+        Dispatcher.CurrentDispatcher.BeginInvoke(async () =>
+        {
+            var host=new Window { Title="ScreenReader overlay interaction check",Width=460,Height=160 };
+            try
+            {
+                host.Show(); host.Activate(); await Task.Delay(150);
+                using var service=new HotkeyService();
+                await RunOverlayInteractionInputAsync(service,host,new WindowInteropHelper(host).Handle);
+            }
+            catch (Exception e) { error=e; }
+            finally { host.Close(); if (original is not null) await original.RestoreAsync(); loop.Continue=false; }
+        });
+        Dispatcher.PushFrame(loop);
+        if (error is not null) throw error;
+    }
+    [StructLayout(LayoutKind.Sequential)] private struct OverlayRect { public int Left,Top,Right,Bottom; }
+    [DllImport("user32.dll",EntryPoint="GetWindowRect")] private static extern bool GetOverlayRect(IntPtr window,out OverlayRect rect);
+    private static async Task RunOverlayInteractionInputAsync(HotkeyService service,Window host,IntPtr hostHandle)
+    {
+        using var providers=new SpeechProviderRegistry(); using var capture=new BlockedCapture();
+        var reader=new ReadingController(capture,new NoOcr(),new IdentityTextTransform(),providers,new CacheAudio());
+        using var overlay=new ReadingOverlayWindow(reader);
+        System.Threading.CancellationToken jobToken=default;
+        var job=reader.Queue.EnqueueAsync(token=> { jobToken=token; return Task.FromResult(0); },(_,token)=>Task.Delay(System.Threading.Timeout.Infinite,token));
+        overlay.ApplySettings(new() { Enabled=true });
+        IntPtr overlayHandle=new WindowInteropHelper(overlay).Handle;
+        service.OverlayInteractionChanged+=overlay.SetInteractionHeld;
+        void SendKey(ushort key,bool up)
+        {
+            var input=new[] { new Input { Type=1,Data=new InputData { Keyboard=new KeyboardInput { Key=key,Flags=up ? 2u:0 } } } };
+            if (SendInput(1,input,Marshal.SizeOf<Input>())!=1) throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+        }
+        try
+        {
+            foreach (var screen in System.Windows.Forms.Screen.AllScreens)
+            {
+                reader.Queue.Update(jobToken,captureMonitor:screen.Bounds);
+                overlay.ApplySettings(new() { Enabled=true });
+                await Task.Delay(150);
+                Assert(GetOverlayRect(overlayHandle,out var rect),"Native overlay bounds are available");
+                var expected=OverlayPlacement.Calculate(screen.Bounds,screen.WorkingArea,rect.Right-rect.Left,rect.Bottom-rect.Top);
+                Assert(rect.Left==expected.X && rect.Top==expected.Y && System.Windows.Forms.Screen.FromHandle(overlayHandle).DeviceName==screen.DeviceName,
+                    "Visible overlay follows the capture monitor at the default centre: "+screen.DeviceName);
+            }
+            host.Activate();
+            _=host.Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle,()=>
+            {
+                var preview=host.OwnedWindows.OfType<ReadingOverlayWindow>().Single();
+                preview.DialogResult=true;
+            });
+            var saved=overlay.ConfigureLayout(host,new() { Enabled=true,CenterX=0.35,CenterY=0.6 });
+            Assert(saved is not null && Math.Abs(saved.CenterX-0.35)<0.002 && Math.Abs(saved.CenterY-0.6)<0.002,
+                "Layout confirmation saves relative coordinates before the preview window closes: "+System.Text.Json.JsonSerializer.Serialize(saved));
+            foreach (var mode in new[] { HotkeyMode.GameHook,HotkeyMode.Registered })
+            foreach (ushort key in new ushort[] { 0xA4,0xA5,0x86 })
+            {
+                service.Configure(new() { CaptureHotkey=null,OverlayInteractionHotkey=new(0,key==0x86 ? 0x86u:0x12u),HotkeyMode=mode,ExclusiveHotkeys=false });
+                host.Activate(); await Task.Delay(70);
+                if (GetForegroundWindow()!=hostHandle) throw new Exception("Test window lost foreground; no overlay test keys sent.");
+                try
+                {
+                    SendKey(key,false); await Task.Delay(100);
+                    Assert(GetForegroundWindow()==overlayHandle,"Holding interaction key focuses overlay: "+mode+" / "+key);
+                    SendKey(key,false); await Task.Delay(30);
+                    Assert(GetForegroundWindow()==overlayHandle,"Auto-repeat keeps overlay focused");
+                }
+                finally { SendKey(key,true); }
+                await Task.Delay(120);
+                Assert(GetForegroundWindow()==hostHandle,"Releasing interaction key returns focus to source: "+mode+" / "+key);
+            }
+        }
+        finally
+        {
+            service.OverlayInteractionChanged-=overlay.SetInteractionHeld;
+            reader.Queue.CancelAll(); await job;
         }
     }
 

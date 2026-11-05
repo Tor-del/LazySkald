@@ -1,0 +1,34 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <SolidColorBrush x:Key="FluentText" Color="#F5F5F5"/>
+  <SolidColorBrush x:Key="FluentSecondary" Color="#BDBDBD"/>
+  <SolidColorBrush x:Key="FluentAccent" Color="#60CDFF"/>
+  <SolidColorBrush x:Key="FluentStroke" Color="#505050"/>
+  <SolidColorBrush x:Key="FluentSurface" Color="#323232"/>
+  <SolidColorBrush x:Key="FluentSurfaceHover" Color="#3A3A3A"/>
+  <SolidColorBrush x:Key="FluentSurfaceFocus" Color="#292929"/>
+  <SolidColorBrush x:Key="FluentUnderline" Color="#A0A0A0"/>
+  <SolidColorBrush x:Key="FluentSelection" Color="#23485C"/>
+  <SolidColorBrush x:Key="FluentHover" Color="#3D3D3D"/>
+  <SolidColorBrush x:Key="FluentPopup" Color="#2D2D2D"/>
+  <SolidColorBrush x:Key="FluentPopupStroke" Color="#555555"/>
+  <SolidColorBrush x:Key="FluentCheckStroke" Color="#A0A0A0"/>
+  <SolidColorBrush x:Key="FluentList" Color="#292929"/>
+  <SolidColorBrush x:Key="FluentScrollThumb" Color="#858585"/>
+  <SolidColorBrush x:Key="FluentScrollHover" Color="#B0B0B0"/>
+  <SolidColorBrush x:Key="FluentTabHover" Color="#333A43"/>
+  <SolidColorBrush x:Key="FluentTabSelected" Color="#394451"/>
+  <SolidColorBrush x:Key="FluentPanel" Color="#252525"/>
+  <SolidColorBrush x:Key="FluentPanelStroke" Color="#454545"/>
+  <SolidColorBrush x:Key="FluentDivider" Color="#404040"/>
+  <SolidColorBrush x:Key="FluentWarning" Color="#F4CA80"/>
+  <SolidColorBrush x:Key="FluentError" Color="#FF9A91"/>
+  <SolidColorBrush x:Key="FluentVersion" Color="#C6DDF5"/>
+  <SolidColorBrush x:Key="FluentFooter" Color="#BF252525"/>
+  <SolidColorBrush x:Key="FluentFooterStroke" Color="#454545"/>
+  <SolidColorBrush x:Key="FluentAccentStroke" Color="#60CDFF"/>
+  <SolidColorBrush x:Key="FluentAccentText" Color="#10232D"/>
+  <SolidColorBrush x:Key="FluentTextSelection" Color="#365F7C"/>
+  <LinearGradientBrush x:Key="FluentBackdrop" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#202733" Offset="0"/><GradientStop Color="#202020" Offset="0.55"/><GradientStop Color="#28242F" Offset="1"/>
+  </LinearGradientBrush>
+</ResourceDictionary>

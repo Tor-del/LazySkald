@@ -156,6 +156,35 @@ OCR, translation, voice detection and speech synthesis prepare queued fragments
 without waiting for playback. Generated audio is buffered in memory; playback
 remains strictly in submission order, with streaming start for the first fragment.
 
+## Overlay
+
+Enable **Overlay** and optionally **Show translation**, configure **Interact with
+overlay** in either Overlay or Controls (Alt by default). **Configure position** opens a sample widget:
+drag its header to move and the bottom-right handle to resize its width. Confirm
+the position, then save the application settings. Offscreen widgets are moved
+back onto an available monitor. The overlay follows the monitor where the OCR area
+was selected. Its default centre is at 50% of screen width and 75% of screen height.
+Custom positions are saved relative to that monitor and follow each queued job.
+
+The widget shows the current job stage and a cancel button. Playback adds pause/
+resume and progress; streams with unknown duration show elapsed time and an
+activity indicator until duration becomes available. Without a displayed
+translation, jobs finish automatically after playback and an empty queue hides
+the widget. Displayed translations keep their job active until manually closed,
+including when speech is disabled. Later jobs prepare in the background but wait
+to play. Disabling the overlay or translation display releases a pending text wait.
+
+Hold the interaction key to focus the widget; releasing it restores the previous
+window. A visible, unrestricted cursor can use the widget without holding the key.
+A captured or hidden cursor passes through the widget until the key is held;
+blocking input in games that read devices directly is not guaranteed.
+
+The current renderer is a separate WPF/Win32 window without game injection,
+intended for windowed and borderless modes. Exclusive fullscreen visibility is
+not guaranteed. Users verify compatibility with their games and anti-cheat
+systems. `IReadingOverlay` separates presentation from job/audio control to allow
+a future DirectX/Vulkan renderer, potentially using Dear ImGui; it is not included.
+
 ## LLM translation
 
 Enable **Translation → Translate before speaking**, choose LM Studio, Ollama or

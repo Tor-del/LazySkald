@@ -1,6 +1,38 @@
 {
+  "label.theme": {
+    "ru": "Тема оформления", "en": "Appearance", "zh": "外观", "ja": "テーマ", "es": "Tema", "ko": "테마", "fr": "Thème", "de": "Design"
+  },
+  "theme.system": {
+    "ru": "Системная (по умолчанию)", "en": "System (default)", "zh": "跟随系统（默认）", "ja": "システム（既定）", "es": "Sistema (predeterminado)", "ko": "시스템 (기본값)", "fr": "Système (par défaut)", "de": "System (Standard)"
+  },
+  "theme.light": {
+    "ru": "Светлая", "en": "Light", "zh": "浅色", "ja": "ライト", "es": "Claro", "ko": "라이트", "fr": "Clair", "de": "Hell"
+  },
+  "theme.dark": {
+    "ru": "Тёмная", "en": "Dark", "zh": "深色", "ja": "ダーク", "es": "Oscuro", "ko": "다크", "fr": "Sombre", "de": "Dunkel"
+  },
+  "speech.enabled": {
+    "ru": "Включить озвучивание",
+    "en": "Enable speech",
+    "zh": "启用朗读",
+    "ja": "読み上げを有効にする",
+    "es": "Activar lectura en voz alta",
+    "ko": "음성 읽기 활성화",
+    "fr": "Activer la lecture à voix haute",
+    "de": "Vorlesen aktivieren"
+  },
+  "speech.enabledHint": {
+    "ru": "Когда озвучивание выключено, распознавание и перевод продолжают работать без звука. Нажмите «Сохранить», чтобы применить настройку.",
+    "en": "When speech is disabled, recognition and translation continue without audio. Click Save to apply.",
+    "zh": "禁用朗读后，识别和翻译仍可运行，但不会播放声音。点击“保存”以应用。",
+    "ja": "読み上げが無効でも、認識と翻訳は音声なしで動作します。「保存」で適用します。",
+    "es": "Con la lectura desactivada, el reconocimiento y la traducción siguen funcionando sin audio. Pulsa Guardar para aplicar.",
+    "ko": "음성 읽기를 꺼도 인식과 번역은 소리 없이 계속 작동합니다. 저장을 눌러 적용하세요.",
+    "fr": "Lorsque la lecture est désactivée, la reconnaissance et la traduction continuent sans audio. Cliquez sur Enregistrer pour appliquer.",
+    "de": "Bei deaktiviertem Vorlesen funktionieren Erkennung und Übersetzung weiterhin ohne Audio. Zum Anwenden auf Speichern klicken."
+  },
   "tab.textCorrection": {
-    "ru": "Коррекция текста",
+    "ru": "Словарь распознавания",
     "en": "Text correction"
   },
   "ocr.correctionsEnabled": {
@@ -1164,7 +1196,7 @@
     "de": "Verwendet einen Windows-Hook auf niedriger Ebene, um Eingaben zu unterdrücken. Die Modusauswahl ist bei ausgeschaltetem exklusivem Abfangen verfügbar."
   },
   "tab.translationCorrection": {
-    "ru": "Коррекция перевода",
+    "ru": "Словарь перевода",
     "en": "Translation correction"
   },
   "translation.correctionsEnabled": {
@@ -1250,5 +1282,235 @@
   "ocr.entriesHint": {
     "ru": "Слева — искомый текст и настройка регистра, справа — замена или удаление текста. Кнопки в строке позволяют изменить или удалить правило.",
     "en": "Source text and case setting on the left; replacement or deletion on the right. Use the row buttons to edit or delete a rule."
+  },
+  "overlay.enabled": {
+    "ru": "Включить оверлей",
+    "en": "Enable overlay",
+    "de": "Overlay aktivieren",
+    "fr": "Activer la superposition",
+    "es": "Activar superposición",
+    "zh": "启用悬浮窗",
+    "ja": "オーバーレイを有効にする",
+    "ko": "오버레이 사용"
+  },
+  "overlay.showTranslation": {
+    "ru": "Показывать перевод",
+    "en": "Show translation",
+    "de": "Übersetzung anzeigen",
+    "fr": "Afficher la traduction",
+    "es": "Mostrar traducción",
+    "zh": "显示译文",
+    "ja": "翻訳を表示",
+    "ko": "번역 표시"
+  },
+  "overlay.translationHint": {
+    "ru": "После озвучивания перевод остаётся до ручного закрытия, а следующая задача ждёт. Без перевода задача завершается автоматически.",
+    "en": "After speech, translation stays until manually closed and the next job waits. Without translation, jobs finish automatically.",
+    "de": "Die Übersetzung bleibt nach der Sprachausgabe bis zum manuellen Schließen; der nächste Auftrag wartet. Ohne Übersetzung endet der Auftrag automatisch.",
+    "fr": "Après la lecture, la traduction reste jusqu’à sa fermeture manuelle et la tâche suivante attend. Sans traduction, la tâche se termine automatiquement.",
+    "es": "Tras la lectura, la traducción permanece hasta cerrarla y la siguiente tarea espera. Sin traducción, la tarea finaliza automáticamente.",
+    "zh": "朗读后译文保留至手动关闭，下一项任务将等待。没有译文时任务自动结束。",
+    "ja": "翻訳は読み上げ後も手動で閉じるまで残り、次のタスクは待機します。翻訳がなければ自動完了します。",
+    "ko": "재생 후 번역은 직접 닫을 때까지 유지되고 다음 작업은 대기합니다. 번역이 없으면 자동 완료됩니다."
+  },
+  "overlay.renderer": {
+    "ru": "Способ отображения",
+    "en": "Display method",
+    "de": "Anzeigemethode",
+    "fr": "Mode d’affichage",
+    "es": "Método de visualización",
+    "zh": "显示方式",
+    "ja": "表示方式",
+    "ko": "표시 방식"
+  },
+  "overlay.rendererWindow": {
+    "ru": "Отдельное окно Windows (WPF / Win32)",
+    "en": "Separate Windows window (WPF / Win32)",
+    "de": "Separates Windows-Fenster (WPF / Win32)",
+    "fr": "Fenêtre Windows séparée (WPF / Win32)",
+    "es": "Ventana independiente de Windows (WPF / Win32)",
+    "zh": "独立 Windows 窗口 (WPF / Win32)",
+    "ja": "独立 Windows ウィンドウ (WPF / Win32)",
+    "ko": "별도 Windows 창 (WPF / Win32)"
+  },
+  "overlay.compatibility": {
+    "ru": "Для оконного режима и окна без рамки. В эксклюзивном полноэкранном режиме видимость не гарантируется.",
+    "en": "For windowed and borderless modes. Visibility in exclusive fullscreen is not guaranteed.",
+    "de": "Für Fenster- und randlosen Modus. Sichtbarkeit im exklusiven Vollbild ist nicht garantiert.",
+    "fr": "Pour les modes fenêtré et sans bordure. L’affichage en plein écran exclusif n’est pas garanti.",
+    "es": "Para modo ventana y sin bordes. No se garantiza la visibilidad en pantalla completa exclusiva.",
+    "zh": "适用于窗口和无边框模式，独占全屏下不保证可见。",
+    "ja": "ウィンドウ・ボーダーレス向けです。排他的フルスクリーンでは表示を保証できません。",
+    "ko": "창 모드와 테두리 없는 창 모드용입니다. 독점 전체 화면에서는 표시를 보장하지 않습니다."
+  },
+  "overlay.configure": {
+    "ru": "Настроить расположение",
+    "en": "Configure position",
+    "de": "Position einstellen",
+    "fr": "Régler la position",
+    "es": "Configurar posición",
+    "zh": "调整位置",
+    "ja": "位置を設定",
+    "ko": "위치 설정"
+  },
+  "overlay.reset": {
+    "ru": "Сбросить расположение",
+    "en": "Reset position",
+    "de": "Position zurücksetzen",
+    "fr": "Réinitialiser la position",
+    "es": "Restablecer posición",
+    "zh": "重置位置",
+    "ja": "位置をリセット",
+    "ko": "위치 초기화"
+  },
+  "overlay.interactionHotkey": {
+    "ru": "Взаимодействие с оверлеем",
+    "en": "Interact with overlay",
+    "de": "Mit Overlay interagieren",
+    "fr": "Interagir avec la superposition",
+    "es": "Interactuar con la superposición",
+    "zh": "与悬浮窗交互",
+    "ja": "オーバーレイの操作",
+    "ko": "오버레이 조작"
+  },
+  "overlay.interactionHint": {
+    "ru": "Удерживайте клавишу (по умолчанию Alt), чтобы управлять оверлеем. Отпустите её, чтобы вернуть фокус в игру. Если курсор свободен, оверлей доступен мышью без клавиши. Настройка также доступна в разделе «Управление». Сохраните настройки для применения.",
+    "en": "Hold the key (Alt by default) to interact with the overlay. Release it to return focus to the game. With a free cursor, use the overlay without holding a key. Also available under Controls. Save settings to apply.",
+    "de": "Taste gedrückt halten (standardmäßig Alt), um das Overlay zu bedienen. Loslassen gibt den Fokus ans Spiel zurück. Mit freiem Cursor ist keine Taste nötig. Auch unter Steuerung verfügbar. Zum Anwenden speichern.",
+    "fr": "Maintenez la touche (Alt par défaut) pour utiliser la superposition. Relâchez-la pour revenir au jeu. Avec un curseur libre, aucune touche n’est nécessaire. Aussi disponible dans Commandes. Enregistrez pour appliquer.",
+    "es": "Mantén la tecla (Alt por defecto) para usar la superposición. Suéltala para volver al juego. Con el cursor libre no hace falta mantener una tecla. También en Controles. Guarda para aplicar.",
+    "zh": "按住按键（默认为 Alt）操作悬浮窗，松开后焦点返回游戏。光标自由时无需按键即可操作。也可在控制设置中修改。保存后生效。",
+    "ja": "キー（既定は Alt）を押している間、オーバーレイを操作できます。離すとゲームに戻ります。カーソルが自由ならキーは不要です。操作設定でも変更できます。保存して適用してください。",
+    "ko": "키(기본 Alt)를 누르는 동안 오버레이를 조작합니다. 놓으면 게임으로 돌아갑니다. 커서가 자유로우면 키 없이 조작할 수 있습니다. 조작 설정에서도 변경할 수 있습니다. 저장하여 적용하세요."
+  },
+  "overlay.waiting": {
+    "ru": "Ожидает закрытия перевода",
+    "en": "Waiting for translation to be closed",
+    "de": "Wartet auf Schließen der Übersetzung",
+    "fr": "En attente de fermeture de la traduction",
+    "es": "Esperando el cierre de la traducción",
+    "zh": "等待关闭译文",
+    "ja": "翻訳を閉じるまで待機",
+    "ko": "번역 닫기 대기 중"
+  },
+  "overlay.paused": {
+    "ru": "На паузе",
+    "en": "Paused",
+    "de": "Pausiert",
+    "fr": "En pause",
+    "es": "En pausa",
+    "zh": "已暂停",
+    "ja": "一時停止中",
+    "ko": "일시 정지됨"
+  },
+  "overlay.pause": {
+    "ru": "Пауза",
+    "en": "Pause",
+    "de": "Pause",
+    "fr": "Pause",
+    "es": "Pausa",
+    "zh": "暂停",
+    "ja": "一時停止",
+    "ko": "일시 정지"
+  },
+  "overlay.resume": {
+    "ru": "Продолжить",
+    "en": "Resume",
+    "de": "Fortsetzen",
+    "fr": "Reprendre",
+    "es": "Continuar",
+    "zh": "继续",
+    "ja": "再開",
+    "ko": "계속"
+  },
+  "overlay.close": {
+    "ru": "Отменить задачу",
+    "en": "Cancel job",
+    "de": "Auftrag abbrechen",
+    "fr": "Annuler la tâche",
+    "es": "Cancelar tarea",
+    "zh": "取消任务",
+    "ja": "タスクをキャンセル",
+    "ko": "작업 취소"
+  },
+  "overlay.finish": {
+    "ru": "Закрыть перевод и завершить задачу",
+    "en": "Close translation and finish job",
+    "de": "Übersetzung schließen und Auftrag abschließen",
+    "fr": "Fermer la traduction et terminer la tâche",
+    "es": "Cerrar traducción y finalizar tarea",
+    "zh": "关闭译文并完成任务",
+    "ja": "翻訳を閉じてタスクを完了",
+    "ko": "번역을 닫고 작업 완료"
+  },
+  "overlay.interacting": {
+    "ru": "Управление оверлеем · Отпустите клавишу, чтобы вернуться в игру",
+    "en": "Overlay controls · Release the key to return to the game",
+    "de": "Overlay-Steuerung · Taste loslassen, um zum Spiel zurückzukehren",
+    "fr": "Commandes · Relâchez la touche pour revenir au jeu",
+    "es": "Controles · Suelta la tecla para volver al juego",
+    "zh": "悬浮窗操作 · 松开按键返回游戏",
+    "ja": "操作中 · キーを離すとゲームに戻る",
+    "ko": "오버레이 조작 · 키를 놓으면 게임으로 돌아갑니다"
+  },
+  "overlay.preview": {
+    "ru": "Настройка виджета",
+    "en": "Widget layout",
+    "de": "Widget-Layout",
+    "fr": "Disposition du widget",
+    "es": "Diseño del widget",
+    "zh": "调整悬浮窗",
+    "ja": "ウィジェットの配置",
+    "ko": "위젯 배치"
+  },
+  "overlay.sample": {
+    "ru": "Здесь будет отображаться перевод текущей задачи.",
+    "en": "The current job’s translation will appear here.",
+    "de": "Hier erscheint die Übersetzung des aktuellen Auftrags.",
+    "fr": "La traduction de la tâche en cours apparaîtra ici.",
+    "es": "Aquí aparecerá la traducción de la tarea actual.",
+    "zh": "当前任务的译文将显示在此处。",
+    "ja": "現在のタスクの翻訳がここに表示されます。",
+    "ko": "현재 작업의 번역이 여기에 표시됩니다."
+  },
+  "overlay.dragHint": {
+    "ru": "Перетащите заголовок для перемещения. Правый нижний маркер меняет ширину. Затем сохраните настройки приложения.",
+    "en": "Drag the header to move. The bottom-right handle changes the width. Then save the app settings.",
+    "de": "Kopfzeile zum Verschieben ziehen. Der Griff unten rechts ändert die Breite. Danach App-Einstellungen speichern.",
+    "fr": "Faites glisser l’en-tête pour déplacer le widget. La poignée en bas à droite règle la largeur. Enregistrez ensuite les paramètres.",
+    "es": "Arrastre el encabezado para mover. El control inferior derecho cambia el ancho. Guarde después los ajustes.",
+    "zh": "拖动标题移动，右下角手柄调整宽度，然后保存应用设置。",
+    "ja": "見出しで移動し、右下のハンドルで幅を変更します。その後アプリの設定を保存してください。",
+    "ko": "제목을 끌어 이동하고 오른쪽 아래 핸들로 너비를 조절한 후 앱 설정을 저장하세요."
+  },
+  "overlay.usePosition": {
+    "ru": "Использовать положение",
+    "en": "Use position",
+    "de": "Position übernehmen",
+    "fr": "Utiliser cette position",
+    "es": "Usar posición",
+    "zh": "使用此位置",
+    "ja": "この位置を使用",
+    "ko": "위치 적용"
+  },
+  "overlay.cancel": {
+    "ru": "Отмена",
+    "en": "Cancel",
+    "de": "Abbrechen",
+    "fr": "Annuler",
+    "es": "Cancelar",
+    "zh": "取消",
+    "ja": "キャンセル",
+    "ko": "취소"
+  },
+  "overlay.playing": {
+    "ru": "Воспроизведение",
+    "en": "Playing",
+    "de": "Wiedergabe",
+    "fr": "Lecture",
+    "es": "Reproduciendo",
+    "zh": "正在播放",
+    "ja": "再生中",
+    "ko": "재생 중"
   }
 }

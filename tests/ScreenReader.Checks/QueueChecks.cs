@@ -11,13 +11,13 @@ internal static partial class Program
     private static async Task RunQueueChecksAsync()
     {
         var defaults=new AppSettings();
-        Assert(HotkeyService.Bindings(defaults).SequenceEqual(new[] { (HotkeyAction.Capture,new Hotkey(3,0x52)) }),"Only queue capture is assigned by default");
+        Assert(HotkeyService.Bindings(defaults).SequenceEqual(new[] { (HotkeyAction.Capture,new Hotkey(3,0x52)),(HotkeyAction.OverlayInteraction,new Hotkey(0,0x12)) }),"Queue capture and overlay interaction are assigned by default");
         var settings=defaults with { RepeatCaptureHotkey=new(7,0x52),ToggleHotkey=new(3,0x53),CancelCurrentHotkey=new(3,0x54),CancelAllHotkey=new(3,0x55) };
         HotkeyService.Validate(settings);
-        Assert(HotkeyService.Bindings(JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(settings))!).Count()==5,"Five independent shortcuts survive serialization");
+        Assert(HotkeyService.Bindings(JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(settings))!).Count()==6,"Six independent shortcuts survive serialization");
         Throws<ArgumentException>(()=>HotkeyService.Validate(settings with { ToggleHotkey=defaults.CaptureHotkey }),"Duplicate hotkeys rejected before registration");
         Throws<ArgumentException>(()=>HotkeyService.Validate(settings with { RepeatCaptureHotkey=defaults.CaptureHotkey }),"Repeat capture cannot share another action shortcut");
-        var cleared=JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(defaults with { CaptureHotkey=null }))!;
+        var cleared=JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(defaults with { CaptureHotkey=null,OverlayInteractionHotkey=null }))!;
         HotkeyService.Validate(cleared);
         Assert(!HotkeyService.Bindings(cleared).Any(),"All shortcuts can remain unassigned after reload");
 

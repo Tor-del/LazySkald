@@ -6,27 +6,51 @@ using System.Windows.Threading;
 namespace ScreenReader.App;
 
 public readonly record struct HotkeyResult(bool Trigger,bool Suppress);
-public sealed class HotkeyChordRecognizer(Hotkey hotkey,IEnumerable<uint>? initiallyPressed=null)
+public sealed class HotkeyChordRecognizer(Hotkey hotkey,IEnumerable<uint>? initiallyPressed=null,bool hold=false)
 {
     private readonly HashSet<uint> pressed=new(initiallyPressed ?? []);
     private bool consumed;
+    public bool Held { get; private set; }
+    public void Synchronize(IEnumerable<uint> down)
+    {
+        pressed.Clear(); pressed.UnionWith(down);
+        // Suppressed presses may not appear in GetAsyncKeyState. Keep their
+        // repeat/release ownership until the actual key-up reaches the hook.
+        if (consumed) pressed.Add(hotkey.Key);
+    }
     public HotkeyResult Process(uint key,bool down)
     {
         bool wasDown=pressed.Contains(key);
         if (down) pressed.Add(key); else pressed.Remove(key);
+        if (hold)
+        {
+            bool wasHeld=Held;
+            uint ownModifier=hotkey.Key switch { 0x12 or 0xA4 or 0xA5=>1u,0x11 or 0xA2 or 0xA3=>2u,0x10 or 0xA0 or 0xA1=>4u,0x5B or 0x5C=>8u,_=>0u };
+            bool primary=pressed.Any(IsPrimaryKey);
+            bool starts=down && !wasDown && IsPrimaryKey(key) && (Modifiers()&~ownModifier)==hotkey.Modifiers;
+            Held=primary && (Modifiers()&hotkey.Modifiers)==hotkey.Modifiers && (wasHeld || starts);
+            return new(Held && !wasHeld,false);
+        }
         if (key!=hotkey.Key) return default;
         if (!down) { bool suppress=consumed; consumed=false; return new(false,suppress); }
         if (consumed) return new(false,true);
         if (wasDown || Modifiers()!=hotkey.Modifiers) return default;
         consumed=true; return new(true,true);
     }
+    private bool IsPrimaryKey(uint key)=>hotkey.Key switch
+    {
+        0x12=>key is 0x12 or 0xA4 or 0xA5,
+        0x11=>key is 0x11 or 0xA2 or 0xA3,
+        0x10=>key is 0x10 or 0xA0 or 0xA1,
+        _=>key==hotkey.Key
+    };
     private uint Modifiers()=>
         (Any(0x12,0xA4,0xA5) ? 1u:0)|(Any(0x11,0xA2,0xA3) ? 2u:0)|
         (Any(0x10,0xA0,0xA1) ? 4u:0)|(Any(0x5B,0x5C) ? 8u:0);
     private bool Any(params uint[] keys)=>keys.Any(pressed.Contains);
 }
 
-public enum HotkeyAction { Toggle=1, Capture, CancelCurrent, CancelAll, RepeatCapture }
+public enum HotkeyAction { Toggle=1, Capture, CancelCurrent, CancelAll, RepeatCapture, OverlayInteraction }
 
 public sealed class HotkeyService : IDisposable
 {
@@ -35,20 +59,26 @@ public sealed class HotkeyService : IDisposable
     private readonly TaskCompletionSource<Dispatcher> ready=new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly KeyboardProc callback;
     private readonly KeyboardProc mouseCallback;
+    private readonly WinEventProc foregroundCallback;
     private Dispatcher worker=null!;
     private HwndSource? source;
     private IntPtr keyboardHook;
     private IntPtr mouseHook;
+    private IntPtr foregroundHook;
+    private DispatcherTimer? foregroundRefresh;
+    private IntPtr pendingForeground;
     private AppSettings? current;
     private readonly Dictionary<HotkeyAction,HotkeyChordRecognizer> recognizers=new();
     private bool suspended;
     private volatile bool disposed;
     private int version;
     public event Action<HotkeyAction>? ActionRequested;
+    public event Action<bool>? OverlayInteractionChanged;
     public HotkeyService()
     {
         callback=OnKeyboard;
         mouseCallback=OnMouse;
+        foregroundCallback=OnForegroundChanged;
         thread=new Thread(() =>
         {
             try
@@ -67,6 +97,7 @@ public sealed class HotkeyService : IDisposable
     public void Configure(AppSettings settings)
     {
         Validate(settings);
+        OverlayInteractionChanged?.Invoke(false);
         if (!Enum.IsDefined(settings.HotkeyMode)) throw new ArgumentException(UiText.T("error.hotkeyMode"));
         worker.Invoke(() =>
         {
@@ -75,16 +106,21 @@ public sealed class HotkeyService : IDisposable
             catch { Unregister(); if (previous is not null && !suspended) Register(previous); throw; }
         });
     }
-    public void SetSuspended(bool value)=>worker.Invoke(() =>
+    public void SetSuspended(bool value)
     {
-        if (value==suspended) return;
-        Interlocked.Increment(ref version);
-        if (value) { Unregister(); suspended=true; }
-        else { try { if (current is not null) Register(current); suspended=false; } catch { Unregister(); throw; } }
-    });
-    public static void Validate(Hotkey key)
+        if (value) OverlayInteractionChanged?.Invoke(false);
+        worker.Invoke(() =>
+        {
+            if (value==suspended) return;
+            Interlocked.Increment(ref version);
+            if (value) { Unregister(); suspended=true; }
+            else { try { if (current is not null) Register(current); suspended=false; } catch { Unregister(); throw; } }
+        });
+    }
+    public static void Validate(Hotkey key,bool allowModifier=false)
     {
         if (key.IsReserved) throw new ArgumentException(UiText.T("error.hotkeyReserved"));
+        if (allowModifier && key.Modifiers==0 && key.Key is 0x10 or 0x11 or 0x12 or 0x5B or 0x5C or >=0xA0 and <=0xA5) return;
         if (key.Modifiers>15 || key.Key is 0 or >254 or 0x03 or 0x10 or 0x11 or 0x12 or 0x5B or 0x5C or >=0xA0 and <=0xA5)
             throw new ArgumentException(UiText.T("error.hotkey"));
     }
@@ -95,20 +131,21 @@ public sealed class HotkeyService : IDisposable
         if (settings.RepeatCaptureHotkey is { } repeat) yield return (HotkeyAction.RepeatCapture,repeat);
         if (settings.CancelCurrentHotkey is { } current) yield return (HotkeyAction.CancelCurrent,current);
         if (settings.CancelAllHotkey is { } all) yield return (HotkeyAction.CancelAll,all);
+        if (settings.OverlayInteractionHotkey is { } overlay) yield return (HotkeyAction.OverlayInteraction,overlay);
     }
     public static void Validate(AppSettings settings)
     {
         var keys=new HashSet<Hotkey>();
-        foreach (var (_,key) in Bindings(settings))
+        foreach (var (action,key) in Bindings(settings))
         {
-            Validate(key);
+            Validate(key,action==HotkeyAction.OverlayInteraction);
             if (!keys.Add(key)) throw new ArgumentException(UiText.T("error.hotkeyDuplicate",key));
         }
     }
     private void Register(AppSettings settings)
     {
         var bindings=Bindings(settings).ToArray();
-        var hooked=bindings.Where(b=>settings.ExclusiveHotkeys || settings.HotkeyMode==HotkeyMode.GameHook || b.Key.IsMouse || b.Key.Key==0x7B).ToArray();
+        var hooked=bindings.Where(b=>b.Action==HotkeyAction.OverlayInteraction || settings.ExclusiveHotkeys || settings.HotkeyMode==HotkeyMode.GameHook || b.Key.IsMouse || b.Key.Key==0x7B).ToArray();
         if (settings.HotkeyMode==HotkeyMode.Registered)
         {
             foreach (var (action,key) in bindings.Except(hooked))
@@ -116,15 +153,58 @@ public sealed class HotkeyService : IDisposable
                     throw new Win32Exception(Marshal.GetLastWin32Error(),UiText.T("error.hotkeyBusy",key));
         }
         if (hooked.Length==0) return;
-        var pressed=Enumerable.Range(1,254).Where(k=>k is not (0x10 or 0x11 or 0x12) && (GetAsyncKeyState(k)&0x8000)!=0).Select(k=>(uint)k).ToArray();
-        foreach (var (action,key) in hooked) recognizers[action]=new(key,pressed);
-        keyboardHook=SetWindowsHookEx(13,callback,GetModuleHandle(null),0);
-        if (keyboardHook==IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error(),UiText.T("error.hook"));
-        if (hooked.Any(b=>b.Key.IsMouse))
+        var pressed=PressedKeys();
+        foreach (var (action,key) in hooked) recognizers[action]=new(key,pressed,action==HotkeyAction.OverlayInteraction);
+        ReplaceInputHooks(hooked.Any(b=>b.Key.IsMouse));
+        foregroundHook=SetWinEventHook(3,3,IntPtr.Zero,foregroundCallback,0,0,0); // EVENT_SYSTEM_FOREGROUND, out of context
+        if (foregroundHook==IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error(),UiText.T("error.hook"));
+        foregroundRefresh=new DispatcherTimer(DispatcherPriority.Background,worker) { Interval=TimeSpan.FromMilliseconds(300) };
+        foregroundRefresh.Tick+=(_,_)=>
         {
-            mouseHook=SetWindowsHookEx(14,mouseCallback,GetModuleHandle(null),0);
-            if (mouseHook==IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error(),UiText.T("error.hook"));
+            foregroundRefresh?.Stop();
+            if (pendingForeground!=GetForegroundWindow()) return;
+            try { RefreshInputHooks(); }
+            catch (Exception e) { AppLog.Write("Не удалось обновить хуки после смены активного окна",e); }
+        };
+    }
+    private static uint[] PressedKeys()=>Enumerable.Range(1,254)
+        .Where(k=>k is not (0x10 or 0x11 or 0x12) && (GetAsyncKeyState(k)&0x8000)!=0).Select(k=>(uint)k).ToArray();
+    private void OnForegroundChanged(IntPtr hook,uint eventType,IntPtr window,int objectId,int childId,uint eventThread,uint time)
+    {
+        if (disposed || suspended || foregroundRefresh is null) return;
+        foregroundRefresh.Stop(); pendingForeground=IntPtr.Zero;
+        if (window==IntPtr.Zero || window!=GetForegroundWindow()) return;
+        GetWindowThreadProcessId(window,out uint processId);
+        // Do not reorder hooks while our own selection overlay is handling input.
+        if (processId==(uint)Environment.ProcessId) return;
+        pendingForeground=window;
+        // DirectInput games can acquire their keyboard hook during activation.
+        foregroundRefresh.Start();
+    }
+    internal void RefreshInputHooks()=>worker.Invoke(() =>
+    {
+        if (disposed || suspended || recognizers.Count==0) return;
+        ReplaceInputHooks(mouseHook!=IntPtr.Zero);
+        var pressed=PressedKeys();
+        foreach (var recognizer in recognizers.Values) recognizer.Synchronize(pressed);
+    });
+    private void ReplaceInputHooks(bool includeMouse)
+    {
+        // Install first: failure must leave the existing hooks working.
+        IntPtr keyboard=SetWindowsHookEx(13,callback,GetModuleHandle(null),0), mouse=IntPtr.Zero;
+        if (keyboard==IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error(),UiText.T("error.hook"));
+        if (includeMouse)
+        {
+            mouse=SetWindowsHookEx(14,mouseCallback,GetModuleHandle(null),0);
+            if (mouse==IntPtr.Zero)
+            {
+                int error=Marshal.GetLastWin32Error(); UnhookWindowsHookEx(keyboard);
+                throw new Win32Exception(error,UiText.T("error.hook"));
+            }
         }
+        if (keyboardHook!=IntPtr.Zero) UnhookWindowsHookEx(keyboardHook);
+        if (mouseHook!=IntPtr.Zero) UnhookWindowsHookEx(mouseHook);
+        keyboardHook=keyboard; mouseHook=mouse;
     }
     private IntPtr OnKeyboard(int code,IntPtr wParam,IntPtr lParam)
     {
@@ -160,7 +240,13 @@ public sealed class HotkeyService : IDisposable
         bool suppress=false;
         foreach (var (action,recognizer) in recognizers)
         {
+            bool wasHeld=recognizer.Held;
             var result=recognizer.Process(key,down);
+            if (action==HotkeyAction.OverlayInteraction)
+            {
+                if (wasHeld!=recognizer.Held) DispatchInteraction(recognizer.Held);
+                continue;
+            }
             if (result.Trigger) Dispatch(action);
             suppress|=result.Suppress;
         }
@@ -177,8 +263,15 @@ public sealed class HotkeyService : IDisposable
         int requestedVersion=Volatile.Read(ref version);
         ui.BeginInvoke(() => { if (!disposed && requestedVersion==Volatile.Read(ref version)) ActionRequested?.Invoke(action); });
     }
+    private void DispatchInteraction(bool held)
+    {
+        int requestedVersion=Volatile.Read(ref version);
+        ui.BeginInvoke(() => { if (!disposed && requestedVersion==Volatile.Read(ref version)) OverlayInteractionChanged?.Invoke(held); });
+    }
     private void Unregister()
     {
+        foregroundRefresh?.Stop(); foregroundRefresh=null; pendingForeground=IntPtr.Zero;
+        if (foregroundHook!=IntPtr.Zero) { UnhookWinEvent(foregroundHook); foregroundHook=IntPtr.Zero; }
         if (source is not null) foreach (var action in Enum.GetValues<HotkeyAction>()) UnregisterHotKey(source.Handle,(int)action);
         if (keyboardHook!=IntPtr.Zero) { UnhookWindowsHookEx(keyboardHook); keyboardHook=IntPtr.Zero; }
         if (mouseHook!=IntPtr.Zero) { UnhookWindowsHookEx(mouseHook); mouseHook=IntPtr.Zero; }
@@ -191,6 +284,11 @@ public sealed class HotkeyService : IDisposable
         thread.Join(1000);
     }
     private delegate IntPtr KeyboardProc(int code,IntPtr wParam,IntPtr lParam);
+    private delegate void WinEventProc(IntPtr hook,uint eventType,IntPtr window,int objectId,int childId,uint eventThread,uint time);
+    [DllImport("user32.dll",SetLastError=true)] private static extern IntPtr SetWinEventHook(uint first,uint last,IntPtr module,WinEventProc callback,uint process,uint thread,uint flags);
+    [DllImport("user32.dll")] private static extern bool UnhookWinEvent(IntPtr hook);
+    [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr window,out uint process);
     [DllImport("user32.dll",SetLastError=true)] private static extern IntPtr SetWindowsHookEx(int hook,KeyboardProc callback,IntPtr module,uint thread);
     [DllImport("user32.dll")] private static extern bool UnhookWindowsHookEx(IntPtr hook);
     [DllImport("user32.dll")] private static extern IntPtr CallNextHookEx(IntPtr hook,int code,IntPtr wParam,IntPtr lParam);

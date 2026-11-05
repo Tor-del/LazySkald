@@ -203,7 +203,7 @@ internal static partial class Program
                 Throws<ArgumentException>(()=>HotkeyService.Validate(new Hotkey(modifiers,key)),"Reserved input rejected with every modifier combination: "+key+" / "+modifiers);
         var legacy=new AppSettings { CaptureHotkey=new(0,1),RepeatCaptureHotkey=new(2,2),ToggleHotkey=new(1,0x1B),CancelCurrentHotkey=new(3,1),CancelAllHotkey=new(4,0x1B),VolumePercent=37 };
         var migrated=SettingsStore.ClearReservedHotkeys(legacy);
-        Assert(!HotkeyService.Bindings(migrated).Any() && migrated.VolumePercent==37,"Loading legacy settings clears reserved bindings for all five actions while preserving other settings");
+        Assert(HotkeyService.Bindings(migrated).All(b=>b.Action==HotkeyAction.OverlayInteraction) && migrated.VolumePercent==37,"Loading legacy settings clears reserved bindings for all five actions while preserving other settings");
         var allowed=new AppSettings { RepeatCaptureHotkey=new(0,4),ToggleHotkey=new(2,5),CancelCurrentHotkey=new(0,6) };
         Assert(SettingsStore.ClearReservedHotkeys(allowed)==allowed,"Allowed shortcuts remain unchanged during migration");
         Assert(new Hotkey(0,0x14).ToString()=="Caps Lock" && new Hotkey(0,0x7B).ToString()=="F12","Caps Lock and F12 display names");
@@ -230,6 +230,19 @@ internal static partial class Program
         Assert(!seeded.Process(0x52,true).Trigger,"A key held during hook installation does not accidentally start reading");
         seeded.Process(0x52,false); seeded.Process(0xA4,false);
         Assert(!seeded.Process(0x52,true).Trigger,"Released seeded modifiers do not remain stuck");
+        var refreshed=new HotkeyChordRecognizer(new(0,0x76));
+        refreshed.Process(0xA4,true);
+        refreshed.Synchronize(Array.Empty<uint>());
+        Assert(refreshed.Process(0x76,true).Trigger,"Hook refresh clears modifiers whose release was intercepted by another application");
+        refreshed.Synchronize(Array.Empty<uint>());
+        Assert(refreshed.Process(0x76,true)==new HotkeyResult(false,true),"Hook refresh preserves consumed key even when suppressed input is absent from asynchronous state");
+        Assert(refreshed.Process(0x76,false)==new HotkeyResult(false,true),"Hook refresh preserves suppression of the consumed release");
+        Assert(refreshed.Process(0x76,true).Trigger,"F7 can trigger again after refreshed hook receives release");
+        var heldArrow=new HotkeyChordRecognizer(new(0,0x25));
+        heldArrow.Synchronize(new uint[] { 0x25 });
+        Assert(!heldArrow.Process(0x25,true).Trigger,"Refreshing while Left Arrow is already held does not trigger an action");
+        heldArrow.Process(0x25,false);
+        Assert(heldArrow.Process(0x25,true).Trigger,"Left Arrow triggers after release and a fresh press");
     }
     private static void RunHotkeyService()
     {
@@ -237,6 +250,9 @@ internal static partial class Program
         var settings=new AppSettings { CaptureHotkey=new(7,0x86),RepeatCaptureHotkey=new(7,0x82),ToggleHotkey=new(7,0x83),CancelCurrentHotkey=new(7,0x84),CancelAllHotkey=new(7,0x85) };
         service.Configure(settings); service.SetSuspended(true); service.SetSuspended(false);
         Assert(true,"Five-action keyboard hook installs, suspends and resumes on its own thread");
+        service.RefreshInputHooks();
+        service.SetSuspended(true); service.RefreshInputHooks(); service.SetSuspended(false);
+        Assert(true,"Foreground hook recovery reinstalls input hooks and respects editing suspension");
         service.Configure(settings with { HotkeyMode=HotkeyMode.Registered });
         Assert(true,"Five-action service switches to RegisterHotKey without duplicate handlers");
         foreach (var mode in new[] { HotkeyMode.GameHook,HotkeyMode.Registered })
@@ -247,6 +263,7 @@ internal static partial class Program
         }
         Throws<ArgumentException>(()=>service.Configure(settings with { ToggleHotkey=settings.CaptureHotkey }),"Service rejects conflicting actions without replacing valid configuration");
         service.Configure(new AppSettings { CaptureHotkey=null });
+        service.RefreshInputHooks();
         service.SetSuspended(true); service.SetSuspended(false);
         Assert(true,"Unassigned shortcuts install no hook and resume safely");
     }

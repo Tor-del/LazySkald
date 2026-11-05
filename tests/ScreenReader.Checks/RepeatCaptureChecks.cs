@@ -83,6 +83,8 @@ internal static partial class Program
                 await WaitFor(()=>ocr.Images.Count==2 && reader.Queue.Snapshot[1].Stage=="queue.waiting");
                 Assert(capture.RepeatedMonitor==capture.Monitor && capture.Selections==2 && capture.Repeats==1,
                     "Repeat captures the remembered monitor without opening a selection overlay");
+                Assert(reader.Queue.Snapshot.All(job=>job.CaptureMonitor==capture.Monitor),
+                    "Initial recognition and repeat both retain the selection monitor for overlay placement");
                 Assert(ocr.Images[0].Size==region.Size && ocr.Images[1].Size==region.Size && ocr.Images[1].Frame>ocr.Images[0].Frame,
                     "Repeat recognizes fresh pixels cropped to the last selected area");
                 Assert(reader.Queue.Snapshot.Count==2 && !first.IsCompleted && overlayField.GetValue(reader) is null,

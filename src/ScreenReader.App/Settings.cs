@@ -11,12 +11,26 @@ public sealed record Hotkey(uint Modifiers, uint Key)
     public override string ToString() => string.Join(" + ",new[] {
         (Modifiers&2)!=0 ? "Ctrl" : null,(Modifiers&1)!=0 ? "Alt" : null,
         (Modifiers&4)!=0 ? "Shift" : null,(Modifiers&8)!=0 ? "Win" : null,
-        Key switch { 0x01=>"Mouse Left",0x02=>"Mouse Right",0x04=>"Mouse Middle",0x05=>"Mouse X1",0x06=>"Mouse X2",0x14=>"Caps Lock",_=>((System.Windows.Forms.Keys)Key).ToString() } }.Where(x => x != null));
+        Key switch { 0x12=>"Alt",0x11=>"Ctrl",0x10=>"Shift",0x01=>"Mouse Left",0x02=>"Mouse Right",0x04=>"Mouse Middle",0x05=>"Mouse X1",0x06=>"Mouse X2",0x14=>"Caps Lock",_=>((System.Windows.Forms.Keys)Key).ToString() } }.Where(x => x != null));
 }
 public enum CaptureMode { Auto, DesktopDuplication, Gdi }
 public enum HotkeyMode { GameHook, Registered }
+public sealed record OverlaySettings
+{
+    public bool Enabled { get; init; }
+    public bool ShowTranslation { get; init; }
+    public double Left { get; init; }=40;
+    public double Top { get; init; }=40;
+    public double Width { get; init; }=360;
+    // Relative window centre follows the selected monitor, regardless of its DPI or origin.
+    public double CenterX { get; init; }=0.5;
+    public double CenterY { get; init; }=0.75;
+}
 public sealed record AppSettings
 {
+    public OverlaySettings Overlay { get; init; }=new();
+    public Hotkey? OverlayInteractionHotkey { get; init; }=new(0,0x12);
+    public bool SpeechEnabled { get; init; }=true;
     public int VolumePercent { get; init; }=100;
     public SpeechRoleSettings? FallbackRole { get; init; }
     public bool ExclusiveHotkeys { get; init; }=true;
@@ -48,6 +62,7 @@ public sealed record AppSettings
     public string Voice { get; init; } = "ru-RU-SvetlanaNeural";
     public int RatePercent { get; init; }
     public string UiLanguage { get; init; }="ru";
+    public AppTheme Theme { get; init; }=AppTheme.System;
     public string AudioOutputDeviceId { get; init; }="";
     public Hotkey? ToggleHotkey { get; init; }
     public Hotkey? CancelCurrentHotkey { get; init; }
@@ -87,7 +102,7 @@ public static class SettingsStore
             if (value.Translation.CorrectionRules is null) throw new InvalidDataException("Некорректный словарь перевода.");
             if (value.Translation.CorrectionsEnabled || value.Translation.CorrectionEntries is not null)
                 TranslationCorrections.ValidateEntries(TranslationCorrections.EntriesFor(value.Translation));
-            return ClearReservedHotkeys(value with { Translation=value.Translation.UpgradeDefaultPrompt() });
+            return ClearReservedHotkeys(value with { Translation=value.Translation.UpgradeDefaultPrompt(),Theme=Enum.IsDefined(value.Theme) ? value.Theme : AppTheme.System });
         }
         catch (Exception e) { AppLog.Write("Настройки повреждены; использованы значения по умолчанию.",e); return new(); }
     }
@@ -105,7 +120,20 @@ public static class SettingsStore
         {
             CaptureHotkey=Allowed(value.CaptureHotkey),RepeatCaptureHotkey=Allowed(value.RepeatCaptureHotkey),
             ToggleHotkey=Allowed(value.ToggleHotkey),CancelCurrentHotkey=Allowed(value.CancelCurrentHotkey),
-            CancelAllHotkey=Allowed(value.CancelAllHotkey)
+            CancelAllHotkey=Allowed(value.CancelAllHotkey),OverlayInteractionHotkey=Allowed(value.OverlayInteractionHotkey),
+            Overlay=NormalizeOverlay(value.Overlay)
+        };
+    }
+    public static OverlaySettings NormalizeOverlay(OverlaySettings? value)
+    {
+        value ??=new();
+        return value with
+        {
+            Left=double.IsFinite(value.Left) ? Math.Clamp(value.Left,-100000,100000) : 40,
+            Top=double.IsFinite(value.Top) ? Math.Clamp(value.Top,-100000,100000) : 40,
+            Width=double.IsFinite(value.Width) ? Math.Clamp(value.Width,260,800) : 360,
+            CenterX=double.IsFinite(value.CenterX) ? Math.Clamp(value.CenterX,0,1) : 0.5,
+            CenterY=double.IsFinite(value.CenterY) ? Math.Clamp(value.CenterY,0,1) : 0.75
         };
     }
 }

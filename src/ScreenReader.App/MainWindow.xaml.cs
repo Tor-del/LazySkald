@@ -15,7 +15,8 @@ public sealed record UiLanguageChoice(string Id,string Name);
 public partial class MainWindow : Window
 {
     private readonly App owner;
-    private Hotkey? captureKey,repeatCaptureKey,toggleKey,cancelCurrentKey,cancelAllKey;
+    private Hotkey? captureKey,repeatCaptureKey,toggleKey,cancelCurrentKey,cancelAllKey,overlayKey;
+    private OverlaySettings overlayLayout=new();
     private readonly AppSettings draft;
     private readonly Dictionary<string,string> selectedVoices=new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string,List<SpeechVoice>> voiceCache=new(StringComparer.OrdinalIgnoreCase);
@@ -32,6 +33,13 @@ public partial class MainWindow : Window
         voiceCache["edge"]=voices;
         UiText.ApplyResources();
         InitializeComponent();
+        ThemeBox.SelectedValue=draft.Theme.ToString();
+        SourceInitialized+=(_,_)=>owner.Themes.ApplyTitleBar(this);
+        overlayKey=draft.OverlayInteractionHotkey;
+        overlayLayout=draft.Overlay;
+        OverlayEnabledBox.IsChecked=draft.Overlay.Enabled;
+        OverlayTranslationBox.IsChecked=draft.Overlay.ShowTranslation;
+        SpeechEnabledBox.IsChecked=draft.SpeechEnabled;
         InitializeCacheAndQueue();
         OcrReplaceLineBreaksBox.IsChecked=draft.OcrReplaceLineBreaks;
         OcrPreserveParagraphsBox.IsChecked=draft.OcrPreserveParagraphs;
@@ -68,7 +76,7 @@ public partial class MainWindow : Window
         Closed+=(_,_)=>UiText.LanguageChanged-=UpdateLocalization;
         Loaded += async (_,_) => await LoadVoicesAsync();
         Closing += OnClosing;
-        foreach (var box in new[] { CaptureKeyBox,RepeatCaptureKeyBox,ToggleKeyBox,CancelCurrentKeyBox,CancelAllKeyBox })
+        foreach (var box in new[] { CaptureKeyBox,RepeatCaptureKeyBox,ToggleKeyBox,CancelCurrentKeyBox,CancelAllKeyBox,OverlayKeyBox,OverlayControlsKeyBox })
         {
             box.GotKeyboardFocus += (_,_)=>owner.SetHotkeyEditing(true);
             box.LostKeyboardFocus += (_,_)=>owner.SetHotkeyEditing(false);
@@ -91,6 +99,7 @@ public partial class MainWindow : Window
         SaveSpeechEditor();
         foreach (var pair in speechRoles)
         {
+            if (SpeechEnabledBox.IsChecked!=true) continue;
             // Dormant gender roles remain editable without blocking default speech.
             if (pair.Key!=SpeakerGender.Unknown && pair.Key!=FallbackRole && GenderEnabledBox.IsChecked!=true) continue;
             try { ValidateSpeechRole(pair.Value); }
@@ -98,6 +107,9 @@ public partial class MainWindow : Window
         }
         var settings=speechRoles[SpeakerGender.Unknown].ApplyTo(draft) with
         {
+            SpeechEnabled=SpeechEnabledBox.IsChecked==true,
+            Overlay=overlayLayout with { Enabled=OverlayEnabledBox.IsChecked==true,ShowTranslation=OverlayTranslationBox.IsChecked==true },
+            OverlayInteractionHotkey=overlayKey,
             FallbackRole=speechRoles.GetValueOrDefault(FallbackRole),ExclusiveHotkeys=ExclusiveHotkeysBox.IsChecked==true,
             CacheEnabled=CacheEnabledBox.IsChecked==true,
             Language=language.Tag,CaptureHotkey=captureKey,RepeatCaptureHotkey=repeatCaptureKey,ToggleHotkey=toggleKey,
@@ -111,6 +123,7 @@ public partial class MainWindow : Window
             OcrCorrectionsEnabled=OcrCorrectionsEnabledBox.IsChecked==true,
             OcrCorrectionEntries=ocrCorrectionEntries.ToList(),OcrCorrectionRules="",
             Genderization=ReadGenderControls(),Translation=ReadTranslationControls(),UiLanguage=UiText.Language,
+            Theme=Enum.TryParse<AppTheme>(ThemeBox.SelectedValue as string,out var theme) ? theme : AppTheme.System,
             FemaleRole=speechRoles.GetValueOrDefault(SpeakerGender.Female),
             MaleRole=speechRoles.GetValueOrDefault(SpeakerGender.Male),
             FemaleProviderVoices=new(),MaleProviderVoices=new()
@@ -219,6 +232,10 @@ public partial class MainWindow : Window
     }
     private void UiLanguageChanged(object sender,SelectionChangedEventArgs e)
     { if (initialized && UiLanguageBox.SelectedItem is UiLanguageChoice language) UiText.SetLanguage(language.Id); }
+    private void ThemeChanged(object sender,SelectionChangedEventArgs e)
+    {
+        if (initialized && Enum.TryParse<AppTheme>(ThemeBox.SelectedValue as string,out var theme)) owner.Themes.Apply(theme);
+    }
     private void UpdateLocalization()
     {
         RefreshQueue();
@@ -256,20 +273,26 @@ public partial class MainWindow : Window
         string Display(Hotkey? key)=>key?.ToString() ?? UiText.T("hotkey.unassigned");
         CaptureKeyBox.Text=Display(captureKey); RepeatCaptureKeyBox.Text=Display(repeatCaptureKey); ToggleKeyBox.Text=Display(toggleKey);
         CancelCurrentKeyBox.Text=Display(cancelCurrentKey); CancelAllKeyBox.Text=Display(cancelAllKey);
+        OverlayKeyBox.Text=OverlayControlsKeyBox.Text=Display(overlayKey);
         HelpCaptureText.Text=captureKey is null ? UiText.T("help.captureUnassigned") : UiText.T("help.capture",Display(captureKey));
     }
     private void CaptureKeyDown(object sender,KeyEventArgs e)
     {
         if (e.Key==Key.Tab) return;
         e.Handled=true; var key=e.Key==Key.System ? e.SystemKey : e.Key;
-        if (key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt or Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin) return;
+        if (key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt or Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin)
+        {
+            if (sender==OverlayKeyBox || sender==OverlayControlsKeyBox)
+                SetHotkey(sender,new Hotkey(0,key switch { Key.LeftAlt or Key.RightAlt=>0x12u,Key.LeftCtrl or Key.RightCtrl=>0x11u,Key.LeftShift or Key.RightShift=>0x10u,_=>(uint)KeyInterop.VirtualKeyFromKey(key) }));
+            return;
+        }
         var mods=Keyboard.Modifiers;
         Hotkey? value=null;
         if (mods!=ModifierKeys.None || key is not (Key.Delete or Key.Back))
         {
             uint flags=((mods&ModifierKeys.Alt)!=0 ? 1u:0)|((mods&ModifierKeys.Control)!=0 ? 2u:0)|((mods&ModifierKeys.Shift)!=0 ? 4u:0)|((mods&ModifierKeys.Windows)!=0 ? 8u:0);
             value=new Hotkey(flags,(uint)KeyInterop.VirtualKeyFromKey(key));
-            try { HotkeyService.Validate(value); }
+            try { HotkeyService.Validate(value,sender==OverlayKeyBox || sender==OverlayControlsKeyBox); }
             catch (Exception ex) { SetStatus(ex.Message); return; }
         }
         SetHotkey(sender,value);
@@ -284,7 +307,7 @@ public partial class MainWindow : Window
         var mods=Keyboard.Modifiers;
         uint flags=((mods&ModifierKeys.Alt)!=0 ? 1u:0)|((mods&ModifierKeys.Control)!=0 ? 2u:0)|((mods&ModifierKeys.Shift)!=0 ? 4u:0)|((mods&ModifierKeys.Windows)!=0 ? 8u:0);
         var value=new Hotkey(flags,key);
-        try { HotkeyService.Validate(value); }
+        try { HotkeyService.Validate(value,sender==OverlayKeyBox || sender==OverlayControlsKeyBox); }
         catch (Exception ex) { SetStatus(ex.Message); return; }
         SetHotkey(sender,value);
     }
@@ -295,6 +318,12 @@ public partial class MainWindow : Window
         else if (sender==ToggleKeyBox) toggleKey=value;
         else if (sender==CancelCurrentKeyBox) cancelCurrentKey=value;
         else if (sender==CancelAllKeyBox) cancelAllKey=value;
+        else if (sender==OverlayKeyBox || sender==OverlayControlsKeyBox) overlayKey=value;
         UpdateHotkeyFields();
     }
+    private void ConfigureOverlay(object sender,RoutedEventArgs e)
+    {
+        if (owner.ReadingOverlay?.ConfigureLayout(this,overlayLayout) is { } layout) overlayLayout=layout;
+    }
+    private void ResetOverlay(object sender,RoutedEventArgs e)=>overlayLayout=new();
 }

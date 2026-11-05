@@ -9,6 +9,7 @@ public sealed class WavePcmDecoder
     private readonly Stream stream;
     private long remaining;
     public WaveFormat Format { get; }
+    public TimeSpan? TotalDuration { get; }
     public WavePcmDecoder(Stream stream)
     {
         this.stream=stream;
@@ -25,6 +26,7 @@ public sealed class WavePcmDecoder
             {
                 Format=format ?? throw new InvalidDataException(UiText.T("wave.noFormat"));
                 remaining=length is 0 or >= 0x7FFFFFFF ? long.MaxValue : length;
+                TotalDuration=remaining==long.MaxValue ? null : TimeSpan.FromSeconds((double)remaining/Format.AverageBytesPerSecond);
                 return;
             }
             headerBytes+=8+length+(length&1);

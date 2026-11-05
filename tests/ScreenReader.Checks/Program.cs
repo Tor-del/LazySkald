@@ -19,6 +19,7 @@ internal static partial class Program
     {
         try
         {
+            if (args.Contains("--theme-only")) { RunThemeChecks(); Console.WriteLine($"PASS: {checks} checks"); return 0; }
             RunOffline();
             RunRetryChecksAsync().GetAwaiter().GetResult();
             RunProviderChecksAsync().GetAwaiter().GetResult();
@@ -29,6 +30,7 @@ internal static partial class Program
             RunHotkeyChecks();
             RunSelectionCancellationChecks();
             RunQueueChecksAsync().GetAwaiter().GetResult();
+            RunReadingOverlayChecksAsync().GetAwaiter().GetResult();
             RunCacheChecksAsync().GetAwaiter().GetResult();
             RunLocalizationChecks();
             RunOllamaChecksAsync().GetAwaiter().GetResult();
@@ -37,11 +39,13 @@ internal static partial class Program
             if (args.Contains("--windows")) RunWindowsSpeechAsync().GetAwaiter().GetResult();
             if (args.Contains("--hotkey-service")) RunHotkeyService();
             if (args.Contains("--hotkey-input")) RunHotkeyInput();
+            if (args.Contains("--overlay-interaction")) RunOverlayInteractionInput();
             if (args.Contains("--repeat-capture")) RunRepeatCaptureChecks();
             if (args.Contains("--ocr")) RunOcrAsync().GetAwaiter().GetResult();
             if (args.Contains("--online")) RunOnlineAsync().GetAwaiter().GetResult();
             if (args.Contains("--dmitry")) CheckDmitryAsync().GetAwaiter().GetResult();
             if (args.Contains("--audio")) RunAudioAsync().GetAwaiter().GetResult();
+            if (args.Contains("--overlay-audio")) RunOverlayAudioChecksAsync().GetAwaiter().GetResult();
             if (args.Contains("--capture")) RunCapture();
             if (args.Contains("--overlay")) RunOverlay();
             if (args.Contains("--overlay-window")) RunOverlayWindow();
@@ -173,6 +177,16 @@ internal static partial class Program
         int previewWidth=(int)window.Width, previewHeight=(int)window.Height;
         Assert(((System.Windows.Controls.TextBox)window.FindName("CaptureKeyBox")).Text=="Ctrl + Alt + R" &&
             new[] { "RepeatCaptureKeyBox","ToggleKeyBox","CancelCurrentKeyBox","CancelAllKeyBox" }.All(name=>((System.Windows.Controls.TextBox)window.FindName(name)).Text==UiText.T("hotkey.unassigned")),"UI displays queue shortcut and four unassigned actions by default");
+        Assert(new[] { "OverlayKeyBox","OverlayControlsKeyBox" }.All(name=>((System.Windows.Controls.TextBox)window.FindName(name)).Text=="Alt"),
+            "Overlay and Controls display the same default Alt binding");
+        var setHotkey=typeof(MainWindow).GetMethod("SetHotkey",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!;
+        foreach (string name in new[] { "OverlayKeyBox","OverlayControlsKeyBox" })
+        {
+            setHotkey.Invoke(window,[window.FindName(name),new Hotkey(0,0x75)]);
+            Assert(new[] { "OverlayKeyBox","OverlayControlsKeyBox" }.All(field=>((System.Windows.Controls.TextBox)window.FindName(field)).Text=="F6"),
+                "Changing either interaction field synchronizes both tabs: "+name);
+        }
+        setHotkey.Invoke(window,[window.FindName("OverlayKeyBox"),new Hotkey(0,0x12)]);
         var content=(System.Windows.FrameworkElement)window.Content;
         content.Measure(new System.Windows.Size(previewWidth,previewHeight));
         content.Arrange(new System.Windows.Rect(0,0,previewWidth,previewHeight)); content.UpdateLayout();
@@ -236,7 +250,7 @@ internal static partial class Program
         var settings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(settings.SelectedVoice=="custom-ui-voice" && settings.OpenAiEndpoint=="http://127.0.0.1:9876/v1/audio/speech" && SecretProtection.Unprotect(settings.OpenAiApiKeyProtected)=="fake-ui-secret","Server settings round-trip from UI with encrypted key");
         var tabs=(System.Windows.Controls.TabControl)window.FindName("MainTabs");
-        Assert(tabs.Items.Count==13,"Settings include text correction, translation correction and help tabs");
+        Assert(tabs.Items.Count==14,"Settings include overlay, text correction, translation correction and help tabs");
         var translationCorrections=(System.Windows.Controls.CheckBox)window.FindName("TranslationCorrectionsEnabledBox");
         var glossaryList=(System.Windows.Controls.ListBox)window.FindName("TranslationCorrectionsList");
         var glossarySource=(System.Windows.Controls.TextBox)window.FindName("TranslationSourceBox");
@@ -248,6 +262,9 @@ internal static partial class Program
         AppSettings GlossarySettings()=>(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         tabs.SelectedIndex=3; content.UpdateLayout();
         Assert(((System.Windows.Controls.TabItem)tabs.SelectedItem).Header.ToString()==UiText.T("tab.translationCorrection") && translationCorrections.IsChecked==false && !glossarySource.IsEnabled && glossaryList.Items.Count==0,"Translation glossary starts with disabled editor and empty list");
+        Assert(!translationCorrections.IsEnabled && !glossaryList.IsEnabled,"Translation glossary cannot be enabled while translation is off");
+        translateEnabled.IsChecked=true; content.UpdateLayout();
+        Assert(translationCorrections.IsEnabled && !glossarySource.IsEnabled,"Translation enables the glossary toggle while its editor still requires opting in");
         translationCorrections.IsChecked=true; content.UpdateLayout();
         Assert(glossarySource.IsEnabled && glossaryIgnoreCase.IsChecked==true,"Enabling glossary unlocks editor with case-insensitive default");
         glossarySource.Text="Skyrim"; glossaryPreserve.IsChecked=true;
@@ -255,6 +272,11 @@ internal static partial class Program
         GlossaryClick("TranslationCorrectionAddButton");
         glossarySource.Text="Dragonborn"; glossaryReplacement.Text="Довакин";
         GlossaryClick("TranslationCorrectionAddButton");
+        translateEnabled.IsChecked=false; content.UpdateLayout();
+        Assert(!translationCorrections.IsEnabled && !glossarySource.IsEnabled && !glossaryList.IsEnabled && translationCorrections.IsChecked==true && glossaryList.Items.Count==2,"Disabling translation locks the glossary and preserves its selection and entries");
+        translateEnabled.IsChecked=true; content.UpdateLayout();
+        Assert(translationCorrections.IsEnabled && glossarySource.IsEnabled && glossaryList.IsEnabled && glossaryList.Items.Count==2,"Re-enabling translation restores glossary availability and entries");
+        translateEnabled.IsChecked=false; content.UpdateLayout();
         Assert(glossaryList.Items.Count==2 && GlossarySettings().Translation.CorrectionEntries is { Count:2 } && GlossarySettings().Translation.CorrectionRules=="","Glossary form adds typed entries and saves without legacy text");
         GlossaryRowAction("EditTranslationCorrection",(TranslationCorrectionEntry)glossaryList.Items[1]);
         glossaryIgnoreCase.IsChecked=false; glossaryReplacement.Text="Драконорождённый";
@@ -331,8 +353,8 @@ internal static partial class Program
         string selectedDevice=((AudioOutputChoice)devices.SelectedItem).Id;
         var uiLanguage=(System.Windows.Controls.ComboBox)window.FindName("UiLanguageBox");
         uiLanguage.SelectedItem=((System.Collections.Generic.IEnumerable<UiLanguageChoice>)uiLanguage.ItemsSource).First(l=>l.Id=="en");
-        Assert(((System.Windows.Controls.TabItem)tabs.Items[0]).Header.ToString()=="Recognition" && ((System.Windows.Controls.TabItem)tabs.Items[1]).Header.ToString()=="Text correction" && ((System.Windows.Controls.TabItem)tabs.Items[11]).Header.ToString()=="Application","English localization updates tab headers immediately");
-        Assert(((System.Windows.Controls.TabItem)tabs.Items[12]).Header.ToString()=="How to use" && helpCapture.Text==UiText.T("help.capture","Ctrl + Alt + R"),"Help header and shortcut instructions follow language changes");
+        Assert(((System.Windows.Controls.TabItem)tabs.Items[0]).Header.ToString()=="Recognition" && ((System.Windows.Controls.TabItem)tabs.Items[1]).Header.ToString()=="Text correction" && ((System.Windows.Controls.TabItem)tabs.Items[12]).Header.ToString()=="Application","English localization updates tab headers immediately");
+        Assert(((System.Windows.Controls.TabItem)tabs.Items[13]).Header.ToString()=="How to use" && helpCapture.Text==UiText.T("help.capture","Ctrl + Alt + R"),"Help header and shortcut instructions follow language changes");
         Assert(((AudioOutputChoice)devices.SelectedItem).Id==selectedDevice && voiceBox.Text=="custom-ui-voice","Changing UI language preserves device and provider settings");
         var englishSettings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(englishSettings.UiLanguage=="en" && englishSettings.AudioOutputDeviceId==selectedDevice,"Interface language and playback device are included in saved settings");
@@ -348,7 +370,7 @@ internal static partial class Program
         ((System.Windows.Controls.CheckBox)window.FindName("TranslateEnabledBox")).IsChecked=true;
         var translatedSettings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(translatedSettings.Translation.Enabled && translatedSettings.Translation.Selected.Model=="lm-model" && SecretProtection.Unprotect(translatedSettings.Translation.Selected.ApiKeyProtected)=="llm-test-key" && translatedSettings.Translation.Providers["ollama"].Model=="ollama-model","Translation UI saves provider profiles with encrypted keys");
-        Assert(tabs.Items.Cast<System.Windows.Controls.TabItem>().Select(t=>t.Header.ToString()).SequenceEqual(new[] { "Recognition","Text correction","Translation","Translation correction","Genderization","Speech","Checks","Cache","Queue","Controls","Ollama","Application","How to use" }),"Tabs follow pipeline order with help at the end");
+        Assert(tabs.Items.Cast<System.Windows.Controls.TabItem>().Select(t=>t.Header.ToString()).SequenceEqual(new[] { "Recognition","Text correction","Translation","Translation correction","Genderization","Speech","Checks","Cache","Queue","Overlay","Controls","Ollama","Application","How to use" }),"Tabs follow pipeline order with help at the end");
         Assert(((System.Windows.Controls.ComboBox)window.FindName("OcrProviderBox")).SelectedItem is OcrProviderChoice { Id:"windows" },"Recognition defaults to Windows OCR");
         var genderEnabled=(System.Windows.Controls.CheckBox)window.FindName("GenderEnabledBox");
         var roleList=(System.Windows.Controls.ListBox)window.FindName("SpeechRolesBox");
@@ -509,6 +531,7 @@ internal static partial class Program
         uiLanguage.SelectedItem=((System.Collections.Generic.IEnumerable<UiLanguageChoice>)uiLanguage.ItemsSource).First(l=>l.Id=="ru");
         Console.WriteLine("UI rendered to "+Path.Combine(directory,"settings-preview.png"));
         RunFocusLayoutChecks();
+        RenderReadingOverlayPreviews();
         window.Close(); app.Shutdown();
     }
     private static void RunCapture()

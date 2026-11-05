@@ -12,8 +12,11 @@ public partial class App : Application
     private System.Drawing.Icon? trayIcon;
     private AppLifetimeSignal? exitSignal;
     private MainWindow? settingsWindow;
+    public IReadingOverlay? ReadingOverlay { get; private set; }
     private readonly CancellationTokenSource lifetime=new();
     public AppSettings Settings { get; private set; }=new();
+    private ThemeManager? themes;
+    public ThemeManager Themes=>themes ??=new ThemeManager(this);
     public WindowsOcrProvider Ocr { get; }=new();
     public SpeechProviderRegistry Providers { get; }=new();
     public ReadingController Reader { get; private set; }=null!;
@@ -30,8 +33,12 @@ public partial class App : Application
         UiText.SetLanguage(Settings.UiLanguage);
         instance=new Mutex(true,"Local\\ScreenReader.Desktop",out bool created);
         if (!created) { MessageBox.Show(UiText.T("app.alreadyRunning"),"LazySkald"); Shutdown(); return; }
+        Themes.Apply(Settings.Theme);
         exitSignal=new AppLifetimeSignal(()=> { if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(Quit); });
         Reader=new ReadingController(new ScreenCapture(),Ocr,new IdentityTextTransform(),Providers,new StreamingAudioPlayer());
+        Reader.UpdateOverlaySettings(Settings.Overlay);
+        ReadingOverlay=new ReadingOverlayWindow(Reader);
+        ReadingOverlay.ApplySettings(Settings.Overlay);
         Reader.StatusChanged += value=>settingsWindow?.SetStatus(value);
         Reader.TextTranslated += value=>settingsWindow?.SetTranslatedText(value);
         Reader.GenderDetected += value=>settingsWindow?.SetGender(value);
@@ -47,6 +54,7 @@ public partial class App : Application
         UpdateTrayLanguage(); UiText.LanguageChanged+=UpdateTrayLanguage;
         tray.DoubleClick += (_,_)=>ShowSettings();
         hotkeys=new HotkeyService();
+        hotkeys.OverlayInteractionChanged += held=>ReadingOverlay?.SetInteractionHeld(held);
         hotkeys.ActionRequested += async action=>
         {
             switch (action)
@@ -75,6 +83,10 @@ public partial class App : Application
         hotkeys!.Configure(value);
         try { SettingsStore.Save(value); Settings=value; }
         catch { hotkeys.Configure(previous); throw; }
+        Themes.Apply(value.Theme);
+        Reader.UpdateOverlaySettings(value.Overlay);
+        ReadingOverlay?.ApplySettings(value.Overlay);
+        if (previous.SpeechEnabled && !value.SpeechEnabled) Reader.Stop();
         if (tray is not null) tray.Text="LazySkald — "+(value.CaptureHotkey?.ToString() ?? UiText.T("hotkey.unassigned"));
     }
     public void SetHotkeyEditing(bool editing)
@@ -98,11 +110,12 @@ public partial class App : Application
     public void Quit()
     {
         if (IsExiting) return;
-        IsExiting=true; Reader?.Stop(); lifetime.Cancel(); settingsWindow?.Close(); Shutdown();
+        IsExiting=true; Reader?.Stop(); lifetime.Cancel(); ReadingOverlay?.Dispose(); settingsWindow?.Close(); Shutdown();
     }
     protected override void OnExit(ExitEventArgs e)
     {
         UiText.LanguageChanged-=UpdateTrayLanguage;
+        themes?.Dispose();
         exitSignal?.Dispose(); hotkeys?.Dispose(); tray?.Dispose(); trayIcon?.Dispose(); Providers.Dispose(); lifetime.Dispose(); instance?.Dispose();
         base.OnExit(e);
     }
