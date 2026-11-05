@@ -17,6 +17,9 @@ engineering of this library for debugging modifications are permitted under LGPL
 
 Other dependencies:
 
+- Optional Xbox Game Bar widget: Microsoft.Gaming.XboxGameBar 7.3.2607010 —
+  Microsoft, Microsoft Game Bar SDK license terms. See `licenses/GameBar-SDK.txt`.
+
 - Markdig 1.5.1 — Alexandre Mutel, BSD-2-Clause.
   https://github.com/xoofx/markdig. See `licenses/Markdig-BSD-2-Clause.txt`.
 - NAudio 2.2.1 — Mark Heath and contributors, MIT.

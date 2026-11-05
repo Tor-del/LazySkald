@@ -179,11 +179,20 @@ window. A visible, unrestricted cursor can use the widget without holding the ke
 A captured or hidden cursor passes through the widget until the key is held;
 blocking input in games that read devices directly is not guaranteed.
 
-The current renderer is a separate WPF/Win32 window without game injection,
-intended for windowed and borderless modes. Exclusive fullscreen visibility is
-not guaranteed. Users verify compatibility with their games and anti-cheat
-systems. `IReadingOverlay` separates presentation from job/audio control to allow
-a future DirectX/Vulkan renderer, potentially using Dear ImGui; it is not included.
+**Display method** offers a separate WPF/Win32 window and **Xbox Game Bar**.
+The desktop window is intended for windowed and borderless modes; exclusive
+fullscreen visibility is not guaranteed. Game Bar requires the separate LazySkald
+widget: open **Win+G → Widgets → LazySkald** and pin it. Move, resize and interact
+through Game Bar. The desktop overlay returns automatically while the widget is
+unavailable, keeping the same reading queue and playback controls.
+Build the widget with `./build-gamebar.ps1` (Visual Studio 2022 UWP tools required).
+For an unsigned local build, enable Windows Developer Mode and run
+`powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./Install-GameBar.ps1 -Development`
+from `artifacts/LazySkald-GameBar`.
+For signed distribution, pass `-CertificateThumbprint` for a trusted code-signing
+certificate with subject `CN=LazySkald`.
+[Detailed widget setup (Russian)](src/ScreenReader.GameBar/README.ru.md).
+Both modes avoid game injection; users verify compatibility with each game.
 
 ## LLM translation
 
@@ -224,15 +233,36 @@ Protocol references: [LM Studio](https://lmstudio.ai/docs/developer/openai-compa
 [Ollama chat](https://docs.ollama.com/api/chat),
 [Ollama models](https://docs.ollama.com/api/tags).
 
-## Set up Ollama and TranslateGemma
+## Ollama: translation, models and drivers
 
-Open **Ollama** to check the local server, installed models, RAM and dedicated VRAM. **Install / download model** downloads the official installer if needed, installs Ollama for the current user, starts the server and pulls the selected TranslateGemma through the streaming API. Downloads show percentages and bytes; installation shows an activity indicator. Downloads can be cancelled and retried. Installation is allowed to finish safely.
+**Ollama** starts with computer specifications: CPU, logical cores, RAM, available memory, GPU and dedicated VRAM. A separate status block shows whether Ollama was found, whether its server is running and how many models are installed. A stopped server can be started here.
+
+One list of model cards shows tag, approximate disk size, intended use, memory guidelines and status: not downloaded, downloaded, used for translation, preparing/downloading with percentage, or deleting. A stopped server means availability is unverified. Installed sizes come from Ollama's API; catalog sizes are download estimates. The hardware recommendation is marked on its card.
+
+**Translation models** starts with name/description search and compact **Filters** and **Sort** dropdowns. Checked filter tags (downloaded, not downloaded, recommended, supported, unsupported) are combined with OR; no checked tags shows all models. Search narrows the filtered result. Default order is installed recommended models, other installed models, then models not installed. Name and ascending/descending size sorting are also available; unknown sizes stay last.
+
+Supported means the total RAM and dedicated VRAM guidelines are met, not that a particular GPU or driver is compatible. A RAM or VRAM guideline exceeding the computer's specifications is highlighted in red. Low available RAM is shown separately as a warning. Insufficient VRAM does not prevent CPU execution. Unknown model requirements are neither supported nor unsupported, and unverified availability is not classified as not downloaded.
+
+Each missing model has a **Download** button. If Ollama is absent, the app first downloads the official `ollama-windows-amd64.zip`, plus the ROCm extension for detected AMD hardware, and extracts it under `%LOCALAPPDATA%\ScreenReader\OllamaRuntime`. No graphical installer or Ollama window is opened. A hidden `ollama serve` starts before the model is downloaded through the streaming API. Existing Ollama installations are also reused without opening their UI. Cancellation is temporarily disabled during extraction; incomplete runtimes are never discoverable. Downloads can be cancelled and retried. This managed CLI installation does not modify PATH or startup entries and is not updated by Ollama's graphical app.
 
 Available sizes: **4B (~3.3 GB)**, **12B (~8.1 GB)** and **27B (~17 GB)**. Automatic selection recommends 12B with at least 16 GB RAM and 12 GB VRAM, 27B with at least 32 GB RAM and 24 GB VRAM, otherwise 4B to limit CPU latency. These are conservative guidelines with room for the system and context, not GPU compatibility guarantees. Manual selection is available. Ollama itself needs about 4 GB of disk space.
 
 After downloading, click **Use for translation**, then **Save**. This enables translation and selects the local model while preserving other provider and genderization profiles. Ollama appears first in both LLM lists; existing saved provider selections remain unchanged.
 
+The catalog also includes **Qwen2.5 Instruct 3B / 7B / 14B** (~1.9 / 4.7 / 9 GB) and **Gemma 3 4B / 12B** (~3.4 / 8.2 GB). Both support multilingual instructions, with explicit Russian support in Qwen2.5. Compare their translation quality on your own texts, particularly with glossaries and custom instructions. Automatic recommendations still use specialized TranslateGemma models.
+
+The same list includes local models downloaded outside the app. Installed model cards offer **Use for translation** and **Delete model**; catalog models also offer updating. Selecting a model enables translation and sets the local Ollama provider and model tag; click Save to apply it to the reader. Deletion requires confirmation and immediately changes Ollama storage, even if settings are later closed without saving; recovery requires another download. Deleting the model selected here disables local translation. Other features and applications referencing that model may need reconfiguration.
+
+**Graphics driver** shows versions and dates for all detected graphics adapters. Manufacturer website buttons appear only for detected vendors: NVIDIA, AMD and/or Intel, identified by PCI IDs and adapter names.
+
+The [official Ollama requirements](https://docs.ollama.com/gpu), checked November 5, 2026, are bundled with the application: NVIDIA ≥550, or ≥570 for compute capability 5.0–6.2. NVIDIA models are matched to the documentation's GPU table. Drivers below the applicable threshold trigger an explicit warning with installed and required versions, visible even when driver details are collapsed. Unknown models or versions never count as confirmed compliance. For AMD on Windows, ROCm/HIP 7 is required, but no numeric Windows driver minimum is provided, so it cannot be compared automatically. Intel has no numeric threshold either. Vulkan is also documented as additional GPU support.
+
+**Refresh Ollama requirements** downloads official Markdown, validates its format, saves parsed requirements to `%LOCALAPPDATA%\ScreenReader\ollama-gpu-requirements.json` and immediately compares the installed drivers again. The UI shows the checked date and active thresholds. Refresh is manual; the last saved copy remains available offline after restart. Network errors, unrecognized formats and cancellation preserve the previous copy.
+
+**Check driver updates** separately searches Windows Update without installing anything. No updates does not guarantee the latest vendor release; meeting Ollama requirements does not mean a driver is the latest version. Restart Ollama after updating. Searches that are unavailable or exceed 55 seconds report failure while model management remains available.
+
 Model sizes: [official TranslateGemma catalog](https://ollama.com/library/translategemma/tags). Installation: [Ollama for Windows](https://docs.ollama.com/windows).
+Alternatives: [Qwen2.5](https://ollama.com/library/qwen2.5), [Gemma 3](https://ollama.com/library/gemma3). Driver requirements: [Ollama GPU compatibility](https://docs.ollama.com/gpu).
 
 Each speech profile has a 0–100% software volume slider, applied during playback without changing system volume or cached audio. **Add fallback voice** creates an optional shared profile with its own provider, voice, volume, rate and output device. It is attempted once if primary speech fails before playback starts; cancellation and failures after playback starts do not trigger fallback. Fallback audio does not replace primary audio in the cache. Remove the profile to disable it.
 

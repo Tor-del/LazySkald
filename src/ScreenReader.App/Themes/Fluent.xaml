@@ -114,6 +114,26 @@
       </ControlTemplate.Triggers>
     </ControlTemplate></Setter.Value></Setter>
   </Style>
+  <Style TargetType="RadioButton">
+    <Setter Property="Foreground" Value="{DynamicResource FluentText}"/>
+    <Setter Property="MinHeight" Value="28"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
+      <Grid Background="Transparent">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <Ellipse x:Name="Circle" Width="20" Height="20" Fill="{DynamicResource FluentSurface}" Stroke="{DynamicResource FluentCheckStroke}" StrokeThickness="1" VerticalAlignment="Center"/>
+        <Ellipse x:Name="Dot" Width="10" Height="10" Fill="{DynamicResource FluentAccentText}" Visibility="Collapsed" VerticalAlignment="Center"/>
+        <Ellipse x:Name="FocusRing" Width="26" Height="26" Stroke="{DynamicResource FluentAccent}" StrokeThickness="1" Opacity="0" IsHitTestVisible="False" VerticalAlignment="Center"/>
+        <ContentPresenter Grid.Column="1" Margin="7,0,0,0" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+      </Grid>
+      <ControlTemplate.Triggers>
+        <Trigger Property="IsChecked" Value="True"><Setter TargetName="Circle" Property="Fill" Value="{DynamicResource FluentAccent}"/><Setter TargetName="Circle" Property="Stroke" Value="{DynamicResource FluentAccent}"/><Setter TargetName="Dot" Property="Visibility" Value="Visible"/></Trigger>
+        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Circle" Property="Opacity" Value="0.75"/></Trigger>
+        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="FocusRing" Property="Opacity" Value="1"/></Trigger>
+        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+      </ControlTemplate.Triggers>
+    </ControlTemplate></Setter.Value></Setter>
+  </Style>
   <Style TargetType="CheckBox">
     <Setter Property="Foreground" Value="{DynamicResource FluentText}"/><Setter Property="MinHeight" Value="24"/>
     <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
@@ -139,8 +159,47 @@
   <Style TargetType="ListBox">
     <Setter Property="Foreground" Value="{DynamicResource FluentText}"/>
     <Setter Property="Background" Value="{DynamicResource FluentSurfaceHover}"/><Setter Property="BorderBrush" Value="{DynamicResource FluentStroke}"/>
+    <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="Padding" Value="4"/>
-    <Style.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="5"/></Style></Style.Resources>
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+    <Setter Property="ScrollViewer.CanContentScroll" Value="True"/>
+    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBox">
+      <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+        <ScrollViewer x:Name="PART_ScrollViewer" Focusable="False">
+          <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+        </ScrollViewer>
+      </Border>
+      <ControlTemplate.Triggers>
+        <Trigger Property="IsEnabled" Value="False"><Setter Property="Foreground" Value="{DynamicResource FluentSecondary}"/></Trigger>
+      </ControlTemplate.Triggers>
+    </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style x:Key="WizardChoiceItem" TargetType="ListBoxItem">
+    <Setter Property="Foreground" Value="{DynamicResource FluentText}"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="Margin" Value="0,0,0,8"/>
+    <Setter Property="Padding" Value="12,10"/>
+    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem">
+      <Border x:Name="ChoiceBorder" Background="{DynamicResource FluentSurface}" BorderBrush="{DynamicResource FluentStroke}" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
+      </Border>
+      <ControlTemplate.Triggers>
+        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ChoiceBorder" Property="Background" Value="{DynamicResource FluentSurfaceHover}"/></Trigger>
+        <Trigger Property="IsSelected" Value="True"><Setter TargetName="ChoiceBorder" Property="BorderBrush" Value="{DynamicResource FluentAccent}"/><Setter TargetName="ChoiceBorder" Property="BorderThickness" Value="2"/></Trigger>
+        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ChoiceBorder" Property="BorderBrush" Value="{DynamicResource FluentAccent}"/></Trigger>
+        <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+      </ControlTemplate.Triggers>
+    </ControlTemplate></Setter.Value></Setter>
+  </Style>
+  <Style x:Key="WizardChoiceList" TargetType="ListBox" BasedOn="{StaticResource {x:Type ListBox}}">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="SelectionMode" Value="Single"/>
+    <Setter Property="ItemContainerStyle" Value="{StaticResource WizardChoiceItem}"/>
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
+    <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
   </Style>
   <Style TargetType="ScrollBar">
     <Setter Property="Width" Value="12"/><Setter Property="MinWidth" Value="12"/>

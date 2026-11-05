@@ -1,4 +1,33 @@
 {
+  "wizard.title": {
+    "ru": "Мастер настройки",
+    "en": "Setup wizard",
+    "zh": "设置向导",
+    "ja": "設定ウィザード",
+    "es": "Asistente de configuración",
+    "ko": "설정 마법사",
+    "fr": "Assistant de configuration",
+    "de": "Einrichtungsassistent"
+  },
+  "overlay.gameBarHint": {
+    "ru": "Установите виджет LazySkald Game Bar, нажмите Win+G, откройте его в меню виджетов и закрепите. Перемещение и размер настраиваются в Game Bar; управление — через Win+G. Пока виджет недоступен, используется обычный оверлей.",
+    "en": "Install the LazySkald Game Bar widget, press Win+G, open it from the widget menu and pin it. Move and resize it in Game Bar; use Win+G to interact. The desktop overlay is used while the widget is unavailable.",
+    "zh": "安装 LazySkald Game Bar 小组件，按 Win+G，从小组件菜单打开并固定。可在 Game Bar 中移动和调整大小，按 Win+G 操作。小组件不可用时使用桌面叠加层。",
+    "ja": "LazySkald Game Bar ウィジェットをインストールし、Win+G を押してメニューから開き、ピン留めしてください。移動とサイズ変更は Game Bar、操作は Win+G で行います。利用できない間はデスクトップ表示を使います。",
+    "es": "Instala el widget LazySkald Game Bar, pulsa Win+G, ábrelo desde el menú y fíjalo. Muévelo y cambia su tamaño en Game Bar; usa Win+G para interactuar. Si no está disponible, se usa la superposición de escritorio.",
+    "ko": "LazySkald Game Bar 위젯을 설치하고 Win+G를 눌러 위젯 메뉴에서 열고 고정하세요. 이동과 크기는 Game Bar에서 조절하고 Win+G로 조작합니다. 위젯을 사용할 수 없으면 데스크톱 오버레이를 사용합니다.",
+    "fr": "Installez le widget LazySkald Game Bar, appuyez sur Win+G, ouvrez-le depuis le menu et épinglez-le. Déplacez-le et redimensionnez-le dans Game Bar ; utilisez Win+G pour interagir. Sinon, la superposition de bureau est utilisée.",
+    "de": "Installiere das LazySkald Game Bar Widget, drücke Win+G, öffne es im Widget-Menü und hefte es an. Verschieben und Größe ändern erfolgt in Game Bar; mit Win+G bedienen. Ist es nicht verfügbar, wird das Desktop-Overlay verwendet."
+  },
+  "overlay.openGameBar": {
+    "ru": "Открыть Xbox Game Bar", "en": "Open Xbox Game Bar", "zh": "打开 Xbox Game Bar", "ja": "Xbox Game Bar を開く", "es": "Abrir Xbox Game Bar", "ko": "Xbox Game Bar 열기", "fr": "Ouvrir Xbox Game Bar", "de": "Xbox Game Bar öffnen"
+  },
+  "overlay.gameBarLayout": {
+    "ru": "Положение и размер виджета изменяются в Xbox Game Bar (Win+G).", "en": "Move and resize the widget in Xbox Game Bar (Win+G).", "zh": "在 Xbox Game Bar (Win+G) 中移动和调整小组件大小。", "ja": "Xbox Game Bar (Win+G) でウィジェットの位置とサイズを変更してください。", "es": "Mueve y redimensiona el widget en Xbox Game Bar (Win+G).", "ko": "Xbox Game Bar (Win+G)에서 위젯을 이동하고 크기를 조절하세요.", "fr": "Déplacez et redimensionnez le widget dans Xbox Game Bar (Win+G).", "de": "Verschiebe das Widget und ändere seine Größe in Xbox Game Bar (Win+G)."
+  },
+  "overlay.gameBarIdle": {
+    "ru": "Ожидание задачи чтения", "en": "Waiting for a reading task", "zh": "等待读取任务", "ja": "読み上げタスクを待機中", "es": "Esperando una tarea de lectura", "ko": "읽기 작업 대기 중", "fr": "En attente de lecture", "de": "Warten auf einen Leseauftrag"
+  },
   "label.theme": {
     "ru": "Тема оформления", "en": "Appearance", "zh": "外观", "ja": "テーマ", "es": "Tema", "ko": "테마", "fr": "Thème", "de": "Design"
   },
@@ -760,8 +789,8 @@
     "en": "{0}: {1}"
   },
   "label.hotkeyQueue": {
-    "ru": "Распознать и добавить в очередь",
-    "en": "Recognize and add to queue"
+    "ru": "Распознать",
+    "en": "Recognize"
   },
   "label.hotkeyRepeatQueue": {
     "ru": "Повторить распознавание последней области и добавить в очередь",
@@ -844,8 +873,14 @@
     "en": "Ollama and local translation"
   },
   "ollama.intro": {
-    "ru": "Подготовьте TranslateGemma одной кнопкой: приложение проверит Ollama, при необходимости скачает установщик с ollama.com, установит Ollama, запустит сервер и загрузит выбранную модель.",
-    "en": "Prepare TranslateGemma with one button: check Ollama, download the installer from ollama.com if needed, install Ollama, start the server and download the selected model."
+    "ru": "Установите Ollama, выберите модель для перевода или управляйте уже скачанными моделями. Все операции выполняются с локальным сервером 127.0.0.1:11434.",
+    "en": "Install Ollama, choose a translation model or manage downloaded models. All operations use the local server at 127.0.0.1:11434.",
+    "zh": "安装 Ollama，选择翻译模型或管理已下载模型。所有操作使用本地服务器 127.0.0.1:11434。",
+    "ja": "Ollama をインストールし、翻訳モデルを選択・管理します。操作はローカルサーバー 127.0.0.1:11434 を使用します。",
+    "es": "Instala Ollama, elige un modelo de traducción o gestiona los descargados. Se usa el servidor local 127.0.0.1:11434.",
+    "ko": "Ollama 설치, 번역 모델 선택 및 다운로드한 모델 관리. 모든 작업은 로컬 서버 127.0.0.1:11434를 사용합니다.",
+    "fr": "Installez Ollama, choisissez un modèle de traduction ou gérez les modèles téléchargés. Serveur local : 127.0.0.1:11434.",
+    "de": "Ollama installieren, Übersetzungsmodell wählen oder heruntergeladene Modelle verwalten. Alle Vorgänge nutzen den lokalen Server 127.0.0.1:11434."
   },
   "ollama.unchecked": {
     "ru": "Ollama ещё не проверена.",
@@ -896,12 +931,24 @@
     "en": "Ollama is installed, but the local server is unavailable. The setup button will try to start it."
   },
   "ollama.running": {
-    "ru": "Ollama {0}: сервер доступен. Установленные TranslateGemma: {1}.",
-    "en": "Ollama {0}: server available. Installed TranslateGemma models: {1}."
+    "ru": "Ollama {0}: сервер доступен. Установленные модели: {1}.",
+    "en": "Ollama {0}: server available. Installed models: {1}.",
+    "zh": "Ollama {0}：服务器可用。已安装模型：{1}。",
+    "ja": "Ollama {0}：サーバー利用可能。インストール済み：{1}。",
+    "es": "Ollama {0}: servidor disponible. Modelos instalados: {1}.",
+    "ko": "Ollama {0}: 서버 사용 가능. 설치된 모델: {1}.",
+    "fr": "Ollama {0} : serveur disponible. Modèles installés : {1}.",
+    "de": "Ollama {0}: Server verfügbar. Installierte Modelle: {1}."
   },
   "ollama.noModels": {
-    "ru": "нет",
-    "en": "none"
+    "ru": "Моделей пока нет.",
+    "en": "No models installed yet.",
+    "zh": "尚未安装模型。",
+    "ja": "モデルは未インストールです。",
+    "es": "Aún no hay modelos instalados.",
+    "ko": "설치된 모델이 없습니다.",
+    "fr": "Aucun modèle installé.",
+    "de": "Noch keine Modelle installiert."
   },
   "ollama.checking": {
     "ru": "Проверка Ollama…",
@@ -1512,5 +1559,786 @@
     "zh": "正在播放",
     "ja": "再生中",
     "ko": "재생 중"
+  },
+  "ollama.computer": {
+    "ru": "Ваш компьютер",
+    "en": "Your computer",
+    "zh": "你的电脑",
+    "ja": "このコンピューター",
+    "es": "Tu equipo",
+    "ko": "내 컴퓨터",
+    "fr": "Votre ordinateur",
+    "de": "Dein Computer"
+  },
+  "ollama.drivers": {
+    "ru": "Драйвер видеокарты",
+    "en": "Graphics driver",
+    "zh": "显卡驱动",
+    "ja": "グラフィックスドライバー",
+    "es": "Controlador gráfico",
+    "ko": "그래픽 드라이버",
+    "fr": "Pilote graphique",
+    "de": "Grafiktreiber"
+  },
+  "ollama.catalog": {
+    "ru": "Модели для перевода",
+    "en": "Translation models",
+    "zh": "翻译模型",
+    "ja": "翻訳モデル",
+    "es": "Modelos de traducción",
+    "ko": "번역 모델",
+    "fr": "Modèles de traduction",
+    "de": "Übersetzungsmodelle"
+  },
+  "ollama.installed": {
+    "ru": "Установленные модели",
+    "en": "Installed models",
+    "zh": "已安装模型",
+    "ja": "インストール済みモデル",
+    "es": "Modelos instalados",
+    "ko": "설치된 모델",
+    "fr": "Modèles installés",
+    "de": "Installierte Modelle"
+  },
+  "ollama.updateModel": {
+    "ru": "Обновить выбранную модель",
+    "en": "Update selected model",
+    "zh": "更新所选模型",
+    "ja": "選択したモデルを更新",
+    "es": "Actualizar modelo seleccionado",
+    "ko": "선택한 모델 업데이트",
+    "fr": "Mettre à jour le modèle",
+    "de": "Ausgewähltes Modell aktualisieren"
+  },
+  "ollama.delete": {
+    "ru": "Удалить модель",
+    "en": "Delete model",
+    "zh": "删除模型",
+    "ja": "モデルを削除",
+    "es": "Eliminar modelo",
+    "ko": "모델 삭제",
+    "fr": "Supprimer le modèle",
+    "de": "Modell löschen"
+  },
+  "ollama.deleteConfirm": {
+    "ru": "Удалить «{0}» из локальной Ollama? Для повторного использования её нужно будет скачать заново. Если она выбрана здесь для локального перевода, перевод отключится. Другие приложения и настройки, использующие эту модель, могут потребовать перенастройки.",
+    "en": "Delete “{0}” from local Ollama? It must be downloaded again to use it. If selected here for local translation, translation will be disabled. Other apps and settings using this model may need reconfiguration.",
+    "zh": "从本地 Ollama 删除“{0}”？再次使用需要重新下载。如果此处用于本地翻译，翻译将停用。其他使用此模型的应用和设置可能需要调整。",
+    "ja": "ローカル Ollama から「{0}」を削除しますか？再利用には再ダウンロードが必要です。ここで翻訳に選択されている場合、翻訳を無効にします。他のアプリや設定も変更が必要になる場合があります。",
+    "es": "¿Eliminar «{0}» de Ollama local? Para usarlo habrá que descargarlo de nuevo. Si está seleccionado aquí, se desactivará la traducción local. Otras aplicaciones y ajustes pueden requerir cambios.",
+    "ko": "로컬 Ollama에서 “{0}”을 삭제할까요? 다시 사용하려면 재다운로드가 필요합니다. 여기서 번역에 선택했다면 번역이 꺼집니다. 다른 앱과 설정을 변경해야 할 수 있습니다.",
+    "fr": "Supprimer « {0} » d’Ollama local ? Il faudra le télécharger à nouveau. Si ce modèle est sélectionné ici, la traduction locale sera désactivée. D’autres applications et réglages peuvent nécessiter une modification.",
+    "de": "„{0}“ aus lokalem Ollama löschen? Zur erneuten Nutzung muss es wieder heruntergeladen werden. Falls hier ausgewählt, wird die lokale Übersetzung deaktiviert. Andere Apps und Einstellungen müssen eventuell angepasst werden."
+  },
+  "ollama.deleting": {
+    "ru": "Удаление {0}…",
+    "en": "Deleting {0}…",
+    "zh": "正在删除 {0}…",
+    "ja": "{0} を削除中…",
+    "es": "Eliminando {0}…",
+    "ko": "{0} 삭제 중…",
+    "fr": "Suppression de {0}…",
+    "de": "{0} wird gelöscht…"
+  },
+  "ollama.deleted": {
+    "ru": "Модель {0} удалена.",
+    "en": "Model {0} deleted.",
+    "zh": "模型 {0} 已删除。",
+    "ja": "モデル {0} を削除しました。",
+    "es": "Modelo {0} eliminado.",
+    "ko": "모델 {0} 삭제 완료.",
+    "fr": "Modèle {0} supprimé.",
+    "de": "Modell {0} gelöscht."
+  },
+  "ollama.descTranslation": {
+    "ru": "TranslateGemma: специализированный перевод, в том числе на русский. Основной рекомендуемый вариант.",
+    "en": "TranslateGemma: dedicated translation, including Russian. The default recommendation.",
+    "zh": "TranslateGemma：专用翻译模型，支持俄语。默认推荐。",
+    "ja": "TranslateGemma：ロシア語を含む翻訳専用。標準の推奨モデル。",
+    "es": "TranslateGemma: traducción especializada, incluido ruso. Opción recomendada.",
+    "ko": "TranslateGemma: 러시아어 포함 번역 전용. 기본 추천 모델.",
+    "fr": "TranslateGemma : traduction spécialisée, dont le russe. Choix recommandé.",
+    "de": "TranslateGemma: auf Übersetzung spezialisiert, auch Russisch. Standardempfehlung."
+  },
+  "ollama.descQwen": {
+    "ru": "Qwen2.5 Instruct: многоязычная модель с поддержкой русского; подходит для перевода с глоссарием и дополнительными инструкциями. 3B — для слабых ПК; 7B/14B — для сравнения качества на ваших текстах.",
+    "en": "Qwen2.5 Instruct: multilingual model supporting Russian; suitable for translation with a glossary and custom instructions. 3B suits smaller PCs; compare 7B/14B on your own texts.",
+    "zh": "Qwen2.5 Instruct：支持俄语的多语言模型，适合术语表和自定义指令。3B 适合较弱电脑；可用自己的文本比较 7B/14B。",
+    "ja": "Qwen2.5 Instruct：ロシア語対応の多言語モデル。用語集や追加指示に適しています。低性能 PC には 3B、品質比較には 7B/14B。",
+    "es": "Qwen2.5 Instruct: modelo multilingüe con ruso, útil con glosarios e instrucciones. 3B para equipos modestos; compara 7B/14B con tus textos.",
+    "ko": "Qwen2.5 Instruct: 러시아어를 지원하는 다국어 모델. 용어집과 추가 지시에 적합합니다. 저사양 PC는 3B, 품질 비교는 7B/14B.",
+    "fr": "Qwen2.5 Instruct : multilingue avec russe, adapté aux glossaires et consignes. 3B pour les petits PC ; comparez 7B/14B sur vos textes.",
+    "de": "Qwen2.5 Instruct: mehrsprachig mit Russisch, geeignet für Glossare und eigene Anweisungen. 3B für kleine PCs; 7B/14B an eigenen Texten vergleichen."
+  },
+  "ollama.descGemma": {
+    "ru": "Gemma 3: универсальная многоязычная модель для перевода с контекстом и инструкциями. Альтернатива TranslateGemma; качество русского стоит сравнить на своих текстах.",
+    "en": "Gemma 3: general multilingual model for translation with context and instructions. An alternative to TranslateGemma; compare Russian quality on your own texts.",
+    "zh": "Gemma 3：通用多语言模型，支持上下文和翻译指令。可作为 TranslateGemma 的替代，用自己的文本比较俄语质量。",
+    "ja": "Gemma 3：文脈や指示を使える汎用多言語モデル。TranslateGemma の代替として、実際の文章でロシア語の品質を比較してください。",
+    "es": "Gemma 3: modelo multilingüe para traducir con contexto e instrucciones. Alternativa a TranslateGemma; compara el ruso con tus textos.",
+    "ko": "Gemma 3: 문맥과 지시를 활용하는 다국어 모델. TranslateGemma 대안으로 실제 텍스트에서 러시아어 품질을 비교하세요.",
+    "fr": "Gemma 3 : modèle multilingue avec contexte et consignes. Alternative à TranslateGemma ; comparez le russe sur vos textes.",
+    "de": "Gemma 3: mehrsprachiges Modell für Übersetzung mit Kontext und Anweisungen. Alternative zu TranslateGemma; Russisch an eigenen Texten vergleichen."
+  },
+  "ollama.driverCheck": {
+    "ru": "Проверить обновления драйвера",
+    "en": "Check driver updates",
+    "zh": "检查驱动更新",
+    "ja": "ドライバー更新を確認",
+    "es": "Buscar actualizaciones del controlador",
+    "ko": "드라이버 업데이트 확인",
+    "fr": "Rechercher des pilotes",
+    "de": "Nach Treiberupdates suchen"
+  },
+  "ollama.gpuSupport": {
+    "ru": "Совместимость GPU",
+    "en": "GPU compatibility",
+    "zh": "GPU 兼容性",
+    "ja": "GPU の互換性",
+    "es": "Compatibilidad GPU",
+    "ko": "GPU 호환성",
+    "fr": "Compatibilité GPU",
+    "de": "GPU-Kompatibilität"
+  },
+  "ollama.driverVersion": {
+    "ru": "{0}: драйвер {1}, дата {2}.",
+    "en": "{0}: driver {1}, dated {2}.",
+    "zh": "{0}：驱动 {1}，日期 {2}。",
+    "ja": "{0}：ドライバー {1}、日付 {2}。",
+    "es": "{0}: controlador {1}, fecha {2}.",
+    "ko": "{0}: 드라이버 {1}, 날짜 {2}.",
+    "fr": "{0} : pilote {1}, date {2}.",
+    "de": "{0}: Treiber {1}, Datum {2}."
+  },
+  "ollama.driverOld": {
+    "ru": "Драйвер NVIDIA ниже базового требования Ollama (550). Обновите его у производителя и перезапустите Ollama.",
+    "en": "NVIDIA driver is below Ollama’s baseline (550). Update it from the manufacturer and restart Ollama.",
+    "zh": "NVIDIA 驱动低于 Ollama 基本要求（550）。请从厂商更新并重启 Ollama。",
+    "ja": "NVIDIA ドライバーが Ollama の基本要件（550）未満です。メーカーから更新し Ollama を再起動してください。",
+    "es": "El controlador NVIDIA no cumple el mínimo de Ollama (550). Actualízalo y reinicia Ollama.",
+    "ko": "NVIDIA 드라이버가 Ollama 기본 요구 사항(550) 미만입니다. 제조사에서 업데이트 후 Ollama를 재시작하세요.",
+    "fr": "Le pilote NVIDIA est inférieur au minimum Ollama (550). Mettez-le à jour et redémarrez Ollama.",
+    "de": "NVIDIA-Treiber liegt unter Ollamas Mindestversion (550). Beim Hersteller aktualisieren und Ollama neu starten."
+  },
+  "ollama.driverUpdates": {
+    "ru": "Windows Update предлагает обновления видеодрайверов:\n{0}\nУстановите их в параметрах Windows или проверьте сайт производителя.",
+    "en": "Windows Update offers graphics driver updates:\n{0}\nInstall them in Windows Settings or check the manufacturer’s site.",
+    "zh": "Windows Update 提供显卡驱动更新：\n{0}\n请在 Windows 设置中安装或查看厂商网站。",
+    "ja": "Windows Update にグラフィックスドライバーの更新があります：\n{0}\nWindows 設定でインストールするかメーカーのサイトを確認してください。",
+    "es": "Windows Update ofrece controladores gráficos:\n{0}\nInstálalos en Configuración de Windows o consulta al fabricante.",
+    "ko": "Windows Update에 그래픽 드라이버 업데이트가 있습니다:\n{0}\nWindows 설정에서 설치하거나 제조사 사이트를 확인하세요.",
+    "fr": "Windows Update propose des pilotes graphiques :\n{0}\nInstallez-les dans les paramètres Windows ou consultez le fabricant.",
+    "de": "Windows Update bietet Grafiktreiber an:\n{0}\nIn den Windows-Einstellungen installieren oder beim Hersteller prüfen."
+  },
+  "ollama.driverNoUpdates": {
+    "ru": "Windows Update не нашёл обновлений видеодрайвера. У производителя может быть более новая версия.",
+    "en": "Windows Update found no graphics driver updates. The manufacturer may offer a newer version.",
+    "zh": "Windows Update 未找到显卡驱动更新。厂商可能提供更新版本。",
+    "ja": "Windows Update に更新はありません。メーカーに新しいバージョンがある可能性があります。",
+    "es": "Windows Update no encontró controladores nuevos. El fabricante puede tener una versión más reciente.",
+    "ko": "Windows Update에서 업데이트를 찾지 못했습니다. 제조사에 최신 버전이 있을 수 있습니다.",
+    "fr": "Windows Update n’a trouvé aucun nouveau pilote. Le fabricant peut proposer une version plus récente.",
+    "de": "Windows Update fand keine Grafiktreiberupdates. Beim Hersteller kann eine neuere Version verfügbar sein."
+  },
+  "ollama.driverUnavailable": {
+    "ru": "Не удалось проверить драйвер или обновления. Проверьте сайт производителя вручную; это не подтверждает актуальность драйвера.",
+    "en": "Could not check the driver or updates. Check the manufacturer manually; driver currency is unknown.",
+    "zh": "无法检查驱动或更新。请手动查看厂商网站；驱动是否最新未知。",
+    "ja": "ドライバーまたは更新を確認できませんでした。メーカーのサイトを確認してください。最新かどうかは不明です。",
+    "es": "No se pudo comprobar el controlador o sus actualizaciones. Consulta al fabricante; no se conoce su vigencia.",
+    "ko": "드라이버나 업데이트를 확인할 수 없습니다. 제조사에서 직접 확인하세요. 최신 여부는 알 수 없습니다.",
+    "fr": "Impossible de vérifier le pilote ou ses mises à jour. Consultez le fabricant ; la version actuelle est inconnue.",
+    "de": "Treiber oder Updates konnten nicht geprüft werden. Beim Hersteller prüfen; Aktualität unbekannt."
+  },
+  "ollama.driverSearching": {
+    "ru": "Поиск обновлений видеодрайвера в Windows Update…",
+    "en": "Searching Windows Update for graphics drivers…",
+    "zh": "正在 Windows Update 中搜索显卡驱动…",
+    "ja": "Windows Update でドライバーを検索中…",
+    "es": "Buscando controladores gráficos en Windows Update…",
+    "ko": "Windows Update에서 그래픽 드라이버 검색 중…",
+    "fr": "Recherche de pilotes dans Windows Update…",
+    "de": "Grafiktreibersuche in Windows Update…"
+  },
+  "ollama.driverHint": {
+    "ru": "Проверка Windows Update ищет обновления драйверов и ничего не устанавливает. «Обновить требования Ollama» загружает и сохраняет правила с официального сайта. Отсутствие обновлений в Windows Update не гарантирует последнюю версию у производителя. После установки драйвера перезапустите Ollama.",
+    "en": "Windows Update checks search for driver updates and install nothing. “Refresh Ollama requirements” downloads and saves rules from the official site. No Windows Update results does not guarantee the latest vendor release. Restart Ollama after installing a driver.",
+    "zh": "Windows Update 检查只搜索驱动更新，不会安装。“更新 Ollama 要求”从官方网站下载并保存规则。Windows Update 无结果不代表厂商没有新版。安装驱动后请重启 Ollama。",
+    "ja": "Windows Update は更新の検索のみでインストールしません。「Ollama 要件を更新」は公式サイトからルールを取得・保存します。更新がなくてもメーカーに新しい版がある可能性があります。ドライバー更新後は Ollama を再起動してください。",
+    "es": "Windows Update busca controladores sin instalar nada. «Actualizar requisitos de Ollama» descarga y guarda reglas oficiales. Que no haya actualizaciones no garantiza la última versión del fabricante. Reinicia Ollama tras instalar el controlador.",
+    "ko": "Windows Update는 드라이버 업데이트 검색만 하며 설치하지 않습니다. 요구 사항 갱신은 공식 사이트의 규칙을 내려받아 저장합니다. 검색 결과가 없어도 제조사 최신 버전이 있을 수 있습니다. 드라이버 설치 후 Ollama를 재시작하세요.",
+    "fr": "Windows Update recherche des pilotes sans rien installer. « Actualiser les exigences Ollama » télécharge et enregistre les règles officielles. Aucun résultat ne garantit pas la dernière version du fabricant. Redémarrez Ollama après installation.",
+    "de": "Windows Update sucht Treiberupdates und installiert nichts. „Ollama-Anforderungen aktualisieren“ lädt offizielle Regeln und speichert sie. Keine Updates garantiert nicht die neueste Herstellerversion. Ollama nach Treiberinstallation neu starten."
+  },
+  "ollama.refreshRequirements": {
+    "ru": "Обновить требования Ollama",
+    "en": "Refresh Ollama requirements",
+    "zh": "更新 Ollama 要求",
+    "ja": "Ollama 要件を更新",
+    "es": "Actualizar requisitos de Ollama",
+    "ko": "Ollama 요구 사항 갱신",
+    "fr": "Actualiser les exigences Ollama",
+    "de": "Ollama-Anforderungen aktualisieren"
+  },
+  "ollama.requirementsRefreshing": {
+    "ru": "Загрузка требований с docs.ollama.com…",
+    "en": "Fetching requirements from docs.ollama.com…",
+    "zh": "正在获取 docs.ollama.com 要求…",
+    "ja": "docs.ollama.com から要件を取得中…",
+    "es": "Descargando requisitos de docs.ollama.com…",
+    "ko": "docs.ollama.com에서 요구 사항 가져오는 중…",
+    "fr": "Chargement des exigences depuis docs.ollama.com…",
+    "de": "Anforderungen von docs.ollama.com werden geladen…"
+  },
+  "ollama.requirementsRefreshed": {
+    "ru": "Требования обновлены, сохранены и применены к установленным драйверам.",
+    "en": "Requirements updated, saved and applied to installed drivers.",
+    "zh": "要求已更新、保存并应用于已安装驱动。",
+    "ja": "要件を更新・保存し、ドライバーに適用しました。",
+    "es": "Requisitos actualizados, guardados y aplicados a los controladores.",
+    "ko": "요구 사항이 갱신 및 저장되어 설치된 드라이버에 적용되었습니다.",
+    "fr": "Exigences actualisées, enregistrées et appliquées aux pilotes installés.",
+    "de": "Anforderungen aktualisiert, gespeichert und auf installierte Treiber angewendet."
+  },
+  "ollama.requirementsRefreshFailed": {
+    "ru": "Не удалось обновить требования: сайт недоступен или формат изменился. Продолжает использоваться предыдущая сохранённая копия.",
+    "en": "Could not update requirements: site unavailable or format changed. The previous saved copy remains in use.",
+    "zh": "无法更新要求：网站不可用或格式已更改。继续使用之前保存的副本。",
+    "ja": "サイトに接続できないか形式が変わったため更新できません。保存済みの要件を使い続けます。",
+    "es": "No se pudieron actualizar los requisitos: sitio no disponible o formato cambiado. Se conserva la copia anterior.",
+    "ko": "사이트에 연결할 수 없거나 형식이 변경되어 갱신하지 못했습니다. 이전 저장본을 계속 사용합니다.",
+    "fr": "Actualisation impossible : site indisponible ou format modifié. La copie précédente reste utilisée.",
+    "de": "Aktualisierung fehlgeschlagen: Seite nicht verfügbar oder Format geändert. Die bisherige Kopie bleibt aktiv."
+  },
+  "ollama.requirementsInvalid": {
+    "ru": "Формат требований Ollama не распознан.",
+    "en": "Unrecognized Ollama requirements format.",
+    "zh": "无法识别 Ollama 要求格式。",
+    "ja": "Ollama 要件の形式を認識できません。",
+    "es": "Formato de requisitos de Ollama no reconocido.",
+    "ko": "Ollama 요구 사항 형식을 인식할 수 없습니다.",
+    "fr": "Format des exigences Ollama non reconnu.",
+    "de": "Unbekanntes Format der Ollama-Anforderungen."
+  },
+  "ollama.requirementsSnapshot": {
+    "ru": "Копия требований проверена {0}: NVIDIA ≥{1}; compute capability {2}–{3}: ≥{4}; AMD Windows: ROCm/HIP {5}. Источник: docs.ollama.com/gpu.",
+    "en": "Requirements copy checked {0}: NVIDIA ≥{1}; compute capability {2}–{3}: ≥{4}; AMD Windows: ROCm/HIP {5}. Source: docs.ollama.com/gpu.",
+    "zh": "要求副本核对日期 {0}：NVIDIA ≥{1}；计算能力 {2}–{3}：≥{4}；AMD Windows：ROCm/HIP {5}。来源：docs.ollama.com/gpu。",
+    "ja": "要件確認日 {0}：NVIDIA ≥{1}、compute capability {2}–{3} は ≥{4}、AMD Windows は ROCm/HIP {5}。出典：docs.ollama.com/gpu。",
+    "es": "Copia verificada el {0}: NVIDIA ≥{1}; compute capability {2}–{3}: ≥{4}; AMD Windows: ROCm/HIP {5}. Fuente: docs.ollama.com/gpu.",
+    "ko": "요구 사항 확인일 {0}: NVIDIA ≥{1}; compute capability {2}–{3}: ≥{4}; AMD Windows: ROCm/HIP {5}. 출처: docs.ollama.com/gpu.",
+    "fr": "Copie vérifiée le {0} : NVIDIA ≥{1} ; compute capability {2}–{3} : ≥{4} ; AMD Windows : ROCm/HIP {5}. Source : docs.ollama.com/gpu.",
+    "de": "Kopie geprüft am {0}: NVIDIA ≥{1}; Compute Capability {2}–{3}: ≥{4}; AMD Windows: ROCm/HIP {5}. Quelle: docs.ollama.com/gpu."
+  },
+  "ollama.driverRequired": {
+    "ru": "Драйвер {0} НЕ СООТВЕТСТВУЕТ требованиям NVIDIA в Ollama: установлен {1:0.00}, требуется {2} или новее. Обновите драйвер и перезапустите Ollama.",
+    "en": "The {0} driver DOES NOT MEET Ollama NVIDIA requirements: installed {1:0.00}, required {2} or newer. Update the driver and restart Ollama.",
+    "zh": "{0} 驱动不符合 Ollama NVIDIA 要求：已安装 {1:0.00}，需要 {2} 或更新版本。请更新驱动并重启 Ollama。",
+    "ja": "{0} のドライバーは Ollama NVIDIA 要件を満たしません：インストール済み {1:0.00}、必要 {2} 以上。更新し Ollama を再起動してください。",
+    "es": "El controlador de {0} NO CUMPLE los requisitos NVIDIA de Ollama: instalado {1:0.00}, necesario {2} o posterior. Actualiza y reinicia Ollama.",
+    "ko": "{0} 드라이버가 Ollama NVIDIA 요구 사항을 충족하지 않습니다: 설치 {1:0.00}, 필요 {2} 이상. 업데이트 후 Ollama를 재시작하세요.",
+    "fr": "Le pilote {0} NE RESPECTE PAS les exigences NVIDIA d’Ollama : installé {1:0.00}, requis {2} ou plus. Mettez-le à jour et redémarrez Ollama.",
+    "de": "Der Treiber für {0} ERFÜLLT NICHT die NVIDIA-Anforderungen von Ollama: installiert {1:0.00}, erforderlich {2} oder neuer. Aktualisieren und Ollama neu starten."
+  },
+  "ollama.driverMeetsRequirement": {
+    "ru": "{0}: версия {1:0.00} соответствует требованию ≥{2}. Это не проверка наличия последней версии драйвера.",
+    "en": "{0}: version {1:0.00} meets the requirement ≥{2}. This does not check whether the driver is the latest release.",
+    "zh": "{0}：版本 {1:0.00} 满足 ≥{2} 的要求。这不表示驱动为最新版本。",
+    "ja": "{0}：バージョン {1:0.00} は要件 ≥{2} を満たします。最新版であることは確認していません。",
+    "es": "{0}: la versión {1:0.00} cumple el requisito ≥{2}. No confirma que sea la última versión.",
+    "ko": "{0}: 버전 {1:0.00}은 요구 사항 ≥{2}을 충족합니다. 최신 버전 여부는 확인하지 않습니다.",
+    "fr": "{0} : la version {1:0.00} respecte le minimum ≥{2}. Cela ne confirme pas la dernière version du pilote.",
+    "de": "{0}: Version {1:0.00} erfüllt die Anforderung ≥{2}. Dies bestätigt nicht die neueste Treiberversion."
+  },
+  "ollama.driverUnknownRequirement": {
+    "ru": "{0}: не удалось определить версию драйвера или применимый порог для этой модели GPU. Общий минимум NVIDIA — {1}; полное соответствие требованиям не подтверждено.",
+    "en": "{0}: driver version or model-specific threshold could not be determined. NVIDIA baseline: {1}; full compliance is unconfirmed.",
+    "zh": "{0}：无法确定驱动版本或此 GPU 的适用阈值。NVIDIA 基本最低要求：{1}；尚未确认完全符合。",
+    "ja": "{0}：ドライバーのバージョンまたは GPU 固有の基準を特定できません。NVIDIA 基本最低値は {1}。完全な適合は未確認です。",
+    "es": "{0}: no se pudo determinar la versión o el umbral de esta GPU. Mínimo general NVIDIA: {1}; cumplimiento completo sin confirmar.",
+    "ko": "{0}: 드라이버 버전 또는 GPU별 기준을 확인할 수 없습니다. NVIDIA 기본 최소: {1}; 완전한 충족 여부는 미확인입니다.",
+    "fr": "{0} : version ou seuil propre au GPU indéterminé. Minimum NVIDIA : {1} ; conformité complète non confirmée.",
+    "de": "{0}: Treiberversion oder GPU-spezifischer Grenzwert unbekannt. NVIDIA-Mindestwert: {1}; vollständige Erfüllung unbestätigt."
+  },
+  "ollama.driverAmdRequirement": {
+    "ru": "AMD Windows: требуется стек с поддержкой ROCm/HIP {0}. На странице нет числового минимума версии Windows-драйвера, поэтому автоматическое сравнение невозможно. Дополнительная поддержка GPU возможна через Vulkan.",
+    "en": "AMD Windows: a ROCm/HIP {0}-capable stack is required. The page gives no numeric minimum Windows driver version, so automatic comparison is unavailable. Vulkan provides additional GPU support.",
+    "zh": "AMD Windows：需要支持 ROCm/HIP {0} 的驱动栈。页面未提供 Windows 驱动版本的数值下限，无法自动比较。Vulkan 可提供额外 GPU 支持。",
+    "ja": "AMD Windows：ROCm/HIP {0} 対応スタックが必要です。Windows ドライバーの数値の最低バージョンは記載されていないため自動比較できません。Vulkan による追加対応もあります。",
+    "es": "AMD Windows: se requiere compatibilidad ROCm/HIP {0}. No se indica una versión mínima numérica del controlador Windows para comparar. Vulkan ofrece soporte GPU adicional.",
+    "ko": "AMD Windows: ROCm/HIP {0} 지원 스택이 필요합니다. 페이지에 Windows 드라이버 최소 버전 숫자가 없어 자동 비교할 수 없습니다. Vulkan으로 추가 GPU 지원이 가능합니다.",
+    "fr": "AMD Windows : pile compatible ROCm/HIP {0} requise. Aucun minimum numérique du pilote Windows n’est indiqué, donc pas de comparaison automatique. Vulkan offre une prise en charge supplémentaire.",
+    "de": "AMD Windows: ROCm/HIP-{0}-fähiger Stack erforderlich. Keine numerische Windows-Treibermindestversion angegeben, daher kein automatischer Vergleich. Vulkan bietet zusätzliche GPU-Unterstützung."
+  },
+  "ollama.driverNoNumericRequirement": {
+    "ru": "Для этого вендора на странице нет числового требования к версии Windows-драйвера. Соответствие автоматически не подтверждается; проверьте поддержку Vulkan и сайт производителя.",
+    "en": "The page gives no numeric Windows driver requirement for this vendor. Compliance is not automatically confirmed; check Vulkan support and the manufacturer’s site.",
+    "zh": "页面未给出此厂商 Windows 驱动的数值要求。无法自动确认符合性；请检查 Vulkan 支持及厂商网站。",
+    "ja": "このメーカーの Windows ドライバーの数値要件は記載されていません。自動適合確認はできません。Vulkan 対応とメーカーのサイトを確認してください。",
+    "es": "No hay un requisito numérico del controlador Windows para este fabricante. Cumplimiento no confirmado; revisa Vulkan y la web del fabricante.",
+    "ko": "이 제조사의 Windows 드라이버 버전 요구 숫자가 없습니다. 자동 충족 확인이 불가능하므로 Vulkan 지원 및 제조사 사이트를 확인하세요.",
+    "fr": "Aucun minimum numérique Windows pour ce fabricant. Conformité non confirmée automatiquement ; vérifiez Vulkan et le site du fabricant.",
+    "de": "Keine numerische Windows-Treiberanforderung für diesen Hersteller angegeben. Erfüllung nicht automatisch bestätigt; Vulkan-Unterstützung und Herstellerseite prüfen."
+  },
+  "ollama.downloadModel": {
+    "ru": "Загрузить",
+    "en": "Download",
+    "zh": "下载",
+    "ja": "ダウンロード",
+    "es": "Descargar",
+    "ko": "다운로드",
+    "fr": "Télécharger",
+    "de": "Herunterladen"
+  },
+  "ollama.startServer": {
+    "ru": "Запустить сервер",
+    "en": "Start server",
+    "zh": "启动服务器",
+    "ja": "サーバーを起動",
+    "es": "Iniciar servidor",
+    "ko": "서버 시작",
+    "fr": "Démarrer le serveur",
+    "de": "Server starten"
+  },
+  "ollama.modelSize": {
+    "ru": "~{0:0.#} ГБ на диске",
+    "en": "~{0:0.#} GB on disk",
+    "zh": "磁盘约 {0:0.#} GB",
+    "ja": "ディスク約 {0:0.#} GB",
+    "es": "~{0:0.#} GB en disco",
+    "ko": "디스크 약 {0:0.#} GB",
+    "fr": "~{0:0.#} Go sur disque",
+    "de": "~{0:0.#} GB auf Datenträger"
+  },
+  "ollama.modelSizeUnknown": {
+    "ru": "Размер неизвестен",
+    "en": "Size unknown",
+    "zh": "大小未知",
+    "ja": "サイズ不明",
+    "es": "Tamaño desconocido",
+    "ko": "크기 알 수 없음",
+    "fr": "Taille inconnue",
+    "de": "Größe unbekannt"
+  },
+  "ollama.externalModel": {
+    "ru": "Модель установлена вне каталога приложения. Назначение и качество перевода зависят от модели.",
+    "en": "Installed outside the app catalog. Intended use and translation quality depend on the model.",
+    "zh": "在应用目录之外安装。用途和翻译质量取决于模型。",
+    "ja": "アプリのカタログ外でインストールされたモデルです。用途と翻訳品質はモデルによります。",
+    "es": "Instalado fuera del catálogo de la app. El uso y la calidad de traducción dependen del modelo.",
+    "ko": "앱 카탈로그 외부에서 설치된 모델입니다. 용도와 번역 품질은 모델에 따라 다릅니다.",
+    "fr": "Installé hors du catalogue. L’usage et la qualité de traduction dépendent du modèle.",
+    "de": "Außerhalb des App-Katalogs installiert. Zweck und Übersetzungsqualität hängen vom Modell ab."
+  },
+  "ollama.modelDeleting": {
+    "ru": "Удаляется",
+    "en": "Deleting",
+    "zh": "正在删除",
+    "ja": "削除中",
+    "es": "Eliminando",
+    "ko": "삭제 중",
+    "fr": "Suppression",
+    "de": "Wird gelöscht"
+  },
+  "ollama.modelDownloading": {
+    "ru": "Подготовка / загрузка",
+    "en": "Preparing / downloading",
+    "zh": "准备 / 下载中",
+    "ja": "準備・ダウンロード中",
+    "es": "Preparando / descargando",
+    "ko": "준비 / 다운로드 중",
+    "fr": "Préparation / téléchargement",
+    "de": "Vorbereitung / Download"
+  },
+  "ollama.modelInUse": {
+    "ru": "Используется для перевода",
+    "en": "Used for translation",
+    "zh": "用于翻译",
+    "ja": "翻訳に使用中",
+    "es": "En uso para traducción",
+    "ko": "번역에 사용 중",
+    "fr": "Utilisé pour la traduction",
+    "de": "Für Übersetzung ausgewählt"
+  },
+  "ollama.modelDownloaded": {
+    "ru": "Загружена",
+    "en": "Downloaded",
+    "zh": "已下载",
+    "ja": "ダウンロード済み",
+    "es": "Descargado",
+    "ko": "다운로드됨",
+    "fr": "Téléchargé",
+    "de": "Heruntergeladen"
+  },
+  "ollama.modelUnchecked": {
+    "ru": "Наличие не проверено",
+    "en": "Availability not checked",
+    "zh": "尚未检查可用性",
+    "ja": "有無を未確認",
+    "es": "Disponibilidad sin comprobar",
+    "ko": "설치 여부 미확인",
+    "fr": "Disponibilité non vérifiée",
+    "de": "Verfügbarkeit ungeprüft"
+  },
+  "ollama.modelNotDownloaded": {
+    "ru": "Не загружена",
+    "en": "Not downloaded",
+    "zh": "未下载",
+    "ja": "未ダウンロード",
+    "es": "Sin descargar",
+    "ko": "다운로드 안 됨",
+    "fr": "Non téléchargé",
+    "de": "Nicht heruntergeladen"
+  },
+  "ollama.cpu": {
+    "ru": "Процессор: {0} · логических ядер: {1}",
+    "en": "CPU: {0} · logical cores: {1}",
+    "zh": "CPU：{0} · 逻辑核心：{1}",
+    "ja": "CPU：{0} · 論理コア：{1}",
+    "es": "CPU: {0} · núcleos lógicos: {1}",
+    "ko": "CPU: {0} · 논리 코어: {1}",
+    "fr": "CPU : {0} · cœurs logiques : {1}",
+    "de": "CPU: {0} · logische Kerne: {1}"
+  },
+  "ollama.recommendationShort": {
+    "ru": "Для вашего компьютера рекомендуется {0}. Требования к памяти — ориентир, скорость зависит от GPU и драйвера.",
+    "en": "Recommended for this computer: {0}. Memory requirements are guidelines; speed depends on the GPU and driver.",
+    "zh": "推荐此电脑使用 {0}。内存要求仅供参考，速度取决于 GPU 和驱动。",
+    "ja": "この PC の推奨：{0}。メモリー要件は目安です。速度は GPU とドライバーによります。",
+    "es": "Recomendado para este equipo: {0}. La memoria es orientativa; la velocidad depende de GPU y controlador.",
+    "ko": "이 컴퓨터의 추천: {0}. 메모리 요구는 참고용이며 속도는 GPU와 드라이버에 따라 다릅니다.",
+    "fr": "Recommandé pour cet ordinateur : {0}. Mémoire indicative ; vitesse selon le GPU et le pilote.",
+    "de": "Für diesen Computer empfohlen: {0}. Speicherwerte sind Richtwerte; Geschwindigkeit hängt von GPU und Treiber ab."
+  },
+  "ollama.runtimeMissing": {
+    "ru": "Ollama не найдена. Нажмите «Загрузить» у модели: сначала приложение установит Ollama, затем скачает модель.",
+    "en": "Ollama not found. Click Download on a model: the app will install Ollama first, then download the model.",
+    "zh": "未找到 Ollama。点击模型的下载按钮：先安装 Ollama，再下载模型。",
+    "ja": "Ollama が見つかりません。モデルのダウンロードを押すと、先に Ollama をインストールします。",
+    "es": "Ollama no encontrado. Pulsa Descargar en un modelo: se instalará Ollama primero y luego el modelo.",
+    "ko": "Ollama를 찾지 못했습니다. 모델 다운로드를 누르면 Ollama 설치 후 모델을 받습니다.",
+    "fr": "Ollama introuvable. Cliquez sur Télécharger : Ollama sera installé avant le modèle.",
+    "de": "Ollama nicht gefunden. Beim Herunterladen eines Modells wird zuerst Ollama installiert."
+  },
+  "ollama.runtimeStopped": {
+    "ru": "Ollama найдена, локальный сервер остановлен. Его можно запустить здесь; при загрузке модели он запустится автоматически.",
+    "en": "Ollama found; the local server is stopped. Start it here, or it will start automatically when downloading a model.",
+    "zh": "已找到 Ollama，本地服务器已停止。可在此启动，或下载模型时自动启动。",
+    "ja": "Ollama は見つかりましたがサーバーが停止中です。ここで起動するか、モデル取得時に自動起動します。",
+    "es": "Ollama encontrado; servidor local detenido. Inícialo aquí o automáticamente al descargar un modelo.",
+    "ko": "Ollama는 있으나 로컬 서버가 중지되었습니다. 여기서 시작하거나 모델 다운로드 시 자동 시작됩니다.",
+    "fr": "Ollama trouvé ; serveur local arrêté. Démarrez-le ici ou il démarrera lors d’un téléchargement.",
+    "de": "Ollama gefunden; lokaler Server gestoppt. Hier starten oder automatisch beim Modelldownload."
+  },
+  "ollama.runtimeRunning": {
+    "ru": "Ollama {0} найдена · сервер работает · моделей: {1}",
+    "en": "Ollama {0} found · server running · models: {1}",
+    "zh": "已找到 Ollama {0} · 服务器运行中 · 模型：{1}",
+    "ja": "Ollama {0} 検出 · サーバー稼働中 · モデル：{1}",
+    "es": "Ollama {0} encontrado · servidor activo · modelos: {1}",
+    "ko": "Ollama {0} 발견 · 서버 실행 중 · 모델: {1}",
+    "fr": "Ollama {0} trouvé · serveur actif · modèles : {1}",
+    "de": "Ollama {0} gefunden · Server läuft · Modelle: {1}"
+  },
+  "ollama.modelsHint": {
+    "ru": "Выберите модель по размеру и назначению. Если Ollama отсутствует, она установится автоматически и будет работать в фоне без отдельного окна. Назначение модели для перевода применяется кнопкой «Сохранить».",
+    "en": "Choose a model by size and purpose. Missing Ollama is installed automatically and runs in the background without a separate window. Click Save to apply your translation model selection.",
+    "zh": "按大小和用途选择模型。缺少 Ollama 时会自动安装并在后台运行，不打开独立窗口。点击保存以应用翻译模型选择。",
+    "ja": "サイズと用途でモデルを選んでください。Ollama がなければ自動インストールし、別ウィンドウなしでバックグラウンド実行します。翻訳モデルの選択は保存で適用します。",
+    "es": "Elige por tamaño y uso. Si falta Ollama, se instalará y ejecutará en segundo plano sin otra ventana. Pulsa Guardar para aplicar el modelo de traducción.",
+    "ko": "크기와 용도로 모델을 선택하세요. Ollama가 없으면 자동 설치되어 별도 창 없이 백그라운드로 실행됩니다. 저장을 눌러 번역 모델 선택을 적용하세요.",
+    "fr": "Choisissez selon taille et usage. Ollama absent sera installé et exécuté en arrière-plan sans fenêtre séparée. Cliquez sur Enregistrer pour appliquer le choix de traduction.",
+    "de": "Modell nach Größe und Zweck wählen. Fehlendes Ollama wird automatisch installiert und läuft ohne eigenes Fenster im Hintergrund. Übersetzungsmodell mit Speichern anwenden."
+  },
+  "ollama.recommendedBadge": {
+    "ru": "Рекомендуется для вашего ПК",
+    "en": "Recommended for your PC",
+    "zh": "推荐用于此电脑",
+    "ja": "この PC の推奨",
+    "es": "Recomendado para tu PC",
+    "ko": "내 PC 추천",
+    "fr": "Recommandé pour votre PC",
+    "de": "Für deinen PC empfohlen"
+  },
+  "ollama.downloadingRuntime": {
+    "ru": "Скачивание Ollama без графической оболочки…",
+    "en": "Downloading Ollama without the graphical app…",
+    "zh": "正在下载无图形界面的 Ollama…",
+    "ja": "GUI なしの Ollama をダウンロード中…",
+    "es": "Descargando Ollama sin interfaz gráfica…",
+    "ko": "그래픽 앱 없는 Ollama 다운로드 중…",
+    "fr": "Téléchargement d’Ollama sans interface graphique…",
+    "de": "Ollama ohne grafische App wird geladen…"
+  },
+  "ollama.search": {
+    "ru": "Поиск моделей",
+    "en": "Search models",
+    "zh": "搜索模型",
+    "ja": "モデルを検索",
+    "es": "Buscar modelos",
+    "ko": "모델 검색",
+    "fr": "Rechercher des modèles",
+    "de": "Modelle suchen"
+  },
+  "ollama.filters": {
+    "ru": "Фильтры",
+    "en": "Filters",
+    "zh": "筛选",
+    "ja": "フィルター",
+    "es": "Filtros",
+    "ko": "필터",
+    "fr": "Filtres",
+    "de": "Filter"
+  },
+  "ollama.sort": {
+    "ru": "Сортировка",
+    "en": "Sort",
+    "zh": "排序",
+    "ja": "並べ替え",
+    "es": "Ordenar",
+    "ko": "정렬",
+    "fr": "Trier",
+    "de": "Sortierung"
+  },
+  "ollama.filterDownloaded": {
+    "ru": "Загружены",
+    "en": "Downloaded",
+    "zh": "已下载",
+    "ja": "ダウンロード済み",
+    "es": "Descargados",
+    "ko": "다운로드됨",
+    "fr": "Téléchargés",
+    "de": "Heruntergeladen"
+  },
+  "ollama.filterNotDownloaded": {
+    "ru": "Не загружены",
+    "en": "Not downloaded",
+    "zh": "未下载",
+    "ja": "未ダウンロード",
+    "es": "Sin descargar",
+    "ko": "다운로드 안 됨",
+    "fr": "Non téléchargés",
+    "de": "Nicht heruntergeladen"
+  },
+  "ollama.filterRecommended": {
+    "ru": "Рекомендуемые",
+    "en": "Recommended",
+    "zh": "推荐",
+    "ja": "推奨",
+    "es": "Recomendados",
+    "ko": "추천",
+    "fr": "Recommandés",
+    "de": "Empfohlen"
+  },
+  "ollama.filterSupported": {
+    "ru": "Поддерживаемые",
+    "en": "Supported",
+    "zh": "符合要求",
+    "ja": "要件内",
+    "es": "Compatibles",
+    "ko": "지원됨",
+    "fr": "Compatibles",
+    "de": "Unterstützt"
+  },
+  "ollama.filterUnsupported": {
+    "ru": "Не поддерживаемые",
+    "en": "Not supported",
+    "zh": "不符合要求",
+    "ja": "要件不足",
+    "es": "No compatibles",
+    "ko": "지원되지 않음",
+    "fr": "Non compatibles",
+    "de": "Nicht unterstützt"
+  },
+  "ollama.resetFilters": {
+    "ru": "Сбросить фильтры",
+    "en": "Reset filters",
+    "zh": "重置筛选",
+    "ja": "フィルターをリセット",
+    "es": "Restablecer filtros",
+    "ko": "필터 초기화",
+    "fr": "Réinitialiser les filtres",
+    "de": "Filter zurücksetzen"
+  },
+  "ollama.sortDefault": {
+    "ru": "По умолчанию",
+    "en": "Default order",
+    "zh": "默认顺序",
+    "ja": "標準の順序",
+    "es": "Orden predeterminado",
+    "ko": "기본 순서",
+    "fr": "Ordre par défaut",
+    "de": "Standardreihenfolge"
+  },
+  "ollama.sortName": {
+    "ru": "По названию",
+    "en": "By name",
+    "zh": "按名称",
+    "ja": "名前順",
+    "es": "Por nombre",
+    "ko": "이름순",
+    "fr": "Par nom",
+    "de": "Nach Name"
+  },
+  "ollama.sortSizeAscending": {
+    "ru": "По размеру: сначала меньше",
+    "en": "By size: smallest first",
+    "zh": "按大小：从小到大",
+    "ja": "サイズ：小さい順",
+    "es": "Por tamaño: menor primero",
+    "ko": "크기: 작은 순",
+    "fr": "Taille : croissante",
+    "de": "Größe: kleinste zuerst"
+  },
+  "ollama.sortSizeDescending": {
+    "ru": "По размеру: сначала больше",
+    "en": "By size: largest first",
+    "zh": "按大小：从大到小",
+    "ja": "サイズ：大きい順",
+    "es": "Por tamaño: mayor primero",
+    "ko": "크기: 큰 순",
+    "fr": "Taille : décroissante",
+    "de": "Größe: größte zuerst"
+  },
+  "ollama.results": {
+    "ru": "Показано {0} из {1}",
+    "en": "Showing {0} of {1}",
+    "zh": "显示 {0} / {1}",
+    "ja": "{1} 件中 {0} 件を表示",
+    "es": "Mostrando {0} de {1}",
+    "ko": "{1}개 중 {0}개 표시",
+    "fr": "Affichage de {0} sur {1}",
+    "de": "{0} von {1} angezeigt"
+  },
+  "ollama.noResults": {
+    "ru": "Модели не найдены. Измените поисковый запрос или фильтры.",
+    "en": "No models found. Change your search or filters.",
+    "zh": "未找到模型。请更改搜索或筛选。",
+    "ja": "モデルが見つかりません。検索語やフィルターを変更してください。",
+    "es": "No se encontraron modelos. Cambia la búsqueda o los filtros.",
+    "ko": "모델을 찾지 못했습니다. 검색어나 필터를 바꾸세요.",
+    "fr": "Aucun modèle trouvé. Modifiez la recherche ou les filtres.",
+    "de": "Keine Modelle gefunden. Suche oder Filter ändern."
+  },
+  "ollama.ramRequirement": {
+    "ru": "ОЗУ ≥ {0} ГБ",
+    "en": "RAM ≥ {0} GB",
+    "zh": "内存 ≥ {0} GB",
+    "ja": "RAM ≥ {0} GB",
+    "es": "RAM ≥ {0} GB",
+    "ko": "RAM ≥ {0} GB",
+    "fr": "RAM ≥ {0} Go",
+    "de": "RAM ≥ {0} GB"
+  },
+  "ollama.vramRequirement": {
+    "ru": "Видеопамять ≥ {0} ГБ (GPU)",
+    "en": "VRAM ≥ {0} GB (GPU)",
+    "zh": "显存 ≥ {0} GB (GPU)",
+    "ja": "VRAM ≥ {0} GB (GPU)",
+    "es": "VRAM ≥ {0} GB (GPU)",
+    "ko": "VRAM ≥ {0} GB (GPU)",
+    "fr": "VRAM ≥ {0} Go (GPU)",
+    "de": "VRAM ≥ {0} GB (GPU)"
+  },
+  "ollama.availableRam": {
+    "ru": "Доступно ОЗУ: {0:0.#} ГБ",
+    "en": "Available RAM: {0:0.#} GB",
+    "zh": "可用内存：{0:0.#} GB",
+    "ja": "空き RAM：{0:0.#} GB",
+    "es": "RAM disponible: {0:0.#} GB",
+    "ko": "사용 가능 RAM: {0:0.#} GB",
+    "fr": "RAM disponible : {0:0.#} Go",
+    "de": "Freier RAM: {0:0.#} GB"
+  },
+  "ollama.vramHint": {
+    "ru": "Ориентир для размещения модели на GPU. При нехватке видеопамяти Ollama может использовать CPU или частичную выгрузку на GPU.",
+    "en": "Guideline for fitting the model on a GPU. If VRAM is insufficient, Ollama may use the CPU or partial GPU offload.",
+    "zh": "这是模型放入 GPU 的参考值。显存不足时 Ollama 可使用 CPU 或部分 GPU 卸载。",
+    "ja": "GPU にモデルを載せる目安です。VRAM 不足時は CPU または一部 GPU 実行が可能です。",
+    "es": "Orientación para alojar el modelo en GPU. Sin suficiente VRAM, Ollama puede usar CPU o descarga parcial a GPU.",
+    "ko": "GPU에 모델을 넣기 위한 기준입니다. VRAM이 부족하면 CPU 또는 부분 GPU 실행이 가능합니다.",
+    "fr": "Repère pour placer le modèle sur GPU. Si la VRAM manque, Ollama peut utiliser le CPU ou un placement GPU partiel.",
+    "de": "Richtwert für GPU-Nutzung. Bei zu wenig VRAM kann Ollama CPU oder teilweise GPU-Auslagerung verwenden."
+  },
+  "ollama.filterHint": {
+    "ru": "Теги объединяются по ИЛИ. «Поддерживаемые» — модели, для которых хватает общей ОЗУ и выделенной видеопамяти по указанным ориентирам. Это оценка памяти, а не гарантия совместимости GPU. При нехватке видеопамяти возможна работа на CPU.",
+    "en": "Tags are combined with OR. Supported means total RAM and dedicated VRAM meet the listed guidelines. This estimates memory, not GPU compatibility. CPU execution may remain possible when VRAM is insufficient.",
+    "zh": "多个标签按“或”组合。符合要求表示总内存和独立显存达到参考值。这只是内存评估，不保证 GPU 兼容性。显存不足时仍可使用 CPU。",
+    "ja": "タグは OR で結合します。要件内は RAM と専用 VRAM が目安を満たすことを示し、GPU 互換性を保証しません。VRAM 不足でも CPU 実行は可能です。",
+    "es": "Las etiquetas se combinan con O. Compatible significa que RAM total y VRAM dedicada cumplen las orientaciones; no garantiza compatibilidad GPU. Puede ser posible usar CPU si falta VRAM.",
+    "ko": "태그는 OR로 결합합니다. 지원됨은 전체 RAM과 전용 VRAM이 기준을 충족함을 뜻하며 GPU 호환성을 보장하지 않습니다. VRAM 부족 시 CPU 실행이 가능할 수 있습니다.",
+    "fr": "Les tags se combinent par OU. Compatible indique assez de RAM totale et VRAM dédiée selon les repères, sans garantie de compatibilité GPU. Le CPU peut fonctionner si la VRAM manque.",
+    "de": "Tags werden mit ODER verknüpft. Unterstützt bedeutet ausreichend Gesamt-RAM und dedizierter VRAM nach Richtwerten, keine GPU-Kompatibilitätsgarantie. Bei zu wenig VRAM kann CPU-Nutzung möglich sein."
+  },
+
+  "check.minimizeToTray": {
+    "ru": "Перемещать в трей при сворачивании",
+    "en": "Minimize to tray",
+    "zh": "最小化到托盘",
+    "ja": "最小化時にトレイに格納",
+    "es": "Minimizar a la bandeja",
+    "ko": "최소화 시 트레이로 이동",
+    "fr": "Réduire dans la zone de notification",
+    "de": "Beim Minimieren in den Infobereich verschieben"
+  },
+  "button.resetSettings": {
+    "ru": "Сбросить все настройки",
+    "en": "Reset all settings",
+    "zh": "重置所有设置",
+    "ja": "すべての設定をリセット",
+    "es": "Restablecer todos los ajustes",
+    "ko": "모든 설정 초기화",
+    "fr": "Réinitialiser tous les paramètres",
+    "de": "Alle Einstellungen zurücksetzen"
+  },
+  "button.captureQueue": {
+    "ru": "Распознать",
+    "en": "Recognize",
+    "zh": "识别",
+    "ja": "認識",
+    "es": "Reconocer",
+    "ko": "인식",
+    "fr": "Reconnaître",
+    "de": "Erkennen"
+  },
+  "app.exitConfirm": {
+    "ru": "Завершить работу приложения?",
+    "en": "Exit the application?",
+    "zh": "退出应用程序？",
+    "ja": "アプリケーションを終了しますか？",
+    "es": "¿Salir de la aplicación?",
+    "ko": "앱을 종료하시겠습니까?",
+    "fr": "Quitter l'application ?",
+    "de": "Anwendung beenden?"
+  },
+  "app.doNotAskAgain": {
+    "ru": "Больше не спрашивать",
+    "en": "Do not ask again",
+    "zh": "不再询问",
+    "ja": "今後確認しない",
+    "es": "No volver a preguntar",
+    "ko": "다시 묻지 않기",
+    "fr": "Ne plus demander",
+    "de": "Nicht erneut fragen"
+  },
+  "app.resetConfirm": {
+    "ru": "Сбросить все настройки до значений по умолчанию? Приложение будет перезапущено.",
+    "en": "Reset all settings to defaults? The application will restart.",
+    "zh": "将所有设置恢复为默认值？应用程序将重新启动。",
+    "ja": "すべての設定を初期値に戻しますか？アプリケーションが再起動します。",
+    "es": "¿Restablecer todos los ajustes? La aplicación se reiniciará.",
+    "ko": "모든 설정을 기본값으로 초기화하시겠습니까? 앱이 다시 시작됩니다.",
+    "fr": "Réinitialiser tous les paramètres ? L'application redémarrera.",
+    "de": "Alle Einstellungen zurücksetzen? Die Anwendung wird neu gestartet."
+  },
+  "button.cancel": {
+    "ru": "Отмена",
+    "en": "Cancel",
+    "zh": "取消",
+    "ja": "キャンセル",
+    "es": "Cancelar",
+    "ko": "취소",
+    "fr": "Annuler",
+    "de": "Abbrechen"
   }
 }

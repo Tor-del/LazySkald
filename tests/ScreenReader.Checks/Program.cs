@@ -13,13 +13,27 @@ using ScreenReader.Speech;
 
 internal static partial class Program
 {
+    private sealed class PreviewApp : ScreenReader.App.App
+    {
+        public PreviewApp()
+        {
+            ShutdownMode=System.Windows.ShutdownMode.OnExplicitShutdown;
+            string assembly=typeof(ScreenReader.App.App).Assembly.GetName().Name!;
+            foreach (string file in new[] { "Light","Fluent" })
+                Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary { Source=new Uri($"/{assembly};component/Themes/{file}.xaml",UriKind.Relative) });
+        }
+        protected override void OnStartup(System.Windows.StartupEventArgs e) { }
+    }
     private static int checks;
     [STAThread]
     private static int Main(string[] args)
     {
         try
         {
+            if (args.Contains("--wizard-ui")) { RunSetupWizardChecks(); Console.WriteLine($"PASS: {checks} checks"); return 0; }
+            if (args.Contains("--ollama-requirements-online")) { RunLiveOllamaRequirementsAsync().GetAwaiter().GetResult(); return 0; }
             if (args.Contains("--theme-only")) { RunThemeChecks(); Console.WriteLine($"PASS: {checks} checks"); return 0; }
+            if (args.Contains("--gamebar-ui")) { RunGameBarUi(); Console.WriteLine($"PASS: {checks} checks"); return 0; }
             RunOffline();
             RunRetryChecksAsync().GetAwaiter().GetResult();
             RunProviderChecksAsync().GetAwaiter().GetResult();
@@ -31,6 +45,7 @@ internal static partial class Program
             RunSelectionCancellationChecks();
             RunQueueChecksAsync().GetAwaiter().GetResult();
             RunReadingOverlayChecksAsync().GetAwaiter().GetResult();
+            RunGameBarChecksAsync().GetAwaiter().GetResult();
             RunCacheChecksAsync().GetAwaiter().GetResult();
             RunLocalizationChecks();
             RunOllamaChecksAsync().GetAwaiter().GetResult();
@@ -172,8 +187,9 @@ internal static partial class Program
     }
     private static void RunUi()
     {
-        var app=new ScreenReader.App.App(); app.InitializeComponent();
+        var app=new PreviewApp();
         var window=new MainWindow(app);
+        CheckGameBarControls(window);
         int previewWidth=(int)window.Width, previewHeight=(int)window.Height;
         Assert(((System.Windows.Controls.TextBox)window.FindName("CaptureKeyBox")).Text=="Ctrl + Alt + R" &&
             new[] { "RepeatCaptureKeyBox","ToggleKeyBox","CancelCurrentKeyBox","CancelAllKeyBox" }.All(name=>((System.Windows.Controls.TextBox)window.FindName(name)).Text==UiText.T("hotkey.unassigned")),"UI displays queue shortcut and four unassigned actions by default");
@@ -459,20 +475,82 @@ internal static partial class Program
             new { Heading="#1 · 14:35:10 · Playing from cache…",Text="Я вернулась домой. В окне ещё горел свет." },
             new { Heading="#2 · 14:35:12 · Waiting",Text="The next recognized passage waits for the current audio to finish." }
         };
-        var ollamaModel=(System.Windows.Controls.ComboBox)window.FindName("OllamaModelBox");
-        Assert(ollamaModel.Items.Count==3 && ollamaModel.SelectedItem is OllamaModelChoice { Tag:"translategemma:4b" },"Ollama setup offers three explicit model sizes");
-        Assert(!((System.Windows.Controls.Button)window.FindName("OllamaUseButton")).IsEnabled,"Unverified model cannot be applied");
-        typeof(MainWindow).GetField("ollamaState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.SetValue(window,new OllamaState(null,"test",new[] { "translategemma:4b" }));
-        typeof(MainWindow).GetField("ollamaHardware",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.SetValue(window,new OllamaHardware(16,8,8,"Test GPU"));
+        var ollamaModels=(System.Windows.Controls.ItemsControl)window.FindName("OllamaModelsList");
+        Assert(ollamaModels.Items.Count==8 && ollamaModels.Items.Cast<OllamaModelRow>().All(r=>!r.CanUse && !r.CanDelete),"Ollama model cards offer no use or removal before verification");
+        typeof(MainWindow).GetField("ollamaState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.SetValue(window,
+            new OllamaState(null,"test",new[] { "translategemma:4b","custom/russian:latest" }));
+        typeof(MainWindow).GetField("ollamaHardware",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.SetValue(window,new OllamaHardware(16,8,8,"Test GPU","Test CPU"));
         typeof(MainWindow).GetMethod("UpdateOllamaHardware",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null);
         typeof(MainWindow).GetMethod("ShowOllamaState",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null);
-        Click("OllamaUseButton");
+        Assert(ollamaModels.Items.Count==9 && ollamaModels.Items.Cast<OllamaModelRow>().Single(r=>r.Tag=="custom/russian:latest") is { Installed:true,CanUse:true,CanDelete:true,CatalogModel:false },
+            "Installed models outside the catalog appear with their management actions");
+        var modelSearch=(System.Windows.Controls.TextBox)window.FindName("OllamaSearchBox");
+        var filterMenu=((System.Windows.Controls.Button)window.FindName("OllamaFilterButton")).ContextMenu;
+        var sortMenu=((System.Windows.Controls.Button)window.FindName("OllamaSortButton")).ContextMenu;
+        modelSearch.Text="QwEn";
+        Assert(ollamaModels.Items.Count==3,"Typing in model search immediately narrows the visible cards");
+        var downloadedFilter=filterMenu.Items.OfType<System.Windows.Controls.MenuItem>().First(i=>i.Tag as string=="Downloaded");
+        downloadedFilter.IsChecked=true; downloadedFilter.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.MenuItem.ClickEvent));
+        Assert(ollamaModels.Items.Count==0 && ((System.Windows.Controls.TextBlock)window.FindName("OllamaModelsEmpty")).Visibility==System.Windows.Visibility.Visible,
+            "Checked filter tags combine with search and display an empty result message");
+        modelSearch.Clear();
+        Assert(ollamaModels.Items.Count==2,"Clearing search preserves the active downloaded filter");
+        filterMenu.Items.OfType<System.Windows.Controls.MenuItem>().Last().RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.MenuItem.ClickEvent));
+        var descending=sortMenu.Items.OfType<System.Windows.Controls.MenuItem>().First(i=>i.Tag as string=="SizeDescending");
+        descending.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.MenuItem.ClickEvent));
+        Assert(ollamaModels.Items.Cast<OllamaModelRow>().First().Tag=="translategemma:27b" && sortMenu.Items.OfType<System.Windows.Controls.MenuItem>().Count(i=>i.IsChecked)==1,
+            "Sorting menu applies numeric order and keeps exactly one checked choice");
+        sortMenu.Items.OfType<System.Windows.Controls.MenuItem>().First().RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.MenuItem.ClickEvent));
+        void ClickModelUse(string tag)
+        {
+            tabs.SelectedItem=window.FindName("OllamaTab"); content.UpdateLayout();
+            var row=ollamaModels.Items.Cast<OllamaModelRow>().Single(r=>r.Tag==tag);
+            var presenter=(System.Windows.Controls.ContentPresenter)ollamaModels.ItemContainerGenerator.ContainerFromItem(row);
+            var button=(System.Windows.Controls.Button)presenter.ContentTemplate.FindName("RowUseButton",presenter);
+            Assert(button.IsEnabled,"Installed model row exposes an enabled translation action: "+tag);
+            button.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
+        }
+        tabs.SelectedItem=window.FindName("OllamaTab"); content.UpdateLayout();
+        var oversized=ollamaModels.Items.Cast<OllamaModelRow>().Single(r=>r.Tag=="translategemma:27b");
+        var oversizedPresenter=(System.Windows.Controls.ContentPresenter)ollamaModels.ItemContainerGenerator.ContainerFromItem(oversized);
+        foreach (string requirement in new[] { "RamRequirementText","VramRequirementText" })
+        {
+            var text=(System.Windows.Controls.TextBlock)oversizedPresenter.ContentTemplate.FindName(requirement,oversizedPresenter);
+            Assert(((System.Windows.Media.SolidColorBrush)text.Foreground).Color==((System.Windows.Media.SolidColorBrush)app.FindResource("FluentError")).Color,
+                "Exceeding a hardware requirement uses the deficit color: "+requirement);
+        }
+        ClickModelUse("custom/russian:latest");
+        Assert(ReadUi().Translation.Selected.Model=="custom/russian:latest","A model outside the catalog can be applied from its own card");
+        typeof(MainWindow).GetField("ollamaBusy",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.SetValue(window,true);
+        typeof(MainWindow).GetMethod("RefreshOllamaModels",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null);
+        Assert(ollamaModels.Items.Cast<OllamaModelRow>().All(r=>!r.CanUse && !r.CanDelete && !r.CanDownload),"Model actions are disabled during an Ollama operation");
+        typeof(MainWindow).GetField("ollamaBusy",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.SetValue(window,false);
+        typeof(MainWindow).GetField("ollamaDrivers",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.SetValue(window,
+            new OllamaDriverReport(new[] { new OllamaDriver("NVIDIA Test GPU","31.0.15.3623","2023-06-14") },Array.Empty<string>(),false));
+        typeof(MainWindow).GetMethod("UpdateOllamaHardware",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null);
+        Assert(((System.Windows.Controls.TextBlock)window.FindName("OllamaDriverWarning")).Visibility==System.Windows.Visibility.Visible,
+            "An old NVIDIA driver warning is visible even while driver details are collapsed");
+        typeof(MainWindow).GetField("ollamaDrivers",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.SetValue(window,
+            new OllamaDriverReport(new[] { new OllamaDriver("NVIDIA Test GPU","32.0.15.6094","2024-08-20") },Array.Empty<string>(),false));
+        typeof(MainWindow).GetMethod("UpdateOllamaHardware",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null);
+        Assert(((System.Windows.Controls.TextBlock)window.FindName("OllamaDriverWarning")).Visibility==System.Windows.Visibility.Collapsed,
+            "Meeting the baseline clears the old driver warning without claiming driver currency");
+        Assert(((System.Windows.Controls.Button)window.FindName("OllamaNvidiaButton")).Visibility==System.Windows.Visibility.Visible &&
+            ((System.Windows.Controls.Button)window.FindName("OllamaAmdButton")).Visibility==System.Windows.Visibility.Collapsed &&
+            ((System.Windows.Controls.Button)window.FindName("OllamaIntelButton")).Visibility==System.Windows.Visibility.Collapsed,
+            "Only the detected GPU vendor website button is shown");
+        typeof(MainWindow).GetField("ollamaDrivers",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.SetValue(window,
+            new OllamaDriverReport(new[] { new OllamaDriver("AMD Radeon","unknown",""),new OllamaDriver("Intel Arc","unknown","") },Array.Empty<string>(),false));
+        typeof(MainWindow).GetMethod("UpdateOllamaHardware",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null);
+        Assert(((System.Windows.Controls.Button)window.FindName("OllamaNvidiaButton")).Visibility==System.Windows.Visibility.Collapsed &&
+            ((System.Windows.Controls.Button)window.FindName("OllamaAmdButton")).Visibility==System.Windows.Visibility.Visible &&
+            ((System.Windows.Controls.Button)window.FindName("OllamaIntelButton")).Visibility==System.Windows.Visibility.Visible,
+            "Multi-vendor systems show each detected vendor without unrelated buttons");
+        ClickModelUse("translategemma:4b");
         var ollamaSettings=ReadUi();
-        Assert(ollamaSettings.Translation.Enabled && ollamaSettings.Translation.Provider=="ollama" && ollamaSettings.Translation.Selected.Model=="translategemma:4b" && ollamaSettings.Translation.Selected.BaseUrl==OllamaSetupClient.BaseUrl,"Prepared model is applied to translation with local endpoint");
-        Assert(ollamaSettings.Translation.Providers["lmstudio"].Model=="lm-model" && ollamaSettings.Genderization.Providers["ollama"].Model=="gender-ollama","Applying local translation preserves other provider and gender profiles");
-        ollamaModel.SelectedIndex=1;
-        Assert(!((System.Windows.Controls.Button)window.FindName("OllamaUseButton")).IsEnabled,"Selecting a model not downloaded disables apply");
-        ollamaModel.SelectedIndex=0;
+        Assert(ollamaSettings.Translation.Enabled && ollamaSettings.Translation.Provider=="ollama" && ollamaSettings.Translation.Selected.Model=="translategemma:4b" && ollamaSettings.Translation.Selected.BaseUrl==OllamaSetupClient.BaseUrl,"A model card configures the local Ollama provider and enables translation");
+        Assert(ollamaSettings.Translation.Providers["lmstudio"].Model=="lm-model" && ollamaSettings.Genderization.Providers["ollama"].Model=="gender-ollama","Model selection preserves other provider and gender profiles");
+        Assert(ollamaModels.Items.Cast<OllamaModelRow>().Single(r=>r.Tag=="translategemma:4b").Status==UiText.T("ollama.modelInUse"),"The configured translation model is marked as in use");
         for (int tab=0; tab<tabs.Items.Count; tab++)
         {
             tabs.SelectedIndex=tab; content.UpdateLayout();
@@ -529,6 +607,55 @@ internal static partial class Program
             }
         }
         uiLanguage.SelectedItem=((System.Collections.Generic.IEnumerable<UiLanguageChoice>)uiLanguage.ItemsSource).First(l=>l.Id=="ru");
+        tabs.SelectedItem=window.FindName("OllamaTab"); content.UpdateLayout();
+        var ollamaScroll=(System.Windows.Controls.ScrollViewer)((System.Windows.Controls.TabItem)window.FindName("OllamaTab")).Content;
+        foreach (int offset in new[] { 0,600,1300 })
+        {
+            ollamaScroll.ScrollToVerticalOffset(offset); content.UpdateLayout();
+            var ollamaPreview=new System.Windows.Media.Imaging.RenderTargetBitmap(previewWidth,previewHeight,96,96,System.Windows.Media.PixelFormats.Pbgra32);
+            ollamaPreview.Render(content);
+            var ollamaPng=new System.Windows.Media.Imaging.PngBitmapEncoder(); ollamaPng.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(ollamaPreview));
+            using var ollamaFile=File.Create(Path.Combine(directory,$"ollama-layout-ru-{offset}.png")); ollamaPng.Save(ollamaFile);
+        }
+        var driversExpander=(System.Windows.Controls.Expander)window.FindName("OllamaDriversExpander");
+        driversExpander.IsExpanded=true;
+        foreach (var theme in new[] { AppTheme.Light,AppTheme.Dark })
+        {
+            app.Themes.Apply(theme);
+            content.Measure(new System.Windows.Size(920,previewHeight));
+            content.Arrange(new System.Windows.Rect(0,0,920,previewHeight)); content.UpdateLayout();
+            ollamaScroll.ScrollToVerticalOffset(155); content.UpdateLayout();
+            var driverPreview=new System.Windows.Media.Imaging.RenderTargetBitmap(920,previewHeight,96,96,System.Windows.Media.PixelFormats.Pbgra32);
+            driverPreview.Render(content);
+            var driverPng=new System.Windows.Media.Imaging.PngBitmapEncoder(); driverPng.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(driverPreview));
+            using var driverFile=File.Create(Path.Combine(directory,$"ollama-drivers-ru-{theme.ToString().ToLowerInvariant()}.png")); driverPng.Save(driverFile);
+            foreach (string buttonName in new[] { "OllamaFilterButton","OllamaSortButton" })
+            {
+                var menuButton=(System.Windows.Controls.Button)window.FindName(buttonName);
+                var menu=menuButton.ContextMenu;
+                // The settings preview is never shown. Give native popups a loaded
+                // off-screen placement target without triggering settings Loaded tasks.
+                var target=new System.Windows.Controls.Button { Content=buttonName,ContextMenu=menu };
+                var popupHost=new System.Windows.Window { Content=target,Width=240,Height=80,Left=-10000,Top=-10000,
+                    WindowStartupLocation=System.Windows.WindowStartupLocation.Manual,ShowActivated=false,ShowInTaskbar=false };
+                popupHost.Show(); popupHost.UpdateLayout();
+                bool staysOpen=menu.StaysOpen; menu.StaysOpen=true;
+                try
+                {
+                    typeof(MainWindow).GetMethod("OpenOllamaModelMenu",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!
+                        .Invoke(window,new object[] { target,new System.Windows.RoutedEventArgs() });
+                    menu.Dispatcher.Invoke(()=> { },System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                    menu.UpdateLayout();
+                    Assert(menu.IsOpen && menu.ActualWidth>100 && menu.ActualHeight>50,"Model dropdown opens with readable dimensions: "+buttonName);
+                    var menuPreview=new System.Windows.Media.Imaging.RenderTargetBitmap((int)Math.Ceiling(menu.ActualWidth),(int)Math.Ceiling(menu.ActualHeight),96,96,System.Windows.Media.PixelFormats.Pbgra32);
+                    menuPreview.Render(menu);
+                    var menuPng=new System.Windows.Media.Imaging.PngBitmapEncoder();menuPng.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(menuPreview));
+                    using var menuFile=File.Create(Path.Combine(directory,$"{buttonName}-{theme}.png"));menuPng.Save(menuFile);
+                }
+                finally { menu.IsOpen=false; menu.StaysOpen=staysOpen; popupHost.Close(); }
+            }
+        }
+        driversExpander.IsExpanded=false; app.Themes.Apply(AppTheme.System);
         Console.WriteLine("UI rendered to "+Path.Combine(directory,"settings-preview.png"));
         RunFocusLayoutChecks();
         RenderReadingOverlayPreviews();

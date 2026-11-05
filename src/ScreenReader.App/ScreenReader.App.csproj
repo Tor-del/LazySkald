@@ -16,6 +16,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="ScreenReader.Checks" />
     <EmbeddedResource Include="Localization/strings*.json" WithCulture="false" />
+    <EmbeddedResource Include="OllamaGpuRequirements.json" />
     <EmbeddedResource Include="Assets/storyteller.ico" />
     <PackageReference Include="Markdig" Version="1.5.1" />
     <Resource Include="Assets/storyteller.png" />

@@ -15,8 +15,10 @@ public sealed record Hotkey(uint Modifiers, uint Key)
 }
 public enum CaptureMode { Auto, DesktopDuplication, Gdi }
 public enum HotkeyMode { GameHook, Registered }
+public enum OverlayRenderer { Desktop, XboxGameBar }
 public sealed record OverlaySettings
 {
+    public OverlayRenderer Renderer { get; init; }
     public bool Enabled { get; init; }
     public bool ShowTranslation { get; init; }
     public double Left { get; init; }=40;
@@ -82,6 +84,8 @@ public sealed record AppSettings
     public string SelectedVoice=>ProviderVoices?.GetValueOrDefault(SpeechProviderId) ?? (SpeechProviderId switch { "windows"=>WindowsVoice,"openai-compatible"=>OpenAiVoice,_=>Voice });
     public CaptureMode CaptureMode { get; init; } = CaptureMode.Auto;
     public bool MinimizeToTray { get; init; } = true;
+    public bool MinimizeOnMinimizeToTray { get; init; }
+    public bool SkipExitConfirmation { get; init; }
     public bool StartInTray { get; init; }
 }
 public static class SettingsStore
@@ -129,6 +133,7 @@ public static class SettingsStore
         value ??=new();
         return value with
         {
+            Renderer=Enum.IsDefined(value.Renderer) ? value.Renderer : OverlayRenderer.Desktop,
             Left=double.IsFinite(value.Left) ? Math.Clamp(value.Left,-100000,100000) : 40,
             Top=double.IsFinite(value.Top) ? Math.Clamp(value.Top,-100000,100000) : 40,
             Width=double.IsFinite(value.Width) ? Math.Clamp(value.Width,260,800) : 360,

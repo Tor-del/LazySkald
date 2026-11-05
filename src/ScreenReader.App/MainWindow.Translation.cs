@@ -82,7 +82,7 @@ public partial class MainWindow
     private void TranslationProviderChanged(object sender,SelectionChangedEventArgs e)
     {
         if (!initialized || TranslationProviderBox.SelectedItem is not TranslationProviderChoice choice) return;
-        RememberTranslationProvider(); modelLoad?.Cancel(); translationProvider=choice.Id; ShowTranslationProvider();
+        RememberTranslationProvider(); modelLoad?.Cancel(); translationProvider=choice.Id; ShowTranslationProvider(); RefreshOllamaModels();
     }
     private void TranslationConnectionChanged(object sender,RoutedEventArgs e)
     {
@@ -90,12 +90,14 @@ public partial class MainWindow
         modelLoad?.Cancel();
         string model=TranslationModelBox.Text; TranslationModelBox.ItemsSource=null; TranslationModelBox.Text=model;
         TranslationModelsHint.Text=UiText.T("translation.modelsHint");
+        RefreshOllamaModels();
     }
     private void TranslationLanguageChanged(object sender,RoutedEventArgs e)
-        =>UpdateTranslationLanguage();
+    { UpdateTranslationLanguage(); if (initialized) RefreshOllamaModels(); }
     private void UpdateTranslationLanguage()
     {
         if (!initialized) return;
+        preserveSavedSpeechLanguage=false;
         RememberVoice(providerId);
         if (!owner.Providers.Get(providerId).CustomVoice) FilterVoices(selectedVoices.GetValueOrDefault(providerId));
         TranslationPreview.Text="";

@@ -18,6 +18,17 @@ internal static partial class Program
 
         var app=new App(); app.InitializeComponent();
         app.Themes.Apply(AppTheme.System);
+        var legacy=JsonSerializer.Deserialize<AppSettings>("{}")!;
+        Assert(!legacy.MinimizeOnMinimizeToTray && !legacy.SkipExitConfirmation,
+            "Existing installations keep minimize-to-tray opt-in and exit confirmation enabled");
+        var behavior=JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(legacy with
+            { MinimizeOnMinimizeToTray=true,SkipExitConfirmation=true }))!;
+        Assert(behavior.MinimizeOnMinimizeToTray && behavior.SkipExitConfirmation,
+            "Tray and exit confirmation preferences survive restart");
+        var confirmation=new ExitConfirmationWindow();
+        confirmation.Loaded+=(_,_)=>confirmation.Dispatcher.BeginInvoke(new Action(()=>confirmation.Close()));
+        Assert(confirmation.ShowDialog()!=true && !confirmation.DoNotAskAgain,
+            "Dismissing exit confirmation cancels exit without opting out");
         var window=new MainWindow(app);
         var tabs=(TabControl)window.FindName("MainTabs");
         tabs.SelectedItem=tabs.Items.Cast<TabItem>().Single(t=>Equals(t.Header,UiText.T("tab.application")));
@@ -35,6 +46,24 @@ internal static partial class Program
             Assert(((SolidColorBrush)window.Foreground).Color==(Color)ColorConverter.ConvertFromString(dark ? "#F5F5F5" : "#1A1A1A"),"Existing window updates text color: "+theme);
             Assert(((SolidColorBrush)tabs.Foreground).Color==((SolidColorBrush)window.Foreground).Color,"Section headings and content inherit readable text: "+theme);
             Assert(((SolidColorBrush)input.Background).Color==(Color)ColorConverter.ConvertFromString(dark ? "#323232" : "#FFFFFF"),"Existing text fields update background: "+theme);
+            foreach (bool enabled in new[] { true,false })
+            {
+                var list=new ListBox();
+                list.Items.Add("Dictionary entry");
+                var parent=new StackPanel { IsEnabled=enabled,Width=300,Height=130 };
+                parent.Children.Add(list);
+                list.Height=130;
+                parent.Measure(new Size(300,130));
+                parent.Arrange(new Rect(0,0,300,130)); parent.UpdateLayout();
+                Assert(list.IsEnabled==enabled,"List inherits translation enabled state: "+enabled);
+                var rendered=new RenderTargetBitmap(300,130,96,96,PixelFormats.Pbgra32);
+                rendered.Render(parent);
+                var pixel=new byte[4];
+                rendered.CopyPixels(new Int32Rect(150,110,1,1),pixel,4,0);
+                var expected=((SolidColorBrush)app.FindResource("FluentSurfaceHover")).Color;
+                Assert(pixel[0]==expected.B && pixel[1]==expected.G && pixel[2]==expected.R && pixel[3]==255,
+                    $"List renders theme background with inherited IsEnabled={enabled}: {theme}");
+            }
             if (theme!=AppTheme.System)
             {
                 var image=new RenderTargetBitmap((int)window.Width,(int)window.Height,96,96,PixelFormats.Pbgra32);

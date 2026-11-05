@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     private CancellationTokenSource? voiceLoad;
     private List<SpeechVoice> voices = LanguageCatalog.EdgeVoices.ToList();
     private bool initialized;
+    private bool preserveSavedSpeechLanguage=true;
 
     public MainWindow(App owner)
     {
@@ -37,6 +38,7 @@ public partial class MainWindow : Window
         SourceInitialized+=(_,_)=>owner.Themes.ApplyTitleBar(this);
         overlayKey=draft.OverlayInteractionHotkey;
         overlayLayout=draft.Overlay;
+        OverlayRendererBox.SelectedValue=draft.Overlay.Renderer.ToString();
         OverlayEnabledBox.IsChecked=draft.Overlay.Enabled;
         OverlayTranslationBox.IsChecked=draft.Overlay.ShowTranslation;
         SpeechEnabledBox.IsChecked=draft.SpeechEnabled;
@@ -60,6 +62,7 @@ public partial class MainWindow : Window
         AudioFormatBox.ItemsSource=new[] { "MP3","WAV (PCM)" }; AudioFormatBox.SelectedIndex=(int)draft.OpenAiFormat;
         CaptureModeBox.ItemsSource=new[] { new CaptureChoice(CaptureMode.Auto,UiText.T("capture.auto")),new CaptureChoice(CaptureMode.DesktopDuplication,UiText.T("capture.dxgi")),new CaptureChoice(CaptureMode.Gdi,UiText.T("capture.gdi")) };
         CaptureModeBox.SelectedItem=((IEnumerable<CaptureChoice>)CaptureModeBox.ItemsSource).First(c => c.Mode==owner.Settings.CaptureMode);
+        MinimizeToTrayBox.IsChecked=draft.MinimizeOnMinimizeToTray;
         CloseToTrayBox.IsChecked=owner.Settings.MinimizeToTray; StartInTrayBox.IsChecked=owner.Settings.StartInTray; RateSlider.Value=owner.Settings.RatePercent;
         VolumeSlider.Value=draft.VolumePercent; ExclusiveHotkeysBox.IsChecked=draft.ExclusiveHotkeys;
         RateLabel.Text=$"{owner.Settings.RatePercent:+0;-0;0}%";
@@ -82,15 +85,37 @@ public partial class MainWindow : Window
             box.LostKeyboardFocus += (_,_)=>owner.SetHotkeyEditing(false);
         }
         IsVisibleChanged += (_,_)=> { if (!IsVisible) owner.SetHotkeyEditing(false); };
-        StateChanged += (_,_) => { if (WindowState==WindowState.Minimized) Hide(); };
+        StateChanged += (_,_) => { if (WindowState==WindowState.Minimized && owner.Settings.MinimizeOnMinimizeToTray) Hide(); };
     }
     private void OnClosing(object? sender,CancelEventArgs e)
     {
         if (owner.IsExiting) return;
         e.Cancel=true;
-        if (owner.Settings.MinimizeToTray) Hide(); else owner.Quit();
+        if (owner.Settings.MinimizeToTray) Hide();
+        else Dispatcher.BeginInvoke(new Action(owner.RequestQuit));
     }
     public void SetStatus(string value) => StatusText.Text=value;
+    private void OpenSetupWizard(object sender,RoutedEventArgs e)
+    {
+        try { ShowSetupWizard(ReadControls()); }
+        catch (Exception ex) { SetStatus(ex.Message); }
+    }
+    internal void ShowSetupWizard(AppSettings settings)
+    {
+        try
+        {
+            var wizard=new SetupWizard(owner,settings) { Owner=this };
+            wizard.ShowDialog();
+            if (wizard.Applied && !owner.IsExiting) owner.ReloadSettingsWindow();
+        }
+        catch (Exception ex) { SetStatus(ex.Message); }
+    }
+    internal void CloseForReload()
+    {
+        Closing-=OnClosing;
+        voiceLoad?.Cancel();
+        Close();
+    }
     public void SetRecognizedText(string value) { PreviewText.Text=value; TranslationPreview.Text=""; }
     public void SetTranslatedText(string value) => TranslationPreview.Text=value;
     private AppSettings ReadControls()
@@ -108,7 +133,8 @@ public partial class MainWindow : Window
         var settings=speechRoles[SpeakerGender.Unknown].ApplyTo(draft) with
         {
             SpeechEnabled=SpeechEnabledBox.IsChecked==true,
-            Overlay=overlayLayout with { Enabled=OverlayEnabledBox.IsChecked==true,ShowTranslation=OverlayTranslationBox.IsChecked==true },
+            Overlay=overlayLayout with { Enabled=OverlayEnabledBox.IsChecked==true,ShowTranslation=OverlayTranslationBox.IsChecked==true,
+                Renderer=SelectedOverlayRenderer },
             OverlayInteractionHotkey=overlayKey,
             FallbackRole=speechRoles.GetValueOrDefault(FallbackRole),ExclusiveHotkeys=ExclusiveHotkeysBox.IsChecked==true,
             CacheEnabled=CacheEnabledBox.IsChecked==true,
@@ -117,6 +143,7 @@ public partial class MainWindow : Window
             HotkeyMode=((HotkeyModeChoice)HotkeyModeBox.SelectedItem).Mode,
             CaptureMode=((CaptureChoice)CaptureModeBox.SelectedItem).Mode,
             MinimizeToTray=CloseToTrayBox.IsChecked==true,StartInTray=StartInTrayBox.IsChecked==true,
+            MinimizeOnMinimizeToTray=MinimizeToTrayBox.IsChecked==true,SkipExitConfirmation=owner.Settings.SkipExitConfirmation,
             OcrProviderId=((OcrProviderChoice)OcrProviderBox.SelectedItem).Id,
             OcrReplaceLineBreaks=OcrReplaceLineBreaksBox.IsChecked==true,
             OcrPreserveParagraphs=OcrPreserveParagraphsBox.IsChecked==true,
@@ -146,7 +173,18 @@ public partial class MainWindow : Window
         catch (Exception ex) { SetStatus(ex.Message); }
     }
     private void StopSpeech(object sender,RoutedEventArgs e)=>owner.Reader.Stop();
-    private void HideWindow(object sender,RoutedEventArgs e)=>Hide();
+    private async void CaptureAndQueue(object sender,RoutedEventArgs e)
+    {
+        try { await owner.Reader.CaptureAndReadAsync(owner.Settings); }
+        catch (Exception ex) { SetStatus(ex.Message); }
+    }
+    private void ResetSettings(object sender,RoutedEventArgs e)
+    {
+        if (MessageBox.Show(this,UiText.T("app.resetConfirm"),UiText.T("button.resetSettings"),
+            MessageBoxButton.YesNo,MessageBoxImage.Warning,MessageBoxResult.No)!=MessageBoxResult.Yes) return;
+        try { owner.ResetSettingsAndRestart(); }
+        catch (Exception ex) { SetStatus(ex.Message); }
+    }
     private void OpenLog(object sender,RoutedEventArgs e)
     {
         try { AppLog.Write("Журнал открыт"); Process.Start(new ProcessStartInfo("notepad.exe",AppLog.LogPath) { UseShellExecute=true }); }
@@ -202,7 +240,7 @@ public partial class MainWindow : Window
         UpdatePrivacyHint();
     }
     private void LanguageChanged(object sender,SelectionChangedEventArgs e)
-    { if (initialized) { RememberVoice(providerId); if (!owner.Providers.Get(providerId).CustomVoice) FilterVoices(null); UpdateLanguageHint(); } }
+    { if (initialized) { preserveSavedSpeechLanguage=false; RememberVoice(providerId); if (!owner.Providers.Get(providerId).CustomVoice) FilterVoices(null); UpdateLanguageHint(); } }
     private void UpdateLanguageHint()
     {
         if (LanguageBox.SelectedItem is LanguageChoice language)
@@ -212,7 +250,8 @@ public partial class MainWindow : Window
     {
         if (LanguageBox.SelectedItem is not LanguageChoice language) return;
         string speechLanguage=TranslateEnabledBox.IsChecked==true ? TranslationTargetBox.Text.Trim() : language.Tag;
-        var available=voices.Where(v => v.Locale.Equals(speechLanguage,StringComparison.OrdinalIgnoreCase)).OrderBy(v => v.ShortName).ToArray();
+        // The wizard can select a speech language independently of the OCR/translation language.
+        var available=voices.Where(v => v.Locale.Equals(speechLanguage,StringComparison.OrdinalIgnoreCase) || (preserveSavedSpeechLanguage && v.ShortName==preferred)).OrderBy(v => v.ShortName).ToArray();
         VoiceBox.ItemsSource=available;
         VoiceBox.SelectedItem=available.FirstOrDefault(v => v.ShortName==preferred) ?? available.FirstOrDefault();
     }
@@ -323,7 +362,24 @@ public partial class MainWindow : Window
     }
     private void ConfigureOverlay(object sender,RoutedEventArgs e)
     {
+        if (SelectedOverlayRenderer==OverlayRenderer.XboxGameBar) { OpenGameBar(sender,e); return; }
         if (owner.ReadingOverlay?.ConfigureLayout(this,overlayLayout) is { } layout) overlayLayout=layout;
     }
-    private void ResetOverlay(object sender,RoutedEventArgs e)=>overlayLayout=new();
+    private OverlayRenderer SelectedOverlayRenderer=>Enum.TryParse<OverlayRenderer>(OverlayRendererBox.SelectedValue as string,out var value) ? value : OverlayRenderer.Desktop;
+    private void OverlayRendererChanged(object sender,SelectionChangedEventArgs e)
+    {
+        if (GameBarPanel is not null) GameBarPanel.Visibility=SelectedOverlayRenderer==OverlayRenderer.XboxGameBar ? Visibility.Visible : Visibility.Collapsed;
+        if (DesktopOverlayHint is not null) DesktopOverlayHint.Visibility=SelectedOverlayRenderer==OverlayRenderer.Desktop ? Visibility.Visible : Visibility.Collapsed;
+        if (DesktopOverlayControls is not null) DesktopOverlayControls.Visibility=SelectedOverlayRenderer==OverlayRenderer.Desktop ? Visibility.Visible : Visibility.Collapsed;
+    }
+    private void OpenGameBar(object sender,RoutedEventArgs e)
+    {
+        try { Process.Start(new ProcessStartInfo("ms-gamebar:") { UseShellExecute=true }); }
+        catch (Exception ex) { SetStatus(ex.Message); }
+    }
+    private void ResetOverlay(object sender,RoutedEventArgs e)
+    {
+        overlayLayout=new() { Renderer=SelectedOverlayRenderer };
+        if (SelectedOverlayRenderer==OverlayRenderer.XboxGameBar) SetStatus(UiText.T("overlay.gameBarLayout"));
+    }
 }
