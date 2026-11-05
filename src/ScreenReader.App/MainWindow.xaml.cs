@@ -307,6 +307,12 @@ public partial class MainWindow : Window
         ApplyProviderUI(); UpdateLanguageHint(); initialized=true;
         SetStatus(UiText.T(owner.Reader?.IsBusy==true ? "status.working" : "ready"));
     }
+    private void ExitApplication(object sender,RoutedEventArgs e)=>owner.RequestQuit();
+    private void OpenProjectGitHub(object sender,System.Windows.Navigation.RequestNavigateEventArgs e)
+    {
+        Process.Start(new ProcessStartInfo("https://github.com/Tor-del/LazySkald") { UseShellExecute=true });
+        e.Handled=true;
+    }
     private void UpdateHotkeyFields()
     {
         string Display(Hotkey? key)=>key?.ToString() ?? UiText.T("hotkey.unassigned");

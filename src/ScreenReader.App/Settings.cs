@@ -34,7 +34,7 @@ public sealed record AppSettings
     public Hotkey? OverlayInteractionHotkey { get; init; }=new(0,0x12);
     public bool SpeechEnabled { get; init; }=true;
     public int VolumePercent { get; init; }=100;
-    public SpeechRoleSettings? FallbackRole { get; init; }
+    public SpeechRoleSettings? FallbackRole { get; init; }=WindowsSpeechProvider.CreateDefaultFallback();
     public bool ExclusiveHotkeys { get; init; }=true;
     public bool CacheEnabled { get; init; }
     public string OcrProviderId { get; init; }="windows";

@@ -14,7 +14,7 @@ public sealed record TranslationProviderSettings
 public record LlmSettings
 {
     public bool Enabled { get; init; }
-    public string Provider { get; init; }="lmstudio";
+    public string Provider { get; init; }="ollama";
     public string Prompt { get; init; }="";
     public double? Temperature { get; init; }=0.2;
     public int TimeoutSeconds { get; init; }=120;

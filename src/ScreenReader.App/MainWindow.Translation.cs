@@ -9,7 +9,7 @@ public sealed record TranslationProviderChoice(string Id,string Name);
 public partial class MainWindow
 {
     private readonly Dictionary<string,TranslationProviderSettings> translationProviders=new();
-    private string translationProvider="lmstudio";
+    private string translationProvider="ollama";
     private bool changingTranslation;
     private CancellationTokenSource? modelLoad;
     private void InitializeTranslation()

@@ -5,6 +5,23 @@ namespace ScreenReader.App;
 
 public sealed class WindowsSpeechProvider : ISpeechProvider
 {
+    public static SpeechRoleSettings? CreateDefaultFallback()
+    {
+        try
+        {
+            var voice=SpeechSynthesizer.AllVoices.FirstOrDefault();
+            return voice is null ? null : new SpeechRoleSettings
+            {
+                ProviderId="windows",ProviderVoices=new() { ["windows"]=voice.Id }
+            };
+        }
+        catch (Exception e)
+        {
+            AppLog.Write("Не удалось выбрать локальный резервный голос Windows.",e);
+            return null;
+        }
+    }
+
     public SpeechAudioFormat AudioFormat=>SpeechAudioFormat.Wave;
     public Task<IReadOnlyList<SpeechVoice>> GetVoicesAsync(CancellationToken cancellationToken)
     {

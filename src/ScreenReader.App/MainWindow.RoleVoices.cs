@@ -111,6 +111,14 @@ public partial class MainWindow
     {
         if ((gender!=FallbackRole && GenderEnabledBox.IsChecked!=true) || speechRoles.ContainsKey(gender)) return;
         SaveSpeechEditor();
+        if (gender==FallbackRole)
+        {
+            var fallback=WindowsSpeechProvider.CreateDefaultFallback();
+            if (fallback is null) { SetStatus(UiText.T("error.systemVoice")); return; }
+            speechRoles[gender]=fallback;
+            SwitchSpeechRole(gender);
+            return;
+        }
         // Start from the default profile; subsequent edits belong only to the new role.
         speechRoles[gender]=speechRoles[SpeakerGender.Unknown] with { ProviderVoices=new(speechRoles[SpeakerGender.Unknown].ProviderVoices) };
         SwitchSpeechRole(gender);

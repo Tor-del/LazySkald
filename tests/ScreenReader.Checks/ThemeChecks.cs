@@ -35,6 +35,8 @@ internal static partial class Program
         var selector=(ComboBox)window.FindName("ThemeBox");
         Assert((string)selector.SelectedValue=="System","Application section defaults to System");
         var input=(TextBox)window.FindName("EndpointBox");
+        var slider=new Slider { Minimum=0,Maximum=100,Value=40,Width=260 };
+        var sliderHost=(StackPanel)((ScrollViewer)((TabItem)tabs.SelectedItem).Content).Content; sliderHost.Children.Add(slider);
         foreach (var theme in new[] { AppTheme.Dark,AppTheme.Light,AppTheme.Dark,AppTheme.System })
         {
             selector.SelectedValue=theme.ToString();
@@ -42,6 +44,11 @@ internal static partial class Program
             content.Measure(new Size(window.Width,window.Height));
             content.Arrange(new Rect(0,0,window.Width,window.Height)); content.UpdateLayout();
             Assert(app.Themes.Theme==theme,"Selector applies theme immediately: "+theme);
+            slider.ApplyTemplate(); slider.UpdateLayout();
+            var track=(System.Windows.Controls.Primitives.Track)slider.Template.FindName("PART_Track",slider);
+            Assert(track.Thumb.ActualWidth==22 && track.Value==40,"Themed slider keeps its thumb and value binding: "+theme);
+            Assert(((SolidColorBrush)track.DecreaseRepeatButton.Background).Color==((SolidColorBrush)app.FindResource("FluentAccent")).Color,
+                "Slider fill follows active theme: "+theme);
             bool dark=app.Themes.IsDark;
             Assert(((SolidColorBrush)window.Foreground).Color==(Color)ColorConverter.ConvertFromString(dark ? "#F5F5F5" : "#1A1A1A"),"Existing window updates text color: "+theme);
             Assert(((SolidColorBrush)tabs.Foreground).Color==((SolidColorBrush)window.Foreground).Color,"Section headings and content inherit readable text: "+theme);
@@ -74,6 +81,13 @@ internal static partial class Program
             }
         }
         selector.SelectedValue="Dark";
+        UiText.SetLanguage("ru");
+        var dictionary=tabs.Items.Cast<TabItem>().Single(t=>Equals(t.Header,UiText.T("tab.textCorrection")));
+        var layout=(FrameworkElement)window.Content;
+        tabs.SelectedIndex=0; layout.UpdateLayout();
+        double headerHeight=dictionary.ActualHeight;
+        tabs.SelectedItem=dictionary; layout.UpdateLayout();
+        Assert(Math.Abs(dictionary.ActualHeight-headerHeight)<0.1,"Selecting recognition dictionary does not resize the sidebar header");
         foreach (var locale in UiText.Languages)
         {
             UiText.SetLanguage(locale.Id);

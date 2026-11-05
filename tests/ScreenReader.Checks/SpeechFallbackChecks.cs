@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +27,18 @@ internal static partial class Program
                 VolumePercent=23,RatePercent=15,AudioOutputDeviceId="backup-device" } };
         var restored=JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(settings))!;
         Assert(restored.VolumePercent==65 && restored.FallbackRole is { VolumePercent:23 },"Voice volumes and optional fallback survive serialization");
-        Assert(JsonSerializer.Deserialize<AppSettings>("{}") is { VolumePercent:100,FallbackRole:null,ExclusiveHotkeys:true },"Old settings preserve full volume and existing shortcut suppression");
+        var defaults=new AppSettings();
+        var localVoices=await new WindowsSpeechProvider().GetVoicesAsync(CancellationToken.None);
+        Assert(localVoices.Count==0 ? defaults.FallbackRole is null :
+            defaults.FallbackRole is { ProviderId:"windows" } local &&
+            localVoices.Any(v=>v.ShortName==local.ApplyTo(defaults).SelectedVoice),
+            "Default fallback automatically selects an installed Windows voice when available");
+        var legacy=JsonSerializer.Deserialize<AppSettings>("{}")!;
+        Assert(legacy is { VolumePercent:100,ExclusiveHotkeys:true } &&
+            legacy.FallbackRole?.ProviderId==defaults.FallbackRole?.ProviderId,
+            "Settings without a fallback field inherit the local Windows default");
+        Assert(JsonSerializer.Deserialize<AppSettings>("{\"FallbackRole\":null}")!.FallbackRole is null,
+            "Explicitly disabled fallback remains disabled after loading");
         await reader.ReadTextAsync("Text",settings);
         Assert(failure is null && primary.Calls==1 && fallback.Calls==1 && fallback.Last is { Text:"Text",Voice:"backup",RatePercent:15 },"Stream failure before sound retries the same text once with fallback without cache enabled");
         Assert(audio.Volume==0.23f && audio.Device=="backup-device" && audio.Format==SpeechAudioFormat.Wave,"Fallback playback uses its volume, device and audio format");

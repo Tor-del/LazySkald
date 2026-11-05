@@ -14,7 +14,7 @@ internal static partial class Program
     {
         string directory=Path.Combine(Path.GetTempPath(),"ScreenReader-cache-check-"+Guid.NewGuid().ToString("N"));
         var cache=new ReadingCache(directory);
-        var settings=new AppSettings { CacheEnabled=true,SpeechProviderId="cache-test",Translation=new() { Enabled=true },Genderization=new() { Enabled=true } };
+        var settings=new AppSettings { CacheEnabled=true,SpeechProviderId="cache-test",FallbackRole=null,Translation=new() { Enabled=true },Genderization=new() { Enabled=true } };
         Assert(JsonSerializer.Deserialize<AppSettings>("{}")!.SpeechEnabled,"Existing settings keep speech enabled by default");
         Assert(!JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(settings with { SpeechEnabled=false }))!.SpeechEnabled,"Disabled speech survives settings serialization");
         string Key(AppSettings value)=>ReadingCache.KeyFor("Original",value);

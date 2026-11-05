@@ -11,7 +11,7 @@ internal static partial class Program
     {
         var settings=new TranslationSettings { Enabled=true,CorrectionsEnabled=true,
             CorrectionRules=" Skyrim \r\nDragonborn => Довакин\nHigh Hrothgar => Высокий Хротгар\ncat\nC++\ncafé\nзамок\nunused",
-            Providers=new() { ["lmstudio"]=new() { BaseUrl="http://localhost/v1",Model="test" } } };
+            Provider="lmstudio",Providers=new() { ["lmstudio"]=new() { BaseUrl="http://localhost/v1",Model="test" } } };
         var rules=TranslationCorrections.Parse(settings.CorrectionRules);
         Assert(rules["skyrim"] is null && rules["DRAGONBORN"]=="Довакин","Glossary supports preserve and replacement rules with trimmed case-insensitive sources");
         Assert(TranslationCorrections.PromptFor("A cathedral, cats, caféine, подзамок and C++Builder.",settings)=="","Glossary does not match word fragments or extended terms");

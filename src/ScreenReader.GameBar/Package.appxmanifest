@@ -3,7 +3,7 @@
  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" IgnorableNamespaces="uap uap3 mp">
- <Identity Name="LazySkald.GameBar" Publisher="CN=LazySkald" Version="0.7.0.0"/>
+ <Identity Name="LazySkald.GameBar" Publisher="CN=LazySkald" Version="0.7.1.0"/>
  <mp:PhoneIdentity PhoneProductId="82e10044-596c-4bdc-a02d-c6748918392e" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
  <Properties><DisplayName>LazySkald Game Bar</DisplayName><PublisherDisplayName>LazySkald</PublisherDisplayName><Logo>Assets\StoreLogo.png</Logo></Properties>
  <Dependencies><TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.18362.0" MaxVersionTested="10.0.22621.0"/></Dependencies>

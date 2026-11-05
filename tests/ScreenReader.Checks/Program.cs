@@ -31,6 +31,7 @@ internal static partial class Program
         try
         {
             if (args.Contains("--wizard-ui")) { RunSetupWizardChecks(); Console.WriteLine($"PASS: {checks} checks"); return 0; }
+            if (args.Contains("--settings-ui")) { RunUi(); Console.WriteLine($"PASS: {checks} checks"); return 0; }
             if (args.Contains("--ollama-requirements-online")) { RunLiveOllamaRequirementsAsync().GetAwaiter().GetResult(); return 0; }
             if (args.Contains("--theme-only")) { RunThemeChecks(); Console.WriteLine($"PASS: {checks} checks"); return 0; }
             if (args.Contains("--gamebar-ui")) { RunGameBarUi(); Console.WriteLine($"PASS: {checks} checks"); return 0; }
@@ -188,6 +189,8 @@ internal static partial class Program
     private static void RunUi()
     {
         var app=new PreviewApp();
+        // Exercise adding and removing fallback roles independently of installed Windows voices.
+        typeof(App).GetProperty(nameof(App.Settings))!.SetValue(app,new AppSettings { FallbackRole=null });
         var window=new MainWindow(app);
         CheckGameBarControls(window);
         int previewWidth=(int)window.Width, previewHeight=(int)window.Height;
@@ -375,6 +378,8 @@ internal static partial class Program
         var englishSettings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(englishSettings.UiLanguage=="en" && englishSettings.AudioOutputDeviceId==selectedDevice,"Interface language and playback device are included in saved settings");
         var llmBox=(System.Windows.Controls.ComboBox)window.FindName("TranslationProviderBox");
+        Assert(llmBox.SelectedItem is TranslationProviderChoice { Id:"ollama" },"Translation UI defaults to Ollama");
+        llmBox.SelectedIndex=1;
         Assert(llmBox.Items[0] is TranslationProviderChoice { Id:"ollama" },"Ollama is first in translation providers");
         var llmModel=(System.Windows.Controls.ComboBox)window.FindName("TranslationModelBox");
         var llmKey=(System.Windows.Controls.PasswordBox)window.FindName("TranslationKeyBox");
@@ -430,6 +435,8 @@ internal static partial class Program
         var genderModel=(System.Windows.Controls.ComboBox)window.FindName("GenderModelBox");
         var genderKey=(System.Windows.Controls.PasswordBox)window.FindName("GenderKeyBox");
         var genderProvider=(System.Windows.Controls.ComboBox)window.FindName("GenderProviderBox");
+        Assert(genderProvider.SelectedItem is TranslationProviderChoice { Id:"ollama" },"Genderization UI defaults to Ollama");
+        genderProvider.SelectedIndex=1;
         Assert(genderProvider.Items[0] is TranslationProviderChoice { Id:"ollama" },"Ollama is first in gender providers");
         genderModel.Text="gender-lm"; genderKey.Password="gender-key";
         genderProvider.SelectedIndex=0; genderModel.Text="gender-ollama"; genderProvider.SelectedIndex=1;

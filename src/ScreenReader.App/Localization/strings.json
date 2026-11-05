@@ -1,4 +1,24 @@
 {
+  "button.exitApp": {
+    "ru": "Выйти из программы", "en": "Exit application",
+    "zh": "退出程序", "ja": "アプリを終了", "es": "Salir de la aplicación",
+    "ko": "프로그램 종료", "fr": "Quitter l’application", "de": "Programm beenden"
+  },
+  "about.author": {
+    "ru": "Автор: Tor-del.", "en": "Author: Tor-del.",
+    "zh": "作者：Tor-del。", "ja": "作者：Tor-del。", "es": "Autor: Tor-del.",
+    "ko": "제작자: Tor-del.", "fr": "Auteur : Tor-del.", "de": "Autor: Tor-del."
+  },
+  "about.ai": {
+    "ru": "Программа написана с помощью Codex — ИИ-ассистента OpenAI.",
+    "en": "Written with help from Codex, OpenAI’s AI assistant.",
+    "zh": "本程序在 OpenAI 的 AI 助手 Codex 协助下编写。",
+    "ja": "OpenAI の AI アシスタント Codex の支援を受けて開発しました。",
+    "es": "Desarrollado con ayuda de Codex, el asistente de IA de OpenAI.",
+    "ko": "OpenAI의 AI 어시스턴트 Codex의 도움으로 개발했습니다.",
+    "fr": "Développé avec l’aide de Codex, l’assistant IA d’OpenAI.",
+    "de": "Mit Unterstützung von Codex, dem KI-Assistenten von OpenAI, entwickelt."
+  },
   "wizard.title": {
     "ru": "Мастер настройки",
     "en": "Setup wizard",

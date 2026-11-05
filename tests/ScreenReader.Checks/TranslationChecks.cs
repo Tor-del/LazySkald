@@ -55,7 +55,10 @@ internal static partial class Program
             try { await client.TranslateAsync("Hello",settings,cancel.Token); } catch (OperationCanceledException) { cancelled=true; }
             Assert(cancelled,"Translation cancellation before HTTP: "+provider);
         }
-        var valid=new TranslationSettings { Enabled=true,Providers=new() { ["lmstudio"]=new() { BaseUrl="http://localhost/v1",Model="m" } } };
+        Assert(new AppSettings().Translation.Provider=="ollama" && new AppSettings().Genderization.Provider=="ollama","Translation and genderization default to Ollama");
+        Assert(JsonSerializer.Deserialize<AppSettings>("{}") is { Translation.Provider:"ollama",Genderization.Provider:"ollama" },"Missing provider settings default to Ollama");
+        Assert(JsonSerializer.Deserialize<TranslationSettings>("{\"Provider\":\"lmstudio\"}")!.Provider=="lmstudio","Explicit provider choice is preserved");
+        var valid=new TranslationSettings { Enabled=true,Provider="lmstudio",Providers=new() { ["lmstudio"]=new() { BaseUrl="http://localhost/v1",Model="m" } } };
         Assert(valid.StripMarkdown,"Markdown removal defaults to enabled");
         Assert(JsonSerializer.Deserialize<TranslationSettings>("{}") is { StripMarkdown:true },"Existing settings without Markdown option enable cleanup");
         Assert(JsonSerializer.Deserialize<TranslationSettings>(JsonSerializer.Serialize(valid with { StripMarkdown=false })) is { StripMarkdown:false },"Explicitly disabled Markdown cleanup survives serialization");

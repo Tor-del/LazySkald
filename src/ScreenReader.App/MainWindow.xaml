@@ -59,7 +59,7 @@
    <Setter Property="FontSize" Value="13"/>
    <Setter Property="HeaderTemplate">
     <Setter.Value><DataTemplate>
-     <TextBlock Text="{Binding}" TextWrapping="Wrap"/>
+     <TextBlock Text="{Binding}" Width="128" Height="38" LineHeight="19" LineStackingStrategy="BlockLineHeight" TextWrapping="Wrap" FontWeight="SemiBold"/>
     </DataTemplate></Setter.Value>
    </Setter>
   </Style>
@@ -562,10 +562,13 @@
       <CheckBox x:Name="MinimizeToTrayBox" Content="{DynamicResource check.minimizeToTray}" Margin="0,0,0,10"/>
       <CheckBox x:Name="StartInTrayBox" Content="{DynamicResource check.startInTray}"/>
       <TextBlock Text="{DynamicResource hint.startInTray}" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource FluentSecondary}" Margin="0,6,0,24"/>
-      <WrapPanel Margin="0,0,0,20"><Button Content="{DynamicResource button.log}" Click="OpenLog"/><Button Content="{DynamicResource button.resetSettings}" Click="ResetSettings"/></WrapPanel>
+      <WrapPanel Margin="0,0,0,20"><Button Content="{DynamicResource button.log}" Click="OpenLog"/><Button Content="{DynamicResource button.resetSettings}" Click="ResetSettings"/><Button x:Name="ExitButton" Content="{DynamicResource button.exitApp}" Click="ExitApplication"/></WrapPanel>
       <TextBlock Text="{DynamicResource label.about}" FontWeight="SemiBold" Margin="0,0,0,10"/>
       <TextBlock x:Name="VersionText" Foreground="{DynamicResource FluentVersion}"/>
       <TextBlock Text="{DynamicResource hint.about}" TextWrapping="Wrap" Foreground="{DynamicResource FluentSecondary}" Margin="0,6,0,0"/>
+      <TextBlock Text="{DynamicResource about.author}" TextWrapping="Wrap" Foreground="{DynamicResource FluentSecondary}" Margin="0,12,0,6"/>
+      <TextBlock><Hyperlink NavigateUri="https://github.com/Tor-del/LazySkald" RequestNavigate="OpenProjectGitHub" Foreground="{DynamicResource FluentAccent}">GitHub · Tor-del/LazySkald</Hyperlink></TextBlock>
+      <TextBlock Text="{DynamicResource about.ai}" TextWrapping="Wrap" Foreground="{DynamicResource FluentSecondary}" Margin="0,6,0,0"/>
      </StackPanel>
     </ScrollViewer>
    </TabItem>

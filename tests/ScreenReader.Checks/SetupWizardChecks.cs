@@ -41,7 +41,8 @@ internal static partial class Program
         var reader=new ReadingController(capture,new NoOcr(),new IdentityTextTransform(),app.Providers,new GainTestAudio(),new NoFocus());
         typeof(App).GetProperty(nameof(App.Reader))!.SetValue(app,reader);
         UiText.SetLanguage("ru");
-        var wizard=new SetupWizard(app,new AppSettings());
+        var initial=new AppSettings();
+        var wizard=new SetupWizard(app,initial);
         typeof(SetupWizard).GetField("speechCatalogLoaded",BindingFlags.NonPublic|BindingFlags.Instance)!.SetValue(wizard,true);
         var step=typeof(SetupWizard).GetField("step",BindingFlags.NonPublic|BindingFlags.Instance)!;
         var render=typeof(SetupWizard).GetMethod("Render",BindingFlags.NonPublic|BindingFlags.Instance|BindingFlags.DeclaredOnly)!;
@@ -130,7 +131,15 @@ internal static partial class Program
         speechLater.IsSelected=true;
         var buildSettings=typeof(SetupWizard).GetMethod("BuildSettingsAsync",BindingFlags.NonPublic|BindingFlags.Instance)!;
         var deferred=((System.Threading.Tasks.Task<AppSettings>)buildSettings.Invoke(wizard,[System.Threading.CancellationToken.None])!).GetAwaiter().GetResult();
-        Assert(deferred.SpeechProviderId=="edge" && deferred.SelectedVoice==new AppSettings().SelectedVoice && deferred.FallbackRole is null,
+        Assert(deferred.OverlayInteractionHotkey==new Hotkey(0,0x12),"Wizard defaults overlay interaction to Alt");
+        var overlayKey=typeof(SetupWizard).GetField("overlayHotkey",BindingFlags.NonPublic|BindingFlags.Instance)!;
+        overlayKey.SetValue(wizard,new Hotkey(2,0x4B));
+        var customOverlay=((System.Threading.Tasks.Task<AppSettings>)buildSettings.Invoke(wizard,[System.Threading.CancellationToken.None])!).GetAwaiter().GetResult();
+        Assert(customOverlay.OverlayInteractionHotkey==new Hotkey(2,0x4B),"Wizard saves a custom overlay shortcut");
+        overlayKey.SetValue(wizard,null);
+        var disabledOverlay=((System.Threading.Tasks.Task<AppSettings>)buildSettings.Invoke(wizard,[System.Threading.CancellationToken.None])!).GetAwaiter().GetResult();
+        Assert(disabledOverlay.OverlayInteractionHotkey is null,"Wizard preserves a cleared overlay shortcut");
+        Assert(deferred.SpeechProviderId=="edge" && deferred.SelectedVoice==initial.SelectedVoice && deferred.FallbackRole==initial.FallbackRole,
             "Deferring speech setup preserves existing provider and voice without requiring local voices");
         var customSpeech=new AppSettings { SpeechEnabled=false,SpeechProviderId="openai-compatible",OpenAiVoice="custom" };
         Assert(SetupWizard.ApplyWizardVoice(customSpeech,null,[])==customSpeech,"Deferring preserves custom speech configuration and enabled state");
@@ -171,8 +180,8 @@ internal static partial class Program
         typeof(App).GetProperty(nameof(App.Settings))!.SetValue(app,new AppSettings { Language="en-US",Voice="de-DE-KatjaNeural" });
         var settings=new MainWindow(app);
         var wizardButton=(Button)settings.FindName("SetupWizardButton");
-        Assert(wizardButton.Parent is WrapPanel footer && footer.Children.OfType<Button>().Count()==4 &&
-            footer.Children.OfType<Button>().Any(b=>Equals(b.Content,UiText.T("button.log"))),"Wizard button shares the footer actions row");
+        Assert(wizardButton.Parent is WrapPanel footer && footer.Children.OfType<Button>().Count()==3 &&
+            footer.Children.OfType<Button>().Any(b=>Equals(b.Content,UiText.T("button.save"))),"Wizard button shares the footer actions row");
         Assert(wizardButton.Style==(Style)app.FindResource(typeof(Button)),"Wizard button uses the standard action button style");
         Assert(((ComboBox)settings.FindName("VoiceBox")).SelectedItem is ScreenReader.Speech.SpeechVoice { ShortName:"de-DE-KatjaNeural" },
             "Settings retain a wizard voice whose language differs from recognition");

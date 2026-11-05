@@ -7,7 +7,7 @@ namespace ScreenReader.App;
 public partial class MainWindow
 {
     private readonly Dictionary<string,TranslationProviderSettings> genderProviders=new();
-    private string genderProvider="lmstudio";
+    private string genderProvider="ollama";
     private bool changingGender;
     private CancellationTokenSource? genderModelLoad;
     private void InitializeGender()

@@ -24,11 +24,11 @@ public sealed class SetupWizard : Window
     private IReadOnlyList<SpeechVoice> speechVoices=LanguageCatalog.EdgeVoices;
     private SpeechVoice? selectedSpeechVoice;
     private bool speechCatalogLoaded;
-    private readonly TextBox hotkeyBox=new() { IsReadOnly=true };
+    private readonly TextBox hotkeyBox=new() { IsReadOnly=true },overlayHotkeyBox=new() { IsReadOnly=true };
     private readonly CheckBox translate=new(),overlay=new();
     private readonly ListBoxItem automatic=new(),later=new();
     private readonly OllamaSetupClient ollama=new();
-    private Hotkey? hotkey;
+    private Hotkey? hotkey,overlayHotkey;
     private IReadOnlyList<SpeechVoice> windowsVoices=[];
     private OllamaModelChoice? recommendation;
     private WizardOllamaPlan? ollamaPlan;
@@ -41,7 +41,7 @@ public sealed class SetupWizard : Window
 
     public SetupWizard(App app,AppSettings initial)
     {
-        this.app=app; this.initial=initial; translation=initial.Translation; hotkey=initial.CaptureHotkey;
+        this.app=app; this.initial=initial; translation=initial.Translation; hotkey=initial.CaptureHotkey; overlayHotkey=initial.OverlayInteractionHotkey;
         lifetime=CancellationTokenSource.CreateLinkedTokenSource(app.Lifetime);
         Title=Caption; Width=760; Height=650; MinWidth=620; MinHeight=520;
         WindowStartupLocation=WindowStartupLocation.CenterOwner;
@@ -68,6 +68,10 @@ public sealed class SetupWizard : Window
         hotkeyBox.GotKeyboardFocus+=(_,_)=>app.SetHotkeyEditing(true);
         hotkeyBox.LostKeyboardFocus+=(_,_)=>app.SetHotkeyEditing(false);
         hotkeyBox.PreviewKeyDown+=CaptureKey;
+        overlayHotkeyBox.Text=overlayHotkey?.ToString() ?? UiText.T("hotkey.unassigned");
+        overlayHotkeyBox.GotKeyboardFocus+=(_,_)=>app.SetHotkeyEditing(true);
+        overlayHotkeyBox.LostKeyboardFocus+=(_,_)=>app.SetHotkeyEditing(false);
+        overlayHotkeyBox.PreviewKeyDown+=CaptureKey;
         translate.Content=Text("Переводить распознанный текст","Translate recognized text"); translate.IsChecked=translation.Enabled;
         overlay.Content=Text("Включить оверлей","Enable overlay"); overlay.IsChecked=initial.Overlay.Enabled;
         SetOptionText(automatic,Text("Проверяем Ollama…","Checking Ollama…"));
@@ -144,8 +148,9 @@ public sealed class SetupWizard : Window
         {
             heading.Text=Text("Оверлей поверх экрана","On-screen overlay");
             Field("",overlay);
+            Field(Text("Горячая клавиша взаимодействия с оверлеем","Overlay interaction shortcut"),overlayHotkeyBox);
             Add(Text("Оверлей показывает очередь и управление озвучиванием поверх других окон. Будет использован обычный настольный оверлей WPF.","The overlay shows the queue and playback controls above other windows. The standard WPF desktop overlay will be used."));
-            Add(Text("Удерживайте ALT, чтобы взаимодействовать с оверлеем: нажимать кнопки и перемещать его. Когда ALT отпущен, нажатия проходят в приложение под ним.","Hold ALT to interact with the overlay: click its buttons or move it. Release ALT to pass clicks through to the application below."));
+            Add(Text("Удерживайте выбранную клавишу (по умолчанию Alt), чтобы нажимать кнопки оверлея и перемещать его. Когда клавиша отпущена, нажатия проходят в приложение под ним. Delete или Backspace очищает поле.","Hold the selected shortcut (Alt by default) to click overlay buttons or move it. Release it to pass clicks through to the application below. Delete or Backspace clears the field."));
         }
         else if (step==6)
         {
@@ -245,11 +250,25 @@ public sealed class SetupWizard : Window
         if (e.Key==Key.Tab) return;
         e.Handled=true;
         var key=e.Key==Key.System ? e.SystemKey : e.Key;
-        if (key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt or Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin) return;
-        var mods=Keyboard.Modifiers;
-        uint flags=((mods&ModifierKeys.Alt)!=0 ? 1u:0)|((mods&ModifierKeys.Control)!=0 ? 2u:0)|((mods&ModifierKeys.Shift)!=0 ? 4u:0)|((mods&ModifierKeys.Windows)!=0 ? 8u:0);
-        var candidate=new Hotkey(flags,(uint)KeyInterop.VirtualKeyFromKey(key));
-        try { HotkeyService.Validate(candidate); hotkey=candidate; hotkeyBox.Text=candidate.ToString(); status.Text=""; }
+        bool interaction=sender==overlayHotkeyBox;
+        Hotkey? candidate;
+        if (key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt or Key.LeftShift or Key.RightShift or Key.LWin or Key.RWin)
+        {
+            if (!interaction) return;
+            candidate=new(0,key switch { Key.LeftAlt or Key.RightAlt=>0x12u,Key.LeftCtrl or Key.RightCtrl=>0x11u,Key.LeftShift or Key.RightShift=>0x10u,_=>(uint)KeyInterop.VirtualKeyFromKey(key) });
+        }
+        else
+        {
+            var mods=Keyboard.Modifiers;
+            uint flags=((mods&ModifierKeys.Alt)!=0 ? 1u:0)|((mods&ModifierKeys.Control)!=0 ? 2u:0)|((mods&ModifierKeys.Shift)!=0 ? 4u:0)|((mods&ModifierKeys.Windows)!=0 ? 8u:0);
+            candidate=interaction && flags==0 && key is (Key.Delete or Key.Back) ? null : new Hotkey(flags,(uint)KeyInterop.VirtualKeyFromKey(key));
+        }
+        try
+        {
+            if (candidate is Hotkey value) HotkeyService.Validate(value,interaction);
+            if (interaction) overlayHotkey=candidate; else hotkey=candidate;
+            ((TextBox)sender).Text=candidate?.ToString() ?? UiText.T("hotkey.unassigned"); status.Text="";
+        }
         catch (Exception ex) { status.Text=ex.Message; }
     }
     private async Task CheckOllamaAsync()=>await RunAsync(async token=>
@@ -277,7 +296,7 @@ public sealed class SetupWizard : Window
             {
                 if (hotkey is null) throw new InvalidOperationException(Text("Задайте горячую клавишу.","Choose a shortcut."));
                 if (source.SelectedItem is LanguageChoice { Installed:false }) throw new InvalidOperationException(UiText.T("ocr.missing"));
-                HotkeyService.Validate(initial with { CaptureHotkey=hotkey,OverlayInteractionHotkey=new(0,0x12) });
+                HotkeyService.Validate(initial with { CaptureHotkey=hotkey,OverlayInteractionHotkey=overlayHotkey });
             }
             if (step==3)
             {
@@ -310,6 +329,7 @@ public sealed class SetupWizard : Window
             if (step==5)
             {
                 var settings=await BuildSettingsAsync(token);
+                HotkeyService.Validate(settings);
                 app.SetHotkeyEditing(false); app.ApplySettings(settings); Applied=true;
             }
             step=NextStep(step,translate.IsChecked==true);
@@ -336,7 +356,7 @@ public sealed class SetupWizard : Window
             Language=SelectedLanguage(source),CaptureHotkey=hotkey,
             Translation=translation with { Enabled=translate.IsChecked==true && translation.Enabled,TargetLanguage=SelectedLanguage(target) },
             Overlay=initial.Overlay with { Enabled=overlay.IsChecked==true,Renderer=OverlayRenderer.Desktop },
-            OverlayInteractionHotkey=new(0,0x12)
+            OverlayInteractionHotkey=overlayHotkey
         };
         if (selectedSpeechVoice is null) return settings;
         using var lease=app.Providers.Acquire(initial with { SpeechProviderId="windows" });

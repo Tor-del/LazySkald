@@ -36,7 +36,7 @@ internal static partial class Program
         }
         var old=JsonSerializer.Deserialize<AppSettings>("{\"Voice\":\"legacy-voice\"}")!;
         Assert(old.OcrProviderId=="windows" && !old.Genderization.Enabled && old.VoiceFor(SpeakerGender.Male)=="legacy-voice","Legacy settings default to Windows OCR and disabled genderization with original voice");
-        var settingsWithRoles=new AppSettings { SpeechProviderId="roles-test",ProviderVoices=new() { ["roles-test"]="neutral" },FemaleProviderVoices=new() { ["roles-test"]="female-voice" },MaleProviderVoices=new() { ["roles-test"]="male-voice" },Translation=new() { Enabled=true },Genderization=new() { Enabled=true,Providers=new() { ["lmstudio"]=new() { BaseUrl="http://localhost/v1",Model="gender-model" } } } };
+        var settingsWithRoles=new AppSettings { SpeechProviderId="roles-test",ProviderVoices=new() { ["roles-test"]="neutral" },FemaleProviderVoices=new() { ["roles-test"]="female-voice" },MaleProviderVoices=new() { ["roles-test"]="male-voice" },Translation=new() { Enabled=true },Genderization=new() { Enabled=true,Provider="lmstudio",Providers=new() { ["lmstudio"]=new() { BaseUrl="http://localhost/v1",Model="gender-model" } } } };
         var restored=JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(settingsWithRoles))!;
         Assert(restored.VoiceFor(SpeakerGender.Female)=="female-voice" && restored.VoiceFor(SpeakerGender.Male)=="male-voice" && restored.Genderization.Selected.Model=="gender-model","Role voices and gender configuration round-trip through JSON");
         using var registry=new SpeechProviderRegistry(); using var capture=new BlockedCapture();
