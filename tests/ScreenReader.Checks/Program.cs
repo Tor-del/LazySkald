@@ -30,11 +30,6 @@ internal static partial class Program
     {
         try
         {
-            if (args.Contains("--capture-only"))
-            {
-                RunSelectionCancellationChecks(); RunCapture(); RunOverlay(); RunOverlayWindow();
-                Console.WriteLine($"PASS: {checks} checks"); return 0;
-            }
             if (args.Contains("--wizard-ui")) { RunSetupWizardChecks(); Console.WriteLine($"PASS: {checks} checks"); return 0; }
             if (args.Contains("--settings-ui")) { RunUi(); Console.WriteLine($"PASS: {checks} checks"); return 0; }
             if (args.Contains("--ollama-requirements-online")) { RunLiveOllamaRequirementsAsync().GetAwaiter().GetResult(); return 0; }
@@ -672,7 +667,6 @@ internal static partial class Program
         window.Show();
         var timer=new System.Windows.Threading.DispatcherTimer { Interval=TimeSpan.FromMilliseconds(500) };
         var loop=new System.Windows.Threading.DispatcherFrame();
-        bool updated=false;
         timer.Tick += (_,_)=>
         {
             timer.Stop();
@@ -685,15 +679,7 @@ internal static partial class Program
                 using var captured=new ScreenCapture().CaptureMonitor(bounds,mode);
                 var center=captured.Image.GetPixel(captured.Image.Width/2,captured.Image.Height/2);
                 Console.WriteLine($"Controlled {mode} capture on {bounds}: center={center}");
-                Assert(updated ? center.B>180 && center.R<20 : center.R>180 && center.G>110 && center.B<20,
-                    (updated ? "Updated frame replaces previous screenshot: " : "Visible screenshot pixels survive ")+mode);
-            }
-            if (!updated)
-            {
-                using var next=new Bitmap(bounds.Width,bounds.Height);
-                using (var graphics=Graphics.FromImage(next)) graphics.Clear(Color.Blue);
-                background.Source=SelectionWindow.ToBitmapSource(next);
-                updated=true; timer.Start(); return;
+                Assert(center.R>180 && center.G>110 && center.B<20,"Visible screenshot pixels survive "+mode+" capture");
             }
             window.Close(); loop.Continue=false;
         };

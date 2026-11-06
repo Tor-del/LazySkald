@@ -46,7 +46,6 @@ public sealed class ScreenCapture : IScreenCapture
     }
     private static unsafe Bitmap CaptureDxgi(Rectangle bounds)
     {
-        long requestedAt=System.Diagnostics.Stopwatch.GetTimestamp();
         using var factory = CreateDXGIFactory1<IDXGIFactory1>();
         for (uint ai = 0; factory.EnumAdapters1(ai,out var adapter).Success; ai++)
         {
@@ -63,78 +62,59 @@ public sealed class ScreenCapture : IScreenCapture
                     using (var output1 = output.QueryInterface<IDXGIOutput1>())
                     using (var duplication = output1.DuplicateOutput(device))
                     {
-                        // A new duplication can initially return an older desktop image.
-                        // Retain it for static desktops, but wait briefly for a presentation
-                        // at or after this request. LastPresentTime uses the QPC clock.
+                        // The first notification can contain only cursor metadata. Its texture
+                        // is not a desktop image (LastPresentTime == 0) and can be all zeroes.
                         var acquisition=System.Diagnostics.Stopwatch.StartNew();
-                        Bitmap? latest=null;
+                        IDXGIResource resource;
+                        while (true)
+                        {
+                            uint remaining=(uint)Math.Max(1,800-acquisition.ElapsedMilliseconds);
+                            duplication.AcquireNextFrame(remaining,out var frameInfo,out resource).CheckError();
+                            if (frameInfo.LastPresentTime!=0) break;
+                            resource.Dispose(); duplication.ReleaseFrame();
+                            if (acquisition.ElapsedMilliseconds>=800) throw new TimeoutException(UiText.T("capture.noFrame"));
+                        }
                         try
                         {
-                            while (acquisition.ElapsedMilliseconds<800)
+                            using (resource)
+                            using (var texture = resource.QueryInterface<ID3D11Texture2D>())
                             {
-                                uint remaining=(uint)Math.Max(1,800-acquisition.ElapsedMilliseconds);
-                                if (latest is not null) remaining=Math.Min(remaining,100u);
-                                var result=duplication.AcquireNextFrame(remaining,out var frameInfo,out var resource);
-                                if (result.Code==unchecked((int)0x887A0027) && latest is not null) break; // DXGI_ERROR_WAIT_TIMEOUT
-                                result.CheckError();
+                                var textureDesc = texture.Description;
+                                textureDesc.Usage = ResourceUsage.Staging;
+                                textureDesc.BindFlags = BindFlags.None;
+                                textureDesc.CPUAccessFlags = CpuAccessFlags.Read;
+                                textureDesc.MiscFlags = ResourceOptionFlags.None;
+                                using var staging = device.CreateTexture2D(textureDesc);
+                                context.CopyResource(staging,texture);
+                                var mapped = context.Map(staging,0,MapMode.Read,Vortice.Direct3D11.MapFlags.None);
+                                var bitmap = new Bitmap((int)textureDesc.Width,(int)textureDesc.Height,PixelFormat.Format32bppArgb);
                                 try
                                 {
-                                    using (resource)
+                                    var locked = bitmap.LockBits(new Rectangle(0,0,bitmap.Width,bitmap.Height),ImageLockMode.WriteOnly,PixelFormat.Format32bppArgb);
+                                    try
                                     {
-                                        // Pointer-only notifications have no desktop image.
-                                        if (frameInfo.LastPresentTime==0) continue;
-                                        var next=ReadDesktopFrame(device,context,resource,desc.Rotation,bounds);
-                                        latest?.Dispose(); latest=next;
+                                        for (int y=0; y<bitmap.Height; y++)
+                                            Buffer.MemoryCopy((byte*)mapped.DataPointer+y*mapped.RowPitch,(byte*)locked.Scan0+y*locked.Stride,locked.Stride,bitmap.Width*4);
                                     }
+                                    finally { bitmap.UnlockBits(locked); }
+                                    switch (desc.Rotation)
+                                    {
+                                        case ModeRotation.Rotate90: bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone); break;
+                                        case ModeRotation.Rotate180: bitmap.RotateFlip(RotateFlipType.Rotate180FlipNone); break;
+                                        case ModeRotation.Rotate270: bitmap.RotateFlip(RotateFlipType.Rotate270FlipNone); break;
+                                    }
+                                    if (bitmap.Size != bounds.Size) throw new InvalidOperationException(UiText.T("capture.size")+$" ({bitmap.Width}×{bitmap.Height}; {bounds.Width}×{bounds.Height})");
+                                    return bitmap;
                                 }
-                                finally { duplication.ReleaseFrame(); }
-                                if (frameInfo.LastPresentTime>=requestedAt) break;
+                                catch { bitmap.Dispose(); throw; }
+                                finally { context.Unmap(staging,0); }
                             }
-                            if (latest is null) throw new TimeoutException(UiText.T("capture.noFrame"));
-                            var captured=latest; latest=null;
-                            return captured;
                         }
-                        finally { latest?.Dispose(); }
+                        finally { duplication.ReleaseFrame(); }
                     }
                 }
             }
         }
         throw new InvalidOperationException(UiText.T("capture.noMonitor"));
-    }
-    private static unsafe Bitmap ReadDesktopFrame(ID3D11Device device,ID3D11DeviceContext context,
-        IDXGIResource resource,ModeRotation rotation,Rectangle bounds)
-    {
-        using (var texture = resource.QueryInterface<ID3D11Texture2D>())
-        {
-            var textureDesc = texture.Description;
-            textureDesc.Usage = ResourceUsage.Staging;
-            textureDesc.BindFlags = BindFlags.None;
-            textureDesc.CPUAccessFlags = CpuAccessFlags.Read;
-            textureDesc.MiscFlags = ResourceOptionFlags.None;
-            using var staging = device.CreateTexture2D(textureDesc);
-            context.CopyResource(staging,texture);
-            var mapped = context.Map(staging,0,MapMode.Read,Vortice.Direct3D11.MapFlags.None);
-            var bitmap = new Bitmap((int)textureDesc.Width,(int)textureDesc.Height,PixelFormat.Format32bppArgb);
-            try
-            {
-                var locked = bitmap.LockBits(new Rectangle(0,0,bitmap.Width,bitmap.Height),ImageLockMode.WriteOnly,PixelFormat.Format32bppArgb);
-                try
-                {
-                    for (int y=0; y<bitmap.Height; y++)
-                        Buffer.MemoryCopy((byte*)mapped.DataPointer+y*mapped.RowPitch,(byte*)locked.Scan0+y*locked.Stride,locked.Stride,bitmap.Width*4);
-                }
-                finally { bitmap.UnlockBits(locked); }
-                switch (rotation)
-                {
-                    case ModeRotation.Rotate90: bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone); break;
-                    case ModeRotation.Rotate180: bitmap.RotateFlip(RotateFlipType.Rotate180FlipNone); break;
-                    case ModeRotation.Rotate270: bitmap.RotateFlip(RotateFlipType.Rotate270FlipNone); break;
-                }
-                if (bitmap.Size != bounds.Size) throw new InvalidOperationException(UiText.T("capture.size")+$" ({bitmap.Width}×{bitmap.Height}; {bounds.Width}×{bounds.Height})");
-                return bitmap;
-            }
-            catch { bitmap.Dispose(); throw; }
-            finally { context.Unmap(staging,0); }
-        }
     }
 }

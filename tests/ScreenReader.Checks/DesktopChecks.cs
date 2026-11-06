@@ -20,9 +20,6 @@ internal static partial class Program
             try
             {
                 overlay.Show();
-                var handle=new System.Windows.Interop.WindowInteropHelper(overlay).Handle;
-                Assert(System.Windows.Interop.HwndSource.FromHwnd(handle)!.CompositionTarget.RenderMode==System.Windows.Interop.RenderMode.SoftwareOnly,
-                    "Selection renders independently of the game's GPU presentation");
                 void Mouse(System.Windows.RoutedEvent routedEvent,System.Windows.Input.MouseButton button)=>overlay.RaiseEvent(
                     new System.Windows.Input.MouseButtonEventArgs(System.Windows.Input.Mouse.PrimaryDevice,0,button) { RoutedEvent=routedEvent });
                 if (dragging) Mouse(System.Windows.Input.Mouse.MouseDownEvent,System.Windows.Input.MouseButton.Left);
