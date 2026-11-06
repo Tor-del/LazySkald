@@ -30,6 +30,11 @@ internal static partial class Program
     {
         try
         {
+            if (args.Contains("--capture-only"))
+            {
+                RunSelectionCancellationChecks(); RunCapture(); RunOverlay(); RunOverlayWindow();
+                Console.WriteLine($"PASS: {checks} checks"); return 0;
+            }
             if (args.Contains("--wizard-ui")) { RunSetupWizardChecks(); Console.WriteLine($"PASS: {checks} checks"); return 0; }
             if (args.Contains("--settings-ui")) { RunUi(); Console.WriteLine($"PASS: {checks} checks"); return 0; }
             if (args.Contains("--ollama-requirements-online")) { RunLiveOllamaRequirementsAsync().GetAwaiter().GetResult(); return 0; }
@@ -41,7 +46,6 @@ internal static partial class Program
             RunSpeechFallbackChecksAsync().GetAwaiter().GetResult();
             RunTranslationChecksAsync().GetAwaiter().GetResult();
             RunTranslationCorrectionChecksAsync().GetAwaiter().GetResult();
-            RunGenderizationChecksAsync().GetAwaiter().GetResult();
             RunHotkeyChecks();
             RunSelectionCancellationChecks();
             RunQueueChecksAsync().GetAwaiter().GetResult();
@@ -269,7 +273,26 @@ internal static partial class Program
         var settings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(settings.SelectedVoice=="custom-ui-voice" && settings.OpenAiEndpoint=="http://127.0.0.1:9876/v1/audio/speech" && SecretProtection.Unprotect(settings.OpenAiApiKeyProtected)=="fake-ui-secret","Server settings round-trip from UI with encrypted key");
         var tabs=(System.Windows.Controls.TabControl)window.FindName("MainTabs");
-        Assert(tabs.Items.Count==14,"Settings include overlay, text correction, translation correction and help tabs");
+        Assert(tabs.Items.Count==13,"Settings include overlay, text correction, translation correction and help tabs");
+        var overlayTranslation=(System.Windows.Controls.CheckBox)window.FindName("OverlayTranslationBox");
+        var overlayAutoAdvance=(System.Windows.Controls.CheckBox)window.FindName("OverlayAutoAdvanceBox");
+        // Select the containing tab so ElementName bindings have an active visual tree.
+        tabs.SelectedItem=tabs.Items.Cast<System.Windows.Controls.TabItem>().First(tab=>
+            tab.Tag?.ToString()=="\uE7F4");
+        content.UpdateLayout();
+        Assert(overlayAutoAdvance.IsChecked==true && overlayAutoAdvance.Visibility==System.Windows.Visibility.Collapsed,
+            "Automatic advance defaults to enabled and is hidden without translation display");
+        overlayTranslation.IsChecked=true; content.UpdateLayout();
+        Assert(overlayAutoAdvance.Visibility==System.Windows.Visibility.Visible,"Translation display reveals automatic advance");
+        overlayAutoAdvance.IsChecked=false;
+        overlayTranslation.IsChecked=false; content.UpdateLayout();
+        Assert(overlayAutoAdvance.Visibility==System.Windows.Visibility.Collapsed && !((AppSettings)typeof(MainWindow)
+            .GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!).Overlay.AutoAdvance,
+            "Hidden automatic advance preserves and saves the disabled choice");
+        overlayTranslation.IsChecked=true; content.UpdateLayout();
+        Assert(overlayAutoAdvance.Visibility==System.Windows.Visibility.Visible && overlayAutoAdvance.IsChecked==false,
+            "Re-enabling translation display preserves automatic advance choice");
+        overlayTranslation.IsChecked=false; overlayAutoAdvance.IsChecked=true;
         var translationCorrections=(System.Windows.Controls.CheckBox)window.FindName("TranslationCorrectionsEnabledBox");
         var glossaryList=(System.Windows.Controls.ListBox)window.FindName("TranslationCorrectionsList");
         var glossarySource=(System.Windows.Controls.TextBox)window.FindName("TranslationSourceBox");
@@ -372,8 +395,8 @@ internal static partial class Program
         string selectedDevice=((AudioOutputChoice)devices.SelectedItem).Id;
         var uiLanguage=(System.Windows.Controls.ComboBox)window.FindName("UiLanguageBox");
         uiLanguage.SelectedItem=((System.Collections.Generic.IEnumerable<UiLanguageChoice>)uiLanguage.ItemsSource).First(l=>l.Id=="en");
-        Assert(((System.Windows.Controls.TabItem)tabs.Items[0]).Header.ToString()=="Recognition" && ((System.Windows.Controls.TabItem)tabs.Items[1]).Header.ToString()=="Text correction" && ((System.Windows.Controls.TabItem)tabs.Items[12]).Header.ToString()=="Application","English localization updates tab headers immediately");
-        Assert(((System.Windows.Controls.TabItem)tabs.Items[13]).Header.ToString()=="How to use" && helpCapture.Text==UiText.T("help.capture","Ctrl + Alt + R"),"Help header and shortcut instructions follow language changes");
+        Assert(((System.Windows.Controls.TabItem)tabs.Items[0]).Header.ToString()=="Recognition" && ((System.Windows.Controls.TabItem)tabs.Items[1]).Header.ToString()=="Text correction" && ((System.Windows.Controls.TabItem)tabs.Items[11]).Header.ToString()=="Application","English localization updates tab headers immediately");
+        Assert(((System.Windows.Controls.TabItem)tabs.Items[12]).Header.ToString()=="How to use" && helpCapture.Text==UiText.T("help.capture","Ctrl + Alt + R"),"Help header and shortcut instructions follow language changes");
         Assert(((AudioOutputChoice)devices.SelectedItem).Id==selectedDevice && voiceBox.Text=="custom-ui-voice","Changing UI language preserves device and provider settings");
         var englishSettings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(englishSettings.UiLanguage=="en" && englishSettings.AudioOutputDeviceId==selectedDevice,"Interface language and playback device are included in saved settings");
@@ -391,9 +414,9 @@ internal static partial class Program
         ((System.Windows.Controls.CheckBox)window.FindName("TranslateEnabledBox")).IsChecked=true;
         var translatedSettings=(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
         Assert(translatedSettings.Translation.Enabled && translatedSettings.Translation.Selected.Model=="lm-model" && SecretProtection.Unprotect(translatedSettings.Translation.Selected.ApiKeyProtected)=="llm-test-key" && translatedSettings.Translation.Providers["ollama"].Model=="ollama-model","Translation UI saves provider profiles with encrypted keys");
-        Assert(tabs.Items.Cast<System.Windows.Controls.TabItem>().Select(t=>t.Header.ToString()).SequenceEqual(new[] { "Recognition","Text correction","Translation","Translation correction","Genderization","Speech","Checks","Cache","Queue","Overlay","Controls","Ollama","Application","How to use" }),"Tabs follow pipeline order with help at the end");
+        Assert(tabs.Items.Cast<System.Windows.Controls.TabItem>().Select(t=>t.Header.ToString()).SequenceEqual(new[] { "Recognition","Text correction","Translation","Translation correction","Speech","Checks","Cache","Queue","Overlay","Controls","Ollama","Application","How to use" }),"Tabs follow pipeline order with help at the end");
         Assert(((System.Windows.Controls.ComboBox)window.FindName("OcrProviderBox")).SelectedItem is OcrProviderChoice { Id:"windows" },"Recognition defaults to Windows OCR");
-        var genderEnabled=(System.Windows.Controls.CheckBox)window.FindName("GenderEnabledBox");
+        Assert(new[] { "GenderEnabledBox","GenderPreview","AddFemaleRoleButton","AddMaleRoleButton" }.All(name=>window.FindName(name) is null),"Gender detection and gender-specific role controls are removed");
         var roleList=(System.Windows.Controls.ListBox)window.FindName("SpeechRolesBox");
         var rolePanel=(System.Windows.Controls.StackPanel)window.FindName("RoleVoicesPanel");
         var rate=(System.Windows.Controls.Slider)window.FindName("RateSlider");
@@ -401,18 +424,18 @@ internal static partial class Program
         var ttsModel=(System.Windows.Controls.TextBox)window.FindName("ModelBox");
         var ttsKey=(System.Windows.Controls.PasswordBox)window.FindName("ApiKeyBox");
         void Click(string name)=>((System.Windows.Controls.Button)window.FindName(name)).RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
-        void SelectRole(SpeakerGender gender)=>roleList.SelectedItem=roleList.Items.Cast<SpeechRoleChoice>().First(r=>r.Gender==gender);
+        void SelectRole(SpeechProfile profile)=>roleList.SelectedItem=roleList.Items.Cast<SpeechRoleChoice>().First(r=>r.Profile==profile);
         AppSettings ReadUi()=>(AppSettings)typeof(MainWindow).GetMethod("ReadControls",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)!.Invoke(window,null)!;
-        Assert(rolePanel.Visibility==System.Windows.Visibility.Visible && roleList.Items.Count==1,"Default and optional fallback are accessible without genderization");
+        Assert(rolePanel.Visibility==System.Windows.Visibility.Visible && roleList.Items.Count==1,"Default and optional fallback are accessible");
         var volume=(System.Windows.Controls.Slider)window.FindName("VolumeSlider");
         volume.Value=73;
         Click("AddFallbackRoleButton"); volume.Value=31;
         voiceBox.Text="fallback-ui";
         var fallbackSettings=ReadUi();
         Assert(fallbackSettings.VolumePercent==73 && fallbackSettings.FallbackRole is { VolumePercent:31 },"UI keeps fallback and primary volume independent");
-        SelectRole(SpeakerGender.Unknown);
+        SelectRole(SpeechProfile.Default);
         Assert(volume.Value==73,"Switching profiles restores voice volume");
-        roleList.SelectedItem=roleList.Items.Cast<SpeechRoleChoice>().First(r=>r.Gender!=(SpeakerGender)0);
+        roleList.SelectedItem=roleList.Items.Cast<SpeechRoleChoice>().First(r=>r.Profile!=SpeechProfile.Default);
         Click("RemoveRoleButton");
         Assert(ReadUi().FallbackRole is null,"Removing fallback disables it");
         ((System.Windows.Controls.CheckBox)window.FindName("ExclusiveHotkeysBox")).IsChecked=false;
@@ -430,47 +453,6 @@ internal static partial class Program
         exclusiveBox.IsChecked=false; content.UpdateLayout();
         Assert(modePanel.Visibility==System.Windows.Visibility.Visible && hotkeyMode.SelectedItem is HotkeyModeChoice { Mode:HotkeyMode.Registered } && ReadUi().HotkeyMode==HotkeyMode.Registered,"Disabling exclusive interception restores the previously selected mode");
 
-        genderEnabled.IsChecked=true;
-        Assert(rolePanel.Visibility==System.Windows.Visibility.Visible && roleList.Items.Count==1,"Genderization exposes default role and add buttons");
-        var genderModel=(System.Windows.Controls.ComboBox)window.FindName("GenderModelBox");
-        var genderKey=(System.Windows.Controls.PasswordBox)window.FindName("GenderKeyBox");
-        var genderProvider=(System.Windows.Controls.ComboBox)window.FindName("GenderProviderBox");
-        Assert(genderProvider.SelectedItem is TranslationProviderChoice { Id:"ollama" },"Genderization UI defaults to Ollama");
-        genderProvider.SelectedIndex=1;
-        Assert(genderProvider.Items[0] is TranslationProviderChoice { Id:"ollama" },"Ollama is first in gender providers");
-        genderModel.Text="gender-lm"; genderKey.Password="gender-key";
-        genderProvider.SelectedIndex=0; genderModel.Text="gender-ollama"; genderProvider.SelectedIndex=1;
-        Assert(genderModel.Text=="gender-lm" && genderKey.Password=="gender-key" && llmModel.Text=="lm-model","Gender LLM profiles are preserved independently of translation");
-        Click("AddFemaleRoleButton");
-        Assert(roleList.Items.Count==2 && !((System.Windows.Controls.Button)window.FindName("AddFemaleRoleButton")).IsEnabled,"Adding female role selects a single independent profile");
-        providerBox.SelectedItem=app.Providers.Definitions.First(p=>p.Id=="windows");
-        voiceBox.SelectedItem=voiceBox.Items.Cast<SpeechVoice>().First(v=>v.Gender=="Female");
-        string femaleVoice=((SpeechVoice)voiceBox.SelectedItem).ShortName;
-        rate.Value=15;
-        Click("AddMaleRoleButton");
-        Assert(providerBox.SelectedItem is SpeechProviderDefinition { Id:"openai-compatible" } && voiceBox.Text=="custom-ui-voice","New male role starts from default settings rather than female settings");
-        voiceBox.Text="custom-male"; rate.Value=-10;
-        endpoint.Text="http://localhost:8765/v1/audio/speech"; ttsModel.Text="male-model"; ttsKey.Password="male-key";
-        ((System.Windows.Controls.ComboBox)window.FindName("AudioFormatBox")).SelectedIndex=1;
-        SelectRole(SpeakerGender.Female);
-        Assert(providerBox.SelectedItem is SpeechProviderDefinition { Id:"windows" } && ((SpeechVoice)voiceBox.SelectedItem).ShortName==femaleVoice && rate.Value==15,"Female role restores its own provider, voice and rate");
-        SelectRole(SpeakerGender.Unknown);
-        Assert(providerBox.SelectedItem is SpeechProviderDefinition { Id:"openai-compatible" } && voiceBox.Text=="custom-ui-voice" && rate.Value==0 && endpoint.Text=="http://127.0.0.1:9876/v1/audio/speech" && ttsKey.Password=="fake-ui-secret","Default profile is unchanged by role edits");
-        SelectRole(SpeakerGender.Male);
-        Assert(voiceBox.Text=="custom-male" && rate.Value==-10 && endpoint.Text=="http://localhost:8765/v1/audio/speech" && ttsKey.Password=="male-key","Male role preserves independent server credentials, voice and rate");
-        genderEnabled.IsChecked=false;
-        Assert(rolePanel.Visibility==System.Windows.Visibility.Visible && roleList.Items.Count==1 && voiceBox.Text=="custom-ui-voice","Disabling genderization restores default profile in the editor");
-        genderEnabled.IsChecked=true; SelectRole(SpeakerGender.Male);
-        Assert(voiceBox.Text=="custom-male" && roleList.Items.Count==3,"Gender profiles survive disabling and re-enabling");
-        var rolesSettings=ReadUi();
-        Assert(rolesSettings.SpeechProviderId=="openai-compatible" && rolesSettings.SelectedVoice=="custom-ui-voice" && rolesSettings.FemaleRole is { ProviderId:"windows",RatePercent:15 } && rolesSettings.MaleRole is { Model:"male-model",Format:SpeechAudioFormat.Wave,RatePercent:-10 } && SecretProtection.Unprotect(rolesSettings.MaleRole.ApiKeyProtected)=="male-key","Saving while editing a role preserves default and independent complete profiles");
-        Assert(rolesSettings.Genderization.Enabled && rolesSettings.Genderization.Providers["ollama"].Model=="gender-ollama" && SecretProtection.Unprotect(rolesSettings.Genderization.Selected.ApiKeyProtected)=="gender-key","UI still saves independent gender LLM profiles and encrypted key");
-        SelectRole(SpeakerGender.Female); Click("RemoveRoleButton");
-        var removedSettings=ReadUi();
-        Assert(roleList.Items.Count==2 && removedSettings.FemaleRole is null && removedSettings.RoleFor(SpeakerGender.Female) is null && removedSettings.VoiceFor(SpeakerGender.Female)=="custom-ui-voice","Removing a role falls back to default without reviving legacy voice settings");
-        Click("AddFemaleRoleButton");
-        providerBox.SelectedItem=app.Providers.Definitions.First(p=>p.Id=="windows");
-        SelectRole(SpeakerGender.Male);
         ((System.Windows.Controls.ListBox)window.FindName("CacheList")).ItemsSource=new[]
         {
             new CachedReadingInfo(new string('A',64),"Я вернулась домой. В окне ещё горел свет.","I came home. The light was still on in the window.",DateTimeOffset.Now,245760),
@@ -556,7 +538,7 @@ internal static partial class Program
         ClickModelUse("translategemma:4b");
         var ollamaSettings=ReadUi();
         Assert(ollamaSettings.Translation.Enabled && ollamaSettings.Translation.Provider=="ollama" && ollamaSettings.Translation.Selected.Model=="translategemma:4b" && ollamaSettings.Translation.Selected.BaseUrl==OllamaSetupClient.BaseUrl,"A model card configures the local Ollama provider and enables translation");
-        Assert(ollamaSettings.Translation.Providers["lmstudio"].Model=="lm-model" && ollamaSettings.Genderization.Providers["ollama"].Model=="gender-ollama","Model selection preserves other provider and gender profiles");
+        Assert(ollamaSettings.Translation.Providers["lmstudio"].Model=="lm-model","Model selection preserves other provider profiles");
         Assert(ollamaModels.Items.Cast<OllamaModelRow>().Single(r=>r.Tag=="translategemma:4b").Status==UiText.T("ollama.modelInUse"),"The configured translation model is marked as in use");
         for (int tab=0; tab<tabs.Items.Count; tab++)
         {
@@ -571,7 +553,6 @@ internal static partial class Program
         }
         string currentVoice=voiceBox.Text,currentEndpoint=endpoint.Text,targetLocale=targetLanguages.Text;
         string sourceLocale=((LanguageChoice)ocrLanguages.SelectedItem).Tag;
-        window.SetGender(SpeakerGender.Female);
         foreach (var locale in UiText.Languages.Where(l=>l.Id is not ("ru" or "en")))
         {
             uiLanguage.SelectedItem=locale;
@@ -587,14 +568,12 @@ internal static partial class Program
                 "Language choices are localized: "+locale.Id);
             Assert(((System.Windows.Controls.TextBlock)window.FindName("OllamaProgressText")).Text==UiText.T("ollama.applied","translategemma:4b"),
                 "Existing Ollama progress is localized: "+locale.Id);
-            Assert(((System.Windows.Controls.TextBlock)window.FindName("GenderPreview")).Text==UiText.T("gender.result",UiText.T("gender.female")),
-                "Existing narrator gender is localized: "+locale.Id);
             for (int tab=0;tab<tabs.Items.Count;tab++)
             {
                 tabs.SelectedIndex=tab; content.UpdateLayout();
                 var host=(System.Windows.Controls.ContentPresenter)tabs.Template.FindName("PART_SelectedContentHost",tabs);
                 var page=(System.Windows.FrameworkElement)((System.Windows.Controls.TabItem)tabs.Items[tab]).Content;
-                if (tab==5)
+                if (tab==4)
                 {
                     System.Collections.Generic.IEnumerable<System.Windows.DependencyObject> Visuals(System.Windows.DependencyObject node)
                     {
@@ -693,6 +672,7 @@ internal static partial class Program
         window.Show();
         var timer=new System.Windows.Threading.DispatcherTimer { Interval=TimeSpan.FromMilliseconds(500) };
         var loop=new System.Windows.Threading.DispatcherFrame();
+        bool updated=false;
         timer.Tick += (_,_)=>
         {
             timer.Stop();
@@ -705,7 +685,15 @@ internal static partial class Program
                 using var captured=new ScreenCapture().CaptureMonitor(bounds,mode);
                 var center=captured.Image.GetPixel(captured.Image.Width/2,captured.Image.Height/2);
                 Console.WriteLine($"Controlled {mode} capture on {bounds}: center={center}");
-                Assert(center.R>180 && center.G>110 && center.B<20,"Visible screenshot pixels survive "+mode+" capture");
+                Assert(updated ? center.B>180 && center.R<20 : center.R>180 && center.G>110 && center.B<20,
+                    (updated ? "Updated frame replaces previous screenshot: " : "Visible screenshot pixels survive ")+mode);
+            }
+            if (!updated)
+            {
+                using var next=new Bitmap(bounds.Width,bounds.Height);
+                using (var graphics=Graphics.FromImage(next)) graphics.Clear(Color.Blue);
+                background.Source=SelectionWindow.ToBitmapSource(next);
+                updated=true; timer.Start(); return;
             }
             window.Close(); loop.Continue=false;
         };

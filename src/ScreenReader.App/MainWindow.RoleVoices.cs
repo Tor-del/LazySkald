@@ -3,32 +3,25 @@ using System.Windows.Controls;
 
 namespace ScreenReader.App;
 
-public sealed record SpeechRoleChoice(SpeakerGender Gender,string Name);
+public enum SpeechProfile { Default, Fallback }
+public sealed record SpeechRoleChoice(SpeechProfile Profile,string Name);
 
 public partial class MainWindow
 {
-    private readonly Dictionary<SpeakerGender,SpeechRoleSettings> speechRoles=new();
-    private const SpeakerGender FallbackRole=(SpeakerGender)3;
-    private SpeakerGender editingRole=SpeakerGender.Unknown;
+    private readonly Dictionary<SpeechProfile,SpeechRoleSettings> speechRoles=new();
+    private const SpeechProfile FallbackRole=SpeechProfile.Fallback;
+    private SpeechProfile editingRole=SpeechProfile.Default;
     private bool changingRoleList;
 
-    private SpeakerGender? previewGender;
-    public void SetGender(SpeakerGender gender)
+    private static string RoleName(SpeechProfile role)=>UiText.T(role switch
     {
-        previewGender=gender;
-        GenderPreview.Text=UiText.T("gender.result",UiText.T("gender."+gender.ToString().ToLowerInvariant()));
-    }
-    private static string RoleName(SpeakerGender role)=>UiText.T(role switch
-    {
-        FallbackRole=>"speech.fallbackRole",SpeakerGender.Female=>"speech.femaleRole",SpeakerGender.Male=>"speech.maleRole",_=>"speech.defaultRole"
+        FallbackRole=>"speech.fallbackRole",_=>"speech.defaultRole"
     });
 
     private void InitializeSpeechRoles()
     {
-        speechRoles[SpeakerGender.Unknown]=SpeechRoleSettings.From(draft);
+        speechRoles[SpeechProfile.Default]=SpeechRoleSettings.From(draft);
         if (draft.FallbackRole is { } fallback) speechRoles[FallbackRole]=fallback;
-        if (draft.RoleFor(SpeakerGender.Female) is { } female) speechRoles[SpeakerGender.Female]=female;
-        if (draft.RoleFor(SpeakerGender.Male) is { } male) speechRoles[SpeakerGender.Male]=male;
         RefreshSpeechRoleList();
     }
 
@@ -57,22 +50,18 @@ public partial class MainWindow
         changingRoleList=true;
         try
         {
-            bool enabled=GenderEnabledBox.IsChecked==true;
             RoleVoicesPanel.Visibility=Visibility.Visible;
-            AddFemaleRoleButton.Visibility=AddMaleRoleButton.Visibility=enabled ? Visibility.Visible : Visibility.Collapsed;
             AddFallbackRoleButton.IsEnabled=!speechRoles.ContainsKey(FallbackRole);
-            SpeechRolesBox.ItemsSource=new[] { SpeakerGender.Unknown,SpeakerGender.Female,SpeakerGender.Male,FallbackRole }
-                .Where(g=>speechRoles.ContainsKey(g) && (enabled || g is SpeakerGender.Unknown or FallbackRole)).Select(g=>new SpeechRoleChoice(g,RoleName(g))).ToArray();
-            SpeechRolesBox.SelectedItem=SpeechRolesBox.Items.Cast<SpeechRoleChoice>().FirstOrDefault(r=>r.Gender==editingRole);
-            AddFemaleRoleButton.IsEnabled=!speechRoles.ContainsKey(SpeakerGender.Female);
-            AddMaleRoleButton.IsEnabled=!speechRoles.ContainsKey(SpeakerGender.Male);
-            RemoveRoleButton.IsEnabled=editingRole!=SpeakerGender.Unknown;
+            SpeechRolesBox.ItemsSource=new[] { SpeechProfile.Default,FallbackRole }
+                .Where(g=>speechRoles.ContainsKey(g)).Select(g=>new SpeechRoleChoice(g,RoleName(g))).ToArray();
+            SpeechRolesBox.SelectedItem=SpeechRolesBox.Items.Cast<SpeechRoleChoice>().FirstOrDefault(r=>r.Profile==editingRole);
+            RemoveRoleButton.IsEnabled=editingRole!=SpeechProfile.Default;
             SpeechRoleHeading.Text=RoleName(editingRole);
         }
         finally { changingRoleList=false; }
     }
 
-    private void SwitchSpeechRole(SpeakerGender role)
+    private void SwitchSpeechRole(SpeechProfile role)
     {
         if (role==editingRole) return;
         SaveSpeechEditor();
@@ -102,32 +91,23 @@ public partial class MainWindow
     private void SpeechRoleChanged(object sender,SelectionChangedEventArgs e)
     {
         if (!initialized || changingRoleList || SpeechRolesBox.SelectedItem is not SpeechRoleChoice role) return;
-        SwitchSpeechRole(role.Gender);
+        SwitchSpeechRole(role.Profile);
     }
     private void AddFallbackRole(object sender,RoutedEventArgs e)=>AddSpeechRole(FallbackRole);
-    private void AddFemaleRole(object sender,RoutedEventArgs e)=>AddSpeechRole(SpeakerGender.Female);
-    private void AddMaleRole(object sender,RoutedEventArgs e)=>AddSpeechRole(SpeakerGender.Male);
-    private void AddSpeechRole(SpeakerGender gender)
+    private void AddSpeechRole(SpeechProfile profile)
     {
-        if ((gender!=FallbackRole && GenderEnabledBox.IsChecked!=true) || speechRoles.ContainsKey(gender)) return;
+        if (profile!=FallbackRole || speechRoles.ContainsKey(profile)) return;
         SaveSpeechEditor();
-        if (gender==FallbackRole)
-        {
-            var fallback=WindowsSpeechProvider.CreateDefaultFallback();
-            if (fallback is null) { SetStatus(UiText.T("error.systemVoice")); return; }
-            speechRoles[gender]=fallback;
-            SwitchSpeechRole(gender);
-            return;
-        }
-        // Start from the default profile; subsequent edits belong only to the new role.
-        speechRoles[gender]=speechRoles[SpeakerGender.Unknown] with { ProviderVoices=new(speechRoles[SpeakerGender.Unknown].ProviderVoices) };
-        SwitchSpeechRole(gender);
+        var fallback=WindowsSpeechProvider.CreateDefaultFallback();
+        if (fallback is null) { SetStatus(UiText.T("error.systemVoice")); return; }
+        speechRoles[profile]=fallback;
+        SwitchSpeechRole(profile);
     }
     private void RemoveSpeechRole(object sender,RoutedEventArgs e)
     {
-        if (editingRole==SpeakerGender.Unknown) return;
+        if (editingRole==SpeechProfile.Default) return;
         var removed=editingRole;
-        SwitchSpeechRole(SpeakerGender.Unknown);
+        SwitchSpeechRole(SpeechProfile.Default);
         speechRoles.Remove(removed); RefreshSpeechRoleList(); UpdatePrivacyHint();
     }
 
@@ -135,11 +115,8 @@ public partial class MainWindow
     {
         var providers=new HashSet<string> { providerId };
         if (speechRoles.TryGetValue(FallbackRole,out var fallback)) providers.Add(fallback.ProviderId);
-        if (speechRoles.TryGetValue(SpeakerGender.Unknown,out var defaults)) providers.Add(defaults.ProviderId);
-        if (GenderEnabledBox.IsChecked==true)
-            foreach (var role in speechRoles.Values) providers.Add(role.ProviderId);
+        if (speechRoles.TryGetValue(SpeechProfile.Default,out var defaults)) providers.Add(defaults.ProviderId);
         PrivacyHint.Text=UiText.T(providers.Contains("openai-compatible") ? "privacy.server" : providers.Contains("edge") ? "privacy.edge" : "privacy.windows")
-            +(TranslateEnabledBox.IsChecked==true ? UiText.T("privacy.translation") : "")
-            +(GenderEnabledBox.IsChecked==true ? UiText.T("gender.privacyShort") : "");
+            +(TranslateEnabledBox.IsChecked==true ? UiText.T("privacy.translation") : "");
     }
 }

@@ -242,7 +242,7 @@ public sealed class SetupWizard : Window
     {
         Language=voice.Locale,SpeechEnabled=true,SpeechProviderId="edge",Voice=voice.ShortName,
         ProviderVoices=new(initial.ProviderVoices) { ["edge"]=voice.ShortName },FallbackRole=null,
-        Translation=initial.Translation with { Enabled=false },Genderization=initial.Genderization with { Enabled=false },
+        Translation=initial.Translation with { Enabled=false },
         CacheEnabled=false,Overlay=initial.Overlay with { Enabled=false }
     };
     private void CaptureKey(object sender,KeyEventArgs e)

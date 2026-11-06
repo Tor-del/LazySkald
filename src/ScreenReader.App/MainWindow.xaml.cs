@@ -41,6 +41,7 @@ public partial class MainWindow : Window
         OverlayRendererBox.SelectedValue=draft.Overlay.Renderer.ToString();
         OverlayEnabledBox.IsChecked=draft.Overlay.Enabled;
         OverlayTranslationBox.IsChecked=draft.Overlay.ShowTranslation;
+        OverlayAutoAdvanceBox.IsChecked=draft.Overlay.AutoAdvance;
         SpeechEnabledBox.IsChecked=draft.SpeechEnabled;
         InitializeCacheAndQueue();
         OcrReplaceLineBreaksBox.IsChecked=draft.OcrReplaceLineBreaks;
@@ -71,7 +72,7 @@ public partial class MainWindow : Window
         PreviewText.Text=UiText.T("preview.sample");
         VersionText.Text="LazySkald "+typeof(App).Assembly.GetName().Version!.ToString(3);
         LoadAudioDevices(draft.AudioOutputDeviceId);
-        InitializeTranslation(); InitializeGender(); InitializeOllama();
+        InitializeTranslation(); InitializeOllama();
         InitializeSpeechRoles();
         initialized=true; ApplyProviderUI(); UpdateLanguageHint();
         CaptureModeBox.SelectionChanged += (_,_)=> { if (initialized) SetStatus(UiText.T("status.captureChanged")); };
@@ -125,15 +126,14 @@ public partial class MainWindow : Window
         foreach (var pair in speechRoles)
         {
             if (SpeechEnabledBox.IsChecked!=true) continue;
-            // Dormant gender roles remain editable without blocking default speech.
-            if (pair.Key!=SpeakerGender.Unknown && pair.Key!=FallbackRole && GenderEnabledBox.IsChecked!=true) continue;
             try { ValidateSpeechRole(pair.Value); }
             catch (Exception e) { throw new InvalidOperationException(UiText.T("speech.roleError",RoleName(pair.Key),e.Message),e); }
         }
-        var settings=speechRoles[SpeakerGender.Unknown].ApplyTo(draft) with
+        var settings=speechRoles[SpeechProfile.Default].ApplyTo(draft) with
         {
             SpeechEnabled=SpeechEnabledBox.IsChecked==true,
             Overlay=overlayLayout with { Enabled=OverlayEnabledBox.IsChecked==true,ShowTranslation=OverlayTranslationBox.IsChecked==true,
+                AutoAdvance=OverlayAutoAdvanceBox.IsChecked==true,
                 Renderer=SelectedOverlayRenderer },
             OverlayInteractionHotkey=overlayKey,
             FallbackRole=speechRoles.GetValueOrDefault(FallbackRole),ExclusiveHotkeys=ExclusiveHotkeysBox.IsChecked==true,
@@ -149,11 +149,8 @@ public partial class MainWindow : Window
             OcrPreserveParagraphs=OcrPreserveParagraphsBox.IsChecked==true,
             OcrCorrectionsEnabled=OcrCorrectionsEnabledBox.IsChecked==true,
             OcrCorrectionEntries=ocrCorrectionEntries.ToList(),OcrCorrectionRules="",
-            Genderization=ReadGenderControls(),Translation=ReadTranslationControls(),UiLanguage=UiText.Language,
-            Theme=Enum.TryParse<AppTheme>(ThemeBox.SelectedValue as string,out var theme) ? theme : AppTheme.System,
-            FemaleRole=speechRoles.GetValueOrDefault(SpeakerGender.Female),
-            MaleRole=speechRoles.GetValueOrDefault(SpeakerGender.Male),
-            FemaleProviderVoices=new(),MaleProviderVoices=new()
+            Translation=ReadTranslationControls(),UiLanguage=UiText.Language,
+            Theme=Enum.TryParse<AppTheme>(ThemeBox.SelectedValue as string,out var theme) ? theme : AppTheme.System
         };
         OcrTextCorrections.ValidateEntries(settings.OcrCorrectionEntries!);
         return settings;
@@ -298,10 +295,8 @@ public partial class MainWindow : Window
         ProviderBox.SelectedItem=owner.Providers.Get(providerId);
         RefreshSpeechRoleList();
         TranslationModelsHint.Text=UiText.T("translation.modelsHint");
-        GenderModelsHint.Text=UiText.T("translation.modelsHint");
         UpdateOllamaHardware(); ShowOllamaState();
         RefreshOllamaProgress();
-        if (previewGender is { } gender) SetGender(gender);
         OcrProviderBox.ItemsSource=new[] { new OcrProviderChoice("windows",UiText.T("ocr.windows")) }; OcrProviderBox.SelectedIndex=0;
         LoadAudioDevices((AudioDeviceBox.SelectedItem as AudioOutputChoice)?.Id ?? draft.AudioOutputDeviceId);
         ApplyProviderUI(); UpdateLanguageHint(); initialized=true;

@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace ScreenReader.App;
 
-public sealed record CachedReading(string Key,string Text,string SpokenText,bool Translated,SpeakerGender Gender,SpeechAudioFormat Format,byte[] Audio,DateTimeOffset CreatedAt)
+public sealed record CachedReading(string Key,string Text,string SpokenText,bool Translated,SpeechAudioFormat Format,byte[] Audio,DateTimeOffset CreatedAt)
 {
     public int AudioLength=>Audio.Length;
 }
@@ -28,13 +28,12 @@ public sealed class ReadingCache(string? directory=null)
         object? Llm(LlmSettings value)=>!value.Enabled ? null : new { value.Provider,value.Prompt,value.Temperature,value.TimeoutSeconds,value.Selected.BaseUrl,value.Selected.Model,Credential=Credential(value.Selected.ApiKeyProtected) };
         object Speech(AppSettings value)=>new { value.SpeechProviderId,value.SelectedVoice,value.RatePercent,
             Server=value.SpeechProviderId=="openai-compatible" ? new { value.OpenAiEndpoint,value.OpenAiModel,value.OpenAiFormat,Credential=Credential(value.OpenAiApiKeyProtected) } : null };
-        var identity=new { Version=2,Text=text,settings.Language,Translation=Llm(settings.Translation),
+        var identity=new { Version=3,Text=text,settings.Language,Translation=Llm(settings.Translation),
             Target=settings.Translation.Enabled ? settings.Translation.TargetLanguage : null,
-            StressMarks=settings.Translation.Enabled && settings.Translation.AddStressMarks,Gender=Llm(settings.Genderization),
+            StressMarks=settings.Translation.Enabled && settings.Translation.AddStressMarks,
             StripMarkdown=settings.Translation.Enabled && settings.Translation.StripMarkdown,
             TranslationCorrections=settings.Translation.Enabled ? ScreenReader.App.TranslationCorrections.PromptFor(text,settings.Translation) : "",
-            Default=Speech(settings),Female=settings.Genderization.Enabled ? Speech(settings.SpeechFor(SpeakerGender.Female)) : null,
-            Male=settings.Genderization.Enabled ? Speech(settings.SpeechFor(SpeakerGender.Male)) : null };
+            Default=Speech(settings) };
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(identity))));
     }
     private string EntryPath(string key)
@@ -50,7 +49,7 @@ public sealed class ReadingCache(string? directory=null)
             {
                 if (!File.Exists(EntryPath(key))) return null;
                 var entry=JsonSerializer.Deserialize<CachedReading>(File.ReadAllText(EntryPath(key)));
-                return entry is not null && entry.Key==key && entry.Audio.Length>0 && Enum.IsDefined(entry.Format) && Enum.IsDefined(entry.Gender) ? entry : null;
+                return entry is not null && entry.Key==key && entry.Audio.Length>0 && Enum.IsDefined(entry.Format) ? entry : null;
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException or NullReferenceException)
             { AppLog.Write("Не удалось прочитать кэш.",e); return null; }

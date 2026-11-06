@@ -21,6 +21,7 @@ public sealed record OverlaySettings
     public OverlayRenderer Renderer { get; init; }
     public bool Enabled { get; init; }
     public bool ShowTranslation { get; init; }
+    public bool AutoAdvance { get; init; }=true;
     public double Left { get; init; }=40;
     public double Top { get; init; }=40;
     public double Width { get; init; }=360;
@@ -43,22 +44,6 @@ public sealed record AppSettings
     public bool OcrCorrectionsEnabled { get; init; }
     public string OcrCorrectionRules { get; init; }="/ => l";
     public List<OcrCorrectionEntry>? OcrCorrectionEntries { get; init; }
-    public GenderizationSettings Genderization { get; init; }=new();
-    public Dictionary<string,string> FemaleProviderVoices { get; init; }=new(StringComparer.OrdinalIgnoreCase);
-    public Dictionary<string,string> MaleProviderVoices { get; init; }=new(StringComparer.OrdinalIgnoreCase);
-    public SpeechRoleSettings? FemaleRole { get; init; }
-    public SpeechRoleSettings? MaleRole { get; init; }
-    public SpeechRoleSettings? RoleFor(SpeakerGender gender)
-    {
-        var role=gender switch { SpeakerGender.Female=>FemaleRole,SpeakerGender.Male=>MaleRole,_=>null };
-        if (role is not null) return role;
-        // Migrate the original voice-only roles using the default TTS configuration.
-        var legacy=gender switch { SpeakerGender.Female=>FemaleProviderVoices,SpeakerGender.Male=>MaleProviderVoices,_=>null };
-        string? voice=legacy?.GetValueOrDefault(SpeechProviderId);
-        return string.IsNullOrWhiteSpace(voice) ? null : SpeechRoleSettings.From(this) with { ProviderVoices=new(legacy!) };
-    }
-    public AppSettings SpeechFor(SpeakerGender gender)=>RoleFor(gender)?.ApplyTo(this) ?? this;
-    public string VoiceFor(SpeakerGender gender)=>SpeechFor(gender).SelectedVoice;
     public TranslationSettings Translation { get; init; } = new();
     public string Language { get; init; } = "ru-RU";
     public string Voice { get; init; } = "ru-RU-SvetlanaNeural";
@@ -98,7 +83,7 @@ public static class SettingsStore
         try
         {
             var value = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(SettingsPath)) ?? new();
-            if (value.VolumePercent is < 0 or > 100 || value.FallbackRole?.IsStructurallyValid()==false || value.FemaleRole?.IsStructurallyValid()==false || value.MaleRole?.IsStructurallyValid()==false || value.Genderization is null || value.Genderization.Providers is null || value.FemaleProviderVoices is null || value.MaleProviderVoices is null || value.OcrProviderId!="windows" || value.Translation is null || value.Translation.Providers is null || string.IsNullOrWhiteSpace(value.Language) || string.IsNullOrWhiteSpace(value.SpeechProviderId) || value.RatePercent is < -50 or > 100 || !Enum.IsDefined(value.CaptureMode) || !Enum.IsDefined(value.HotkeyMode) || !Enum.IsDefined(value.OpenAiFormat))
+            if (value.VolumePercent is < 0 or > 100 || value.FallbackRole?.IsStructurallyValid()==false || value.OcrProviderId!="windows" || value.Translation is null || value.Translation.Providers is null || string.IsNullOrWhiteSpace(value.Language) || string.IsNullOrWhiteSpace(value.SpeechProviderId) || value.RatePercent is < -50 or > 100 || !Enum.IsDefined(value.CaptureMode) || !Enum.IsDefined(value.HotkeyMode) || !Enum.IsDefined(value.OpenAiFormat))
                 throw new InvalidDataException("Некорректные параметры.");
             if (value.OcrCorrectionRules is null) throw new InvalidDataException("Некорректные правила коррекции текста.");
             if (value.OcrCorrectionsEnabled || value.OcrCorrectionEntries is not null)

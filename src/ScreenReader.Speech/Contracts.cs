@@ -5,8 +5,7 @@ public sealed record SpeechVoice(string ShortName,string FriendlyName,string Loc
 {
     public override string ToString()=>FriendlyName;
 }
-public enum SpeakerGender { Unknown, Female, Male }
-public sealed record SpeechRequest(string Text,string Voice,string Language,int RatePercent,SpeakerGender Gender=SpeakerGender.Unknown);
+public sealed record SpeechRequest(string Text,string Voice,string Language,int RatePercent);
 public interface ISpeechProvider
 {
     SpeechAudioFormat AudioFormat=>SpeechAudioFormat.Mp3;

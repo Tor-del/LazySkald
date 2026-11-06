@@ -708,10 +708,6 @@
     "ru": "Распознавание",
     "en": "Recognition"
   },
-  "tab.genderization": {
-    "ru": "Гендеризация",
-    "en": "Genderization"
-  },
   "ocr.provider": {
     "ru": "Провайдер распознавания",
     "en": "Recognition provider"
@@ -724,54 +720,6 @@
     "ru": "Неизвестный провайдер распознавания. Выберите Windows OCR.",
     "en": "Unknown recognition provider. Select Windows OCR."
   },
-  "gender.enabled": {
-    "ru": "Определять гендер рассказчика с помощью LLM",
-    "en": "Detect narrator gender using an LLM"
-  },
-  "gender.provider": {
-    "ru": "Провайдер гендеризации",
-    "en": "Genderization provider"
-  },
-  "gender.prompt": {
-    "ru": "Системный промпт гендеризации",
-    "en": "Genderization system prompt"
-  },
-  "gender.promptHint": {
-    "ru": "LLM получает исходный и озвучиваемый текст. Ответ: male, female или unknown. Для неоднозначного текста используется основной голос.",
-    "en": "The LLM receives original and spoken text. Reply: male, female or unknown. Ambiguous text uses the default voice."
-  },
-  "gender.privacy": {
-    "ru": "При включении исходный текст и перевод отправляются выбранному LLM-серверу. Настройки и ключ независимы от перевода. Ключ хранится зашифрованным для пользователя Windows.",
-    "en": "When enabled, original text and translation are sent to the selected LLM server. Settings and key are independent of translation. The key is encrypted for your Windows user."
-  },
-  "gender.privacyShort": {
-    "ru": " Гендеризация включена: исходный текст и перевод также отправляются LLM-серверу гендеризации.",
-    "en": " Genderization is enabled: original and spoken text are also sent to the genderization LLM server."
-  },
-  "gender.working": {
-    "ru": "Определение гендера рассказчика…",
-    "en": "Detecting narrator gender…"
-  },
-  "gender.result": {
-    "ru": "Гендер рассказчика: {0}",
-    "en": "Narrator gender: {0}"
-  },
-  "gender.unknown": {
-    "ru": "не определён (основной голос)",
-    "en": "unknown (default voice)"
-  },
-  "gender.female": {
-    "ru": "женский",
-    "en": "female"
-  },
-  "gender.male": {
-    "ru": "мужской",
-    "en": "male"
-  },
-  "gender.keyUnavailable": {
-    "ru": "Сохранённый ключ гендеризации недоступен. Введите его заново.",
-    "en": "The saved genderization key is unavailable. Enter it again."
-  },
   "speech.roles": {
     "ru": "Голоса по ролям",
     "en": "Voices by role"
@@ -780,29 +728,13 @@
     "ru": "Голос по умолчанию",
     "en": "Default voice"
   },
-  "speech.femaleRole": {
-    "ru": "Женская роль",
-    "en": "Female role"
-  },
-  "speech.maleRole": {
-    "ru": "Мужская роль",
-    "en": "Male role"
-  },
-  "speech.addFemale": {
-    "ru": "Добавить женскую роль",
-    "en": "Add female role"
-  },
-  "speech.addMale": {
-    "ru": "Добавить мужскую роль",
-    "en": "Add male role"
-  },
   "speech.removeRole": {
     "ru": "Удалить роль",
     "en": "Remove role"
   },
   "speech.rolesHint": {
-    "ru": "Выберите роль, чтобы настроить её провайдера, голос, темп, устройство и параметры сервера. Если роль не добавлена или гендер неизвестен, используется голос по умолчанию.",
-    "en": "Select a role to configure its provider, voice, rate, playback device and server settings. Missing roles and unknown gender use the default voice."
+    "ru": "Выберите основной или резервный голос, чтобы настроить провайдера, голос, темп, устройство и параметры сервера.",
+    "en": "Select the primary or fallback voice to configure its provider, voice, rate, output device and server settings."
   },
   "speech.roleError": {
     "ru": "{0}: {1}",
@@ -1167,8 +1099,8 @@
     "en": "More features"
   },
   "help.more": {
-    "ru": "«Перевод» переводит текст перед чтением. «Гендеризация» определяет мужскую или женскую роль; голоса ролей настраиваются в «Озвучивании». Обе функции требуют подключения LLM. В «Управлении» можно назначить повторное распознавание последней области и остановку чтения.",
-    "en": "Translation translates text before reading. Gender detection identifies a male or female role; configure role voices in Speech. Both features require an LLM connection. In Controls, assign shortcuts to recognize the last area again and stop reading."
+    "ru": "«Перевод» переводит текст перед чтением и требует подключения LLM. В «Управлении» можно назначить повторное распознавание последней области и остановку чтения.",
+    "en": "Translation translates text before reading and requires an LLM connection. In Controls, assign shortcuts to recognize the last area again and stop reading."
   },
   "help.troubleshootTitle": {
     "ru": "Если что-то не работает",
@@ -1370,15 +1302,11 @@
     "ja": "翻訳を表示",
     "ko": "번역 표시"
   },
+  "overlay.autoAdvance": {
+    "ru": "Автоматически переходить к следующей задаче", "en": "Automatically advance to the next task", "de": "Automatisch zum nächsten Auftrag wechseln", "fr": "Passer automatiquement à la tâche suivante", "es": "Pasar automáticamente a la siguiente tarea", "zh": "自动切换到下一项任务", "ja": "次のタスクに自動的に進む", "ko": "자동으로 다음 작업으로 이동"
+  },
   "overlay.translationHint": {
-    "ru": "После озвучивания перевод остаётся до ручного закрытия, а следующая задача ждёт. Без перевода задача завершается автоматически.",
-    "en": "After speech, translation stays until manually closed and the next job waits. Without translation, jobs finish automatically.",
-    "de": "Die Übersetzung bleibt nach der Sprachausgabe bis zum manuellen Schließen; der nächste Auftrag wartet. Ohne Übersetzung endet der Auftrag automatisch.",
-    "fr": "Après la lecture, la traduction reste jusqu’à sa fermeture manuelle et la tâche suivante attend. Sans traduction, la tâche se termine automatiquement.",
-    "es": "Tras la lectura, la traducción permanece hasta cerrarla y la siguiente tarea espera. Sin traducción, la tarea finaliza automáticamente.",
-    "zh": "朗读后译文保留至手动关闭，下一项任务将等待。没有译文时任务自动结束。",
-    "ja": "翻訳は読み上げ後も手動で閉じるまで残り、次のタスクは待機します。翻訳がなければ自動完了します。",
-    "ko": "재생 후 번역은 직접 닫을 때까지 유지되고 다음 작업은 대기합니다. 번역이 없으면 자동 완료됩니다."
+    "ru": "После озвучивания перевод остаётся до закрытия. Автоматический переход завершает задачу, ожидающую закрытия, при добавлении новой. Без перевода задача завершается автоматически.", "en": "After speech, translation stays until closed. Automatic advance completes a task waiting for closure when a new task is added. Without translation, tasks finish automatically.", "de": "Nach der Sprachausgabe bleibt die Übersetzung bis zum Schließen. Der automatische Wechsel beendet einen auf das Schließen wartenden Auftrag, wenn ein neuer hinzugefügt wird. Ohne Übersetzung enden Aufträge automatisch.", "fr": "Après la lecture, la traduction reste jusqu’à sa fermeture. Le passage automatique termine une tâche en attente de fermeture lorsqu’une nouvelle est ajoutée. Sans traduction, les tâches se terminent automatiquement.", "es": "Tras la lectura, la traducción permanece hasta cerrarla. El avance automático finaliza una tarea que espera el cierre al añadir una nueva. Sin traducción, las tareas finalizan automáticamente.", "zh": "朗读后译文保留至关闭。启用自动切换后，添加新任务时会完成正在等待关闭的任务。没有译文时任务自动结束。", "ja": "翻訳は読み上げ後も閉じるまで残ります。自動移行が有効な場合、新しいタスクを追加すると閉じるのを待っているタスクが完了します。翻訳がなければ自動完了します。", "ko": "재생 후 번역은 닫을 때까지 유지됩니다. 자동 이동을 켜면 새 작업을 추가할 때 닫기를 기다리는 작업이 완료됩니다. 번역이 없으면 자동 완료됩니다."
   },
   "overlay.renderer": {
     "ru": "Способ отображения",
@@ -2290,7 +2218,6 @@
     "fr": "Les tags se combinent par OU. Compatible indique assez de RAM totale et VRAM dédiée selon les repères, sans garantie de compatibilité GPU. Le CPU peut fonctionner si la VRAM manque.",
     "de": "Tags werden mit ODER verknüpft. Unterstützt bedeutet ausreichend Gesamt-RAM und dedizierter VRAM nach Richtwerten, keine GPU-Kompatibilitätsgarantie. Bei zu wenig VRAM kann CPU-Nutzung möglich sein."
   },
-
   "check.minimizeToTray": {
     "ru": "Перемещать в трей при сворачивании",
     "en": "Minimize to tray",

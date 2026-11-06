@@ -14,6 +14,10 @@ internal static partial class Program
         Assert(!defaults.Overlay.Enabled && !defaults.Overlay.ShowTranslation && defaults.OverlayInteractionHotkey==new Hotkey(0,0x12),
             "Existing settings keep overlay disabled and default interaction to Alt");
         HotkeyService.Validate(defaults);
+        Assert(defaults.Overlay.AutoAdvance && JsonSerializer.Deserialize<OverlaySettings>("{\"ShowTranslation\":true}")!.AutoAdvance,
+            "New and existing overlay settings enable automatic advance by default");
+        Assert(!JsonSerializer.Deserialize<OverlaySettings>(JsonSerializer.Serialize(defaults.Overlay with { AutoAdvance=false }))!.AutoAdvance,
+            "Disabled automatic advance survives serialization");
         Throws<ArgumentException>(()=>HotkeyService.Validate(new Hotkey(0,0x12)),"Standalone modifiers remain invalid for ordinary shortcuts");
         var alt=new HotkeyChordRecognizer(new(0,0x12),hold:true);
         Assert(alt.Process(0xA4,true).Trigger && alt.Held,"Left Alt starts overlay interaction");
@@ -100,6 +104,29 @@ internal static partial class Program
         await waiting.WaitAsync(TimeSpan.FromSeconds(3));
         Assert(!queue.IsBusy,"Cancel all releases manual text wait");
 
+        var held=queue.EnqueueAsync(_=>Task.FromResult(0),(_,token)=>queue.WaitForCloseAsync(token));
+        var preparation=new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var added=queue.EnqueueAsync(_=>preparation.Task,(_,_)=>Task.CompletedTask,completeCurrentTextWait:true);
+        await held.WaitAsync(TimeSpan.FromSeconds(3));
+        Assert(!added.IsCompleted && queue.Snapshot.Count==1 && !queue.Snapshot[0].AwaitingClose,
+            "Adding a task successfully closes held translation before new preparation finishes");
+        preparation.SetResult(0);
+        await added.WaitAsync(TimeSpan.FromSeconds(3));
+
+        var processing=new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var reachedClose=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        held=queue.EnqueueAsync(_=>processing.Task,async (_,token)=>
+        {
+            var close=queue.WaitForCloseAsync(token); reachedClose.SetResult(); await close;
+        });
+        added=queue.EnqueueAsync(_=>Task.FromResult(0),(_,_)=>Task.CompletedTask,completeCurrentTextWait:true);
+        processing.SetResult(0);
+        await reachedClose.Task.WaitAsync(TimeSpan.FromSeconds(3));
+        Assert(queue.Snapshot.Count==2 && queue.Snapshot[0].AwaitingClose && !held.IsCompleted && !added.IsCompleted,
+            "Submission during processing does not cancel it or bypass its later close wait");
+        queue.Close(queue.Snapshot[0].Id);
+        await Task.WhenAll(held,added).WaitAsync(TimeSpan.FromSeconds(3));
+
         using var providers=new SpeechProviderRegistry(); using var capture=new BlockedCapture();
         var player=new CacheAudio();
         var reader=new ReadingController(capture,new NoOcr(),new IdentityTextTransform(),providers,player,new NoFocus(),new TestTranslator());
@@ -122,7 +149,31 @@ internal static partial class Program
         await reader.ReadTextAsync("Original",settings with { Translation=new() { Enabled=false } }).WaitAsync(TimeSpan.FromSeconds(3));
         Assert(!reader.IsBusy,"No translated text means automatic completion");
 
-        var cached=new CachedReading("test","Original","Saved translation",true,SpeakerGender.Unknown,SpeechAudioFormat.Wave,[1,2,3],DateTimeOffset.Now);
+        var cached=new CachedReading("test","Original","Saved translation",true,SpeechAudioFormat.Wave,[1,2,3],DateTimeOffset.Now);
+        reading=reader.ReplayAsync(cached,settings);
+        await WaitForText();
+        long replacedId=reader.Queue.Snapshot.Single().Id;
+        var nextReading=reader.ReplayAsync(cached with { SpokenText="Next translation" },settings);
+        await reading.WaitAsync(TimeSpan.FromSeconds(3));
+        await WaitForText();
+        Assert(reader.Queue.Snapshot.Single() is { AwaitingClose:true,TranslationText:"Next translation" } next && next.Id!=replacedId,
+            "Default automatic advance replaces the completed translation with the new task");
+        reader.Queue.Close(reader.Queue.Snapshot.Single().Id);
+        await nextReading.WaitAsync(TimeSpan.FromSeconds(3));
+
+        reader.UpdateOverlaySettings(options with { AutoAdvance=false });
+        reading=reader.ReplayAsync(cached,settings);
+        await WaitForText();
+        replacedId=reader.Queue.Snapshot.Single().Id;
+        nextReading=reader.ReplayAsync(cached,settings);
+        Assert(reader.Queue.Snapshot.Count==2 && reader.Queue.Snapshot[0].Id==replacedId && !reading.IsCompleted,
+            "Live disabled automatic advance overrides per-job defaults and preserves manual closing");
+        reader.Queue.Close(replacedId);
+        await reading.WaitAsync(TimeSpan.FromSeconds(3));
+        await WaitForText();
+        reader.Queue.Close(reader.Queue.Snapshot.Single().Id);
+        await nextReading.WaitAsync(TimeSpan.FromSeconds(3));
+        reader=new ReadingController(capture,new NoOcr(),new IdentityTextTransform(),providers,player,new NoFocus(),new TestTranslator());
         reading=reader.ReplayAsync(cached,settings with { SpeechEnabled=true });
         await WaitForText();
         Assert(player.Calls==1 && !reading.IsCompleted && reader.Queue.Snapshot.Single().TranslationText=="Saved translation",
@@ -161,6 +212,14 @@ internal static partial class Program
             await WaitForText(); reader.Queue.Close(reader.Queue.Snapshot.Single().Id);
             await reading.WaitAsync(TimeSpan.FromSeconds(3));
             Assert(cache.List().Count==1,"Closing held translation successfully commits the completed reading to cache");
+            reading=reader.ReadTextAsync("Auto advance original",cacheSettings);
+            await WaitForText();
+            nextReading=reader.ReplayAsync(cached,cacheSettings);
+            await reading.WaitAsync(TimeSpan.FromSeconds(3));
+            Assert(cache.List().Count==2,"Automatic close commits completed speech to cache just like manual close");
+            await WaitForText();
+            reader.Queue.Close(reader.Queue.Snapshot.Single().Id);
+            await nextReading.WaitAsync(TimeSpan.FromSeconds(3));
         }
         finally { if (System.IO.Directory.Exists(directory)) System.IO.Directory.Delete(directory,true); }
     }

@@ -219,23 +219,6 @@
      </ListBox>
     </StackPanel></ScrollViewer>
    </TabItem>
-   <TabItem Header="{DynamicResource tab.genderization}" Tag="&#xE716;">
-    <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="28,24">
-     <CheckBox x:Name="GenderEnabledBox" Content="{DynamicResource gender.enabled}" Checked="GenderEnabledChanged" Unchecked="GenderEnabledChanged" Margin="0,0,0,24"/>
-     <TextBlock Text="{DynamicResource gender.provider}" Style="{StaticResource FieldLabel}"/><ComboBox x:Name="GenderProviderBox" DisplayMemberPath="Name" SelectionChanged="GenderProviderChanged" Margin="0,0,0,20"/>
-     <TextBlock Text="{DynamicResource translation.url}" Style="{StaticResource FieldLabel}"/><TextBox x:Name="GenderUrlBox" TextChanged="GenderConnectionChanged" Margin="0,0,0,20"/>
-     <TextBlock Text="{DynamicResource label.apiKey}" Style="{StaticResource FieldLabel}"/><PasswordBox x:Name="GenderKeyBox" PasswordChanged="GenderConnectionChanged" Margin="0,0,0,20"/>
-     <DockPanel Margin="0,0,0,8"><Button DockPanel.Dock="Right" x:Name="RefreshGenderModelsButton" Content="{DynamicResource button.refresh}" Click="RefreshGenderModels" Padding="10,3" MinHeight="28" Margin="12,0,0,0"/><TextBlock Text="{DynamicResource label.model}" VerticalAlignment="Center" Margin="0" Style="{StaticResource FieldLabel}"/></DockPanel>
-     <ComboBox x:Name="GenderModelBox" IsEditable="True" Margin="0,0,0,0"/>
-     <TextBlock x:Name="GenderModelsHint" Foreground="{DynamicResource FluentSecondary}" TextWrapping="Wrap" FontSize="12" Margin="0,6,0,20"/>
-     <TextBlock Text="{DynamicResource gender.prompt}" Style="{StaticResource FieldLabel}"/><TextBox x:Name="GenderPromptBox" AcceptsReturn="True" TextWrapping="Wrap" Height="110" VerticalScrollBarVisibility="Auto" Margin="0,0,0,0"/>
-     <TextBlock Text="{DynamicResource gender.promptHint}" Foreground="{DynamicResource FluentSecondary}" TextWrapping="Wrap" FontSize="12" Margin="0,6,0,20"/>
-     <CheckBox x:Name="GenderTemperatureEnabledBox" Content="{DynamicResource translation.temperature}"/>
-     <TextBox x:Name="GenderTemperatureBox" Margin="0,8,0,20"/>
-     <TextBlock Text="{DynamicResource translation.timeoutLabel}" Style="{StaticResource FieldLabel}"/><TextBox x:Name="GenderTimeoutBox" Margin="0,0,0,20"/>
-     <TextBlock Text="{DynamicResource gender.privacy}" Foreground="{DynamicResource FluentSecondary}" TextWrapping="Wrap" FontSize="12"/>
-    </StackPanel></ScrollViewer>
-   </TabItem>
    <TabItem Header="{DynamicResource tab.speech}" Tag="&#xE767;">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
      <StackPanel Margin="28,24">
@@ -245,8 +228,6 @@
        <TextBlock Text="{DynamicResource speech.roles}" Style="{StaticResource FieldLabel}"/>
        <ListBox x:Name="SpeechRolesBox" DisplayMemberPath="Name" SelectionChanged="SpeechRoleChanged" MinHeight="38" MaxHeight="120"/>
        <WrapPanel Margin="0,8,0,8">
-        <Button x:Name="AddFemaleRoleButton" Content="{DynamicResource speech.addFemale}" Click="AddFemaleRole"/>
-        <Button x:Name="AddMaleRoleButton" Content="{DynamicResource speech.addMale}" Click="AddMaleRole"/>
         <Button x:Name="AddFallbackRoleButton" Content="{DynamicResource speech.addFallback}" Click="AddFallbackRole"/>
         <Button x:Name="RemoveRoleButton" Content="{DynamicResource speech.removeRole}" Click="RemoveSpeechRole"/>
        </WrapPanel>
@@ -281,11 +262,6 @@
      <TextBlock Text="{DynamicResource hint.preview}" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource FluentSecondary}" Margin="0,8,0,16"/>
      <TextBlock Text="{DynamicResource translation.result}" Style="{StaticResource FieldLabel}"/>
      <TextBox x:Name="TranslationPreview" IsReadOnly="True" TextWrapping="Wrap" Height="110" VerticalScrollBarVisibility="Auto" Margin="0,0,0,20"/>
-     <TextBlock x:Name="GenderPreview" TextWrapping="Wrap" Margin="0,0,0,16">
-      <TextBlock.Style><Style TargetType="TextBlock"><Style.Triggers>
-       <Trigger Property="Text" Value=""><Setter Property="Visibility" Value="Collapsed"/></Trigger>
-      </Style.Triggers></Style></TextBlock.Style>
-     </TextBlock>
      <WrapPanel><Button Content="{DynamicResource button.listen}" Click="PreviewSpeech" Style="{StaticResource AccentButton}"/><Button Content="{DynamicResource button.stop}" Click="StopSpeech"/></WrapPanel>
     </StackPanel></ScrollViewer>
    </TabItem>
@@ -324,6 +300,13 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="28,24">
      <CheckBox x:Name="OverlayEnabledBox" Content="{DynamicResource overlay.enabled}" Margin="0,0,0,16"/>
      <CheckBox x:Name="OverlayTranslationBox" Content="{DynamicResource overlay.showTranslation}" Margin="0,0,0,8"/>
+     <CheckBox x:Name="OverlayAutoAdvanceBox" Margin="24,0,0,8">
+      <CheckBox.Style><Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
+       <Setter Property="Visibility" Value="Collapsed"/>
+       <Style.Triggers><DataTrigger Binding="{Binding IsChecked, ElementName=OverlayTranslationBox}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers>
+      </Style></CheckBox.Style>
+      <TextBlock Text="{DynamicResource overlay.autoAdvance}" TextWrapping="Wrap"/>
+     </CheckBox>
      <TextBlock Text="{DynamicResource overlay.translationHint}" TextWrapping="Wrap" Foreground="{DynamicResource FluentSecondary}" Margin="0,0,0,24"/>
      <TextBlock Text="{DynamicResource overlay.renderer}" Style="{StaticResource FieldLabel}"/>
      <ComboBox x:Name="OverlayRendererBox" SelectedValuePath="Tag" SelectionChanged="OverlayRendererChanged" Margin="0,0,0,8">

@@ -14,7 +14,16 @@ internal static partial class Program
     {
         string directory=Path.Combine(Path.GetTempPath(),"ScreenReader-cache-check-"+Guid.NewGuid().ToString("N"));
         var cache=new ReadingCache(directory);
-        var settings=new AppSettings { CacheEnabled=true,SpeechProviderId="cache-test",FallbackRole=null,Translation=new() { Enabled=true },Genderization=new() { Enabled=true } };
+        var settings=new AppSettings { CacheEnabled=true,SpeechProviderId="cache-test",FallbackRole=null,Translation=new() { Enabled=true } };
+        var legacy=JsonSerializer.Deserialize<AppSettings>("""
+            {"SpeechProviderId":"cache-test","Voice":"original-voice","RatePercent":15,
+             "Genderization":{"Enabled":true,"Provider":"missing-provider"},
+             "FemaleRole":{"ProviderId":"removed-provider"},"MaleProviderVoices":{"cache-test":"old-male-voice"}}
+            """)!;
+        Assert(legacy.SpeechProviderId=="cache-test" && legacy.SelectedVoice=="original-voice" && legacy.RatePercent==15,
+            "Legacy gender settings are ignored while the primary voice settings are preserved");
+        Assert(!JsonSerializer.Serialize(legacy).Contains("Genderization") && !JsonSerializer.Serialize(legacy).Contains("FemaleRole"),
+            "Saving legacy settings removes obsolete gender configuration");
         Assert(JsonSerializer.Deserialize<AppSettings>("{}")!.SpeechEnabled,"Existing settings keep speech enabled by default");
         Assert(!JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(settings with { SpeechEnabled=false }))!.SpeechEnabled,"Disabled speech survives settings serialization");
         string Key(AppSettings value)=>ReadingCache.KeyFor("Original",value);
@@ -27,16 +36,15 @@ internal static partial class Program
         Assert(key!=Key(settings with { Translation=settings.Translation with { StripMarkdown=false } }),"Markdown removal invalidates cached audio");
         Assert(Key(settings with { Translation=settings.Translation with { Enabled=false } })==Key(settings with { Translation=settings.Translation with { Enabled=false,StripMarkdown=false } }),"Markdown removal does not affect cache when translation is disabled");
         Assert(Key(settings with { Translation=settings.Translation with { Enabled=false } })==Key(settings with { Translation=settings.Translation with { Enabled=false,AddStressMarks=true } }),"Stress marks do not affect cache when translation is disabled");
-        Assert(key!=Key(settings with { Genderization=settings.Genderization with { Temperature=1 } }) && key!=Key(settings with { FemaleRole=new() { RatePercent=20 } }),"Gender settings and complete role profiles invalidate cache");
         var server=settings with { SpeechProviderId="openai-compatible",OpenAiApiKeyProtected=SecretProtection.Protect("key") };
         Assert(ReadingCache.KeyFor("text",server)==ReadingCache.KeyFor("text",server with { OpenAiApiKeyProtected=SecretProtection.Protect("key") }),"Re-encrypting unchanged API key preserves cache identity");
         Assert(ReadingCache.KeyFor("text",server)!=ReadingCache.KeyFor("text",server with { OpenAiModel="other" }),"TTS model invalidates cache");
 
         using var registry=new SpeechProviderRegistry(); using var capture=new BlockedCapture();
         var speech=new CacheSpeech(); registry.Register(new("cache-test","Test",false,_=>speech,false));
-        var translator=new TestTranslator(); var gender=new TestGenderization { Result=SpeakerGender.Female };
+        var translator=new TestTranslator();
         var player=new CacheAudio();
-        var reader=new ReadingController(capture,new NoOcr(),new IdentityTextTransform(),registry,player,new NoFocus(),translator,gender,cache);
+        var reader=new ReadingController(capture,new NoOcr(),new IdentityTextTransform(),registry,player,new NoFocus(),translator,cache);
         Exception? failed=null; string? preview=null;
         reader.Failed+=e=>failed=e; reader.TextTranslated+=value=>preview=value;
         try
@@ -44,23 +52,23 @@ internal static partial class Program
             await reader.ReadTextAsync("Original",settings);
             Assert(failed is null && speech.Calls==1 && cache.List().Count==1,"Successful streaming reading populates persistent cache");
             var persisted=new ReadingCache(directory).Find(key);
-            Assert(persisted is { SpokenText:"Перевод",Gender:SpeakerGender.Female,Format:SpeechAudioFormat.Wave } && persisted.Audio.SequenceEqual(new byte[] { 1,2,3 }),"New cache instance restores text, translation, gender, format and exact audio");
-            translator.Fail=true; gender.Fail=true;
+            Assert(persisted is { SpokenText:"Перевод",Format:SpeechAudioFormat.Wave } && persisted.Audio.SequenceEqual(new byte[] { 1,2,3 }),"New cache instance restores text, translation, format and exact audio");
+            translator.Fail=true;
             await reader.ReadTextAsync("Original",settings with { SpeechEnabled=false });
             Assert(failed is null && speech.Calls==1 && player.Calls==1 && preview=="Перевод","Disabled speech restores cached translation without synthesis or playback");
             await reader.ReplayAsync(persisted!,settings with { SpeechEnabled=false });
             Assert(failed is null && player.Calls==1,"Disabled speech suppresses explicit cached audio replay");
             translator.Fail=false;
             await reader.ReadTextAsync("Uncached silent text",settings with { SpeechEnabled=false,SpeechProviderId="missing-provider" });
-            Assert(failed is null && preview=="Перевод" && speech.Calls==1 && player.Calls==1 && gender.Calls==1 && cache.List().Count==1,"Disabled speech translates uncached text without acquiring a provider, detecting gender or caching audio");
+            Assert(failed is null && preview=="Перевод" && speech.Calls==1 && player.Calls==1 && cache.List().Count==1,"Disabled speech translates uncached text without acquiring a provider, caching audio");
             translator.Fail=true;
             await reader.ReadTextAsync("Original",settings);
-            Assert(failed is null && speech.Calls==1 && gender.Calls==1 && player.Calls==2 && preview=="Перевод","Cache hit bypasses translation, genderization and TTS and restores preview");
+            Assert(failed is null && speech.Calls==1 && player.Calls==2 && preview=="Перевод","Cache hit bypasses translation and TTS and restores preview");
             await reader.ReplayAsync(persisted!,settings);
             Assert(player.Calls==3 && speech.Calls==1,"Explicit replay uses saved track without provider calls");
             await reader.ReadTextAsync("Original",settings with { CacheEnabled=false });
             Assert(failed is not null && player.Calls==3 && cache.List().Count==1,"Disabled cache bypasses lookup and preserves saved entries");
-            failed=null; translator.Fail=false; gender.Fail=false;
+            failed=null; translator.Fail=false;
             await reader.ReadTextAsync("Original",settings with { RatePercent=5 });
             Assert(failed is null && speech.Calls==2 && cache.List().Count==2,"Changed settings create a separate cache entry");
             cache.Delete(key);

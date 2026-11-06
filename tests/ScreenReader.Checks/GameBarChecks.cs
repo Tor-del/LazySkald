@@ -31,7 +31,7 @@ internal static partial class Program
         var content=(System.Windows.FrameworkElement)window.Content;
         content.Measure(new System.Windows.Size(window.Width,window.Height));
         content.Arrange(new System.Windows.Rect(0,0,window.Width,window.Height)); content.UpdateLayout();
-        tabs.SelectedIndex=9;
+        tabs.SelectedIndex=8;
         content.Measure(new System.Windows.Size(window.Width,window.Height));
         content.Arrange(new System.Windows.Rect(0,0,window.Width,window.Height));
         content.UpdateLayout();

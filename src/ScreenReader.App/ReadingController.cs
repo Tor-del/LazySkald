@@ -4,12 +4,20 @@ using ScreenReader.Edge;
 
 namespace ScreenReader.App;
 
-public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,ITextTransform transform,SpeechProviderRegistry providers,IAudioPlayer audio,IForegroundWindowService? focus=null,ITranslationClient? translation=null,IGenderizationClient? genderization=null,ReadingCache? cache=null)
+public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,ITextTransform transform,SpeechProviderRegistry providers,IAudioPlayer audio,IForegroundWindowService? focus=null,ITranslationClient? translation=null,ReadingCache? cache=null)
 {
     private readonly IForegroundWindowService windowFocus=focus ?? new ForegroundWindowService();
     private readonly ReadingQueue queue=new();
     private readonly object overlayGate=new();
     private OverlaySettings? overlaySettings;
+    private bool ShouldAutoAdvance(AppSettings settings)
+    {
+        lock (overlayGate)
+        {
+            var options=overlaySettings ?? settings.Overlay;
+            return options.Enabled && options.ShowTranslation && options.AutoAdvance;
+        }
+    }
     public void UpdateOverlaySettings(OverlaySettings value)
     {
         lock (overlayGate)
@@ -43,7 +51,6 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
     public event Action<string>? TextRecognized;
     public event Action<string>? TextTranslated;
     public event Action<Exception>? Failed;
-    public event Action<SpeakerGender>? GenderDetected;
     public bool IsBusy=>queue.IsBusy || overlay is not null || !pendingFocusRestore.IsCompleted;
     public Task ToggleAsync(AppSettings settings)
     {
@@ -71,7 +78,7 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
         async (result,token)=>
         {
             if (result is not null) await PlayPreparedAsync(result,settings,token);
-        },result=>result?.Text ?? ""));
+        },result=>result?.Text ?? "",completeCurrentTextWait:ShouldAutoAdvance(settings)));
 
     private async Task<(string Text,Stopwatch Timer,long OcrMs)?> CaptureTextAsync(AppSettings settings,CancellationToken token,bool repeat)
     {
@@ -127,7 +134,7 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
     {
         Stop();
         return RunSafelyAsync(()=>queue.EnqueueAsync(token=>PrepareSpeechAsync(text,settings,Stopwatch.StartNew(),0,token),
-            (value,token)=>PlayPreparedAsync(value,settings,token),value=>value.Text));
+            (value,token)=>PlayPreparedAsync(value,settings,token),value=>value.Text,completeCurrentTextWait:ShouldAutoAdvance(settings)));
     }
     private async Task RunSafelyAsync(Func<Task> action)
     {
@@ -138,13 +145,12 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
     private async Task<PreparedReading> PrepareSpeechAsync(string text,AppSettings settings,Stopwatch timer,long ocrMs,CancellationToken token)
     {
         TextTranslated?.Invoke("");
-        GenderDetected?.Invoke(SpeakerGender.Unknown);
         string? cacheKey=settings.CacheEnabled ? ReadingCache.KeyFor(text,settings) : null;
         long cacheRevision=Cache.Revision;
         if (cacheKey is not null && Cache.Find(cacheKey) is { } cached)
         {
             queue.Update(token,translationText:cached.Translated ? cached.SpokenText : "");
-            return new(text,cached.SpokenText,cached.Gender,timer,ocrMs,null,cacheRevision,cached,null,settings.SpeechFor(cached.Gender));
+            return new(text,cached.SpokenText,timer,ocrMs,null,cacheRevision,cached,null,settings);
         }
         string prepared=await transform.TransformAsync(text,settings.Language,token);
         token.ThrowIfCancellationRequested();
@@ -157,21 +163,13 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
             queue.Update(token,translationText:prepared);
         }
         if (!settings.SpeechEnabled)
-            return new(text,prepared,SpeakerGender.Unknown,timer,ocrMs,null,cacheRevision,null,null,settings);
-        SpeakerGender gender=SpeakerGender.Unknown;
-        if (settings.Genderization.Enabled)
-        {
-            Report(UiText.T("gender.working"),token);
-            gender=await (genderization ?? new LlmGenderizationClient()).DetectAsync(text,prepared,settings.Genderization,token);
-            token.ThrowIfCancellationRequested();
-        }
-        GenderDetected?.Invoke(gender);
-        var speech=settings.SpeechFor(gender);
+            return new(text,prepared,timer,ocrMs,null,cacheRevision,null,null,settings);
+        var speech=settings;
         Report(UiText.T("status.preparing",providers.Get(speech.SpeechProviderId).DisplayName),token);
         PreparedSpeech Create(AppSettings voice)
         {
             var lease=providers.Acquire(voice);
-            return new PreparedSpeech(lease,new SpeechRequest(prepared,voice.SelectedVoice,settings.Translation.Enabled ? settings.Translation.TargetLanguage : settings.Language,voice.RatePercent,gender),token);
+            return new PreparedSpeech(lease,new SpeechRequest(prepared,voice.SelectedVoice,settings.Translation.Enabled ? settings.Translation.TargetLanguage : settings.Language,voice.RatePercent),token);
         }
         PreparedSpeech pending;
         bool usedFallback=false;
@@ -182,9 +180,9 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
             Report(UiText.T("speech.fallbackWorking"),token);
             speech=settings.FallbackRole.ApplyTo(settings); pending=Create(speech); cacheKey=null; usedFallback=true;
         }
-        return new(text,prepared,gender,timer,ocrMs,cacheKey,cacheRevision,null,pending,speech,usedFallback);
+        return new(text,prepared,timer,ocrMs,cacheKey,cacheRevision,null,pending,speech,usedFallback);
     }
-    private sealed record PreparedReading(string Text,string SpokenText,SpeakerGender Gender,Stopwatch Timer,long OcrMs,
+    private sealed record PreparedReading(string Text,string SpokenText,Stopwatch Timer,long OcrMs,
         string? CacheKey,long CacheRevision,CachedReading? Cached,PreparedSpeech? Speech,AppSettings VoiceSettings,bool UsedFallback=false) : IAsyncDisposable
     {
         public ValueTask DisposeAsync()=>Speech?.DisposeAsync() ?? ValueTask.CompletedTask;
@@ -195,7 +193,6 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
         {
             TextRecognized?.Invoke(reading.Text);
             TextTranslated?.Invoke(settings.Translation.Enabled ? reading.SpokenText : "");
-            GenderDetected?.Invoke(reading.Gender);
             Report(UiText.T("ready"),token);
             await WaitForOverlayCloseAsync(settings,token);
             return;
@@ -213,7 +210,7 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
         AppLog.Write("Основной голос недоступен; используется резервный.",error);
         Report(UiText.T("speech.fallbackWorking"),token);
         var speech=settings.FallbackRole!.ApplyTo(settings);
-        var request=new SpeechRequest(reading.SpokenText,speech.SelectedVoice,settings.Translation.Enabled ? settings.Translation.TargetLanguage : settings.Language,speech.RatePercent,reading.Gender);
+        var request=new SpeechRequest(reading.SpokenText,speech.SelectedVoice,settings.Translation.Enabled ? settings.Translation.TargetLanguage : settings.Language,speech.RatePercent);
         await using var fallback=new PreparedSpeech(providers.Acquire(speech),request,token);
         await PlayPreparedCoreAsync(reading with { Speech=fallback,VoiceSettings=speech,CacheKey=null },settings,()=>{},token);
     }
@@ -222,7 +219,6 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
         if (reading.Cached is { } cached) { await PlayCachedCoreAsync(cached,settings,token); return; }
         TextRecognized?.Invoke(reading.Text);
         TextTranslated?.Invoke(settings.Translation.Enabled ? reading.SpokenText : "");
-        GenderDetected?.Invoke(reading.Gender);
         await playbackGate.WaitAsync(token);
         try
         {
@@ -252,7 +248,7 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
             token.ThrowIfCancellationRequested();
             if (reading.CacheKey is not null && complete)
             {
-                try { Cache.Save(new(reading.CacheKey,reading.Text,reading.SpokenText,settings.Translation.Enabled,reading.Gender,reading.Speech!.Format,recorded.ToArray(),DateTimeOffset.Now),reading.CacheRevision); }
+                try { Cache.Save(new(reading.CacheKey,reading.Text,reading.SpokenText,settings.Translation.Enabled,reading.Speech!.Format,recorded.ToArray(),DateTimeOffset.Now),reading.CacheRevision); }
                 catch (Exception e) when (e is IOException or UnauthorizedAccessException) { AppLog.Write("Не удалось сохранить кэш.",e); }
             }
             Report(UiText.T("ready"),token);
@@ -261,12 +257,11 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
     }
     public Task ReplayAsync(CachedReading entry,AppSettings settings)=>RunSafelyAsync(()=>queue.EnqueueAsync(
         token=> { queue.Update(token,translationText:entry.Translated ? entry.SpokenText : ""); return Task.FromResult(entry); },
-        (value,token)=>PlayCachedCoreAsync(value,settings,token),value=>value.Text));
+        (value,token)=>PlayCachedCoreAsync(value,settings,token),value=>value.Text,completeCurrentTextWait:ShouldAutoAdvance(settings)));
     private async Task PlayCachedCoreAsync(CachedReading entry,AppSettings settings,CancellationToken token)
     {
         TextRecognized?.Invoke(entry.Text);
         TextTranslated?.Invoke(entry.Translated ? entry.SpokenText : "");
-        GenderDetected?.Invoke(entry.Gender);
         if (!settings.SpeechEnabled) { Report(UiText.T("ready"),token); await WaitForOverlayCloseAsync(settings,token); return; }
         await playbackGate.WaitAsync(token);
         try
@@ -281,7 +276,7 @@ public sealed class ReadingController(IScreenCapture capture,IOcrProvider ocr,IT
                 }
             }
             Report(UiText.T("cache.playing"),token);
-            await PlayAudioAsync(Chunks(token),entry.Format,settings.SpeechFor(entry.Gender).AudioOutputDeviceId,settings.SpeechFor(entry.Gender).VolumePercent/100f,()=>{},token);
+            await PlayAudioAsync(Chunks(token),entry.Format,settings.AudioOutputDeviceId,settings.VolumePercent/100f,()=>{},token);
             Report(UiText.T("ready"),token);
             await WaitForOverlayCloseAsync(settings,token);
         }

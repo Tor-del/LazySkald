@@ -37,10 +37,18 @@ public sealed class SelectionWindow : Window
         var hint = new TextBlock { Text=UiText.T("selection.hint"),Foreground=Brushes.White,Background=new SolidColorBrush(System.Windows.Media.Color.FromArgb(220,20,24,32)),Padding=new Thickness(14,9,14,9),FontSize=16,IsHitTestVisible=false };
         Canvas.SetLeft(hint,20); Canvas.SetTop(hint,20); canvas.Children.Add(hint);
         Content = grid;
-        SourceInitialized += (_,_) => SetWindowPos(new WindowInteropHelper(this).Handle,new IntPtr(-1),screenshot.Bounds.X,screenshot.Bounds.Y,screenshot.Bounds.Width,screenshot.Bounds.Height,0x0040);
+        SourceInitialized += (_,_) =>
+        {
+            var handle=new WindowInteropHelper(this).Handle;
+            // Keep this short-lived overlay independent of the game's GPU presentation.
+            // Hardware WPF surfaces can fail to appear over borderless games.
+            HwndSource.FromHwnd(handle)!.CompositionTarget.RenderMode=RenderMode.SoftwareOnly;
+            PlaceAboveGame();
+        };
+        ContentRendered += (_,_) => PlaceAboveGame();
         Loaded += (_,_) =>
         {
-            Activate(); Focus();
+            PlaceAboveGame(); Activate(); Focus();
             if (exclusiveInput)
             {
                 try
@@ -85,6 +93,8 @@ public sealed class SelectionWindow : Window
             }
         };
     }
+    private void PlaceAboveGame()=>SetWindowPos(new WindowInteropHelper(this).Handle,new IntPtr(-1),
+        screenshot.Bounds.X,screenshot.Bounds.Y,screenshot.Bounds.Width,screenshot.Bounds.Height,0x0040);
     private void BeginSelection(WpfPoint point)
     { start=point; selection.Visibility=Visibility.Visible; Update(point); }
     private void EndSelection(WpfPoint end)

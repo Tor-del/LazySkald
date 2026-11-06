@@ -77,13 +77,20 @@ public sealed class ReadingQueue
     {
         lock (gate) foreach (var job in jobs.ToArray()) job.Cancel();
     }
-    public async Task EnqueueAsync<T>(Func<CancellationToken,Task<T>> prepare,Func<T,CancellationToken,Task> execute,Func<T,string>? describe=null)
+    public async Task EnqueueAsync<T>(Func<CancellationToken,Task<T>> prepare,Func<T,CancellationToken,Task> execute,Func<T,string>? describe=null,bool completeCurrentTextWait=false)
     {
         using var operation=new CancellationTokenSource();
         var finished=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         Task previous;
         LinkedListNode<CancellationTokenSource> node;
-        lock (gate) { previous=tail; tail=finished.Task; node=jobs.AddLast(operation); details[operation]=new(++nextId,"","queue.preparing",DateTimeOffset.Now); }
+        lock (gate)
+        {
+            // Only finish a job already waiting when the new task is submitted.
+            if (completeCurrentTextWait && jobs.First is { } current && details[current.Value].AwaitingClose &&
+                dismissals.TryGetValue(details[current.Value].Id,out var completion)) completion.TrySetResult();
+            previous=tail; tail=finished.Task; node=jobs.AddLast(operation);
+            details[operation]=new(++nextId,"","queue.preparing",DateTimeOffset.Now);
+        }
         Changed?.Invoke();
         T? value=default;
         bool prepared=false;

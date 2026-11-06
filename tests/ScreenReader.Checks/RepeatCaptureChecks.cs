@@ -110,10 +110,9 @@ internal static partial class Program
                 registry.Register(new("prefetch-test","Prefetch test",false,_=>prefetched,false));
                 var orderedAudio=new OrderedPrefetchAudio();
                 var translated=new TestTranslator();
-                var detected=new TestGenderization { Result=SpeakerGender.Female };
-                reader=new ReadingController(capture,ocr,new IdentityTextTransform(),registry,orderedAudio,new NoFocus(),translated,detected);
+                reader=new ReadingController(capture,ocr,new IdentityTextTransform(),registry,orderedAudio,new NoFocus(),translated);
                 reader.Failed+=e=>readerFailure=e;
-                settings=settings with { SpeechProviderId="prefetch-test",CacheEnabled=false,Translation=new() { Enabled=true },Genderization=new() { Enabled=true } };
+                settings=settings with { SpeechProviderId="prefetch-test",CacheEnabled=false,Translation=new() { Enabled=true } };
                 ocr.Text="First";
                 var head=reader.CaptureAndReadAsync(settings);
                 await Select(region);
@@ -124,8 +123,8 @@ internal static partial class Program
                 ocr.Text="Third";
                 var last=reader.RepeatCaptureAndReadAsync(settings);
                 await WaitFor(()=>prefetched.Completed==3);
-                Assert(detected.Calls==3 && orderedAudio.Played.SequenceEqual(new byte[] { 1 }) && !head.IsCompleted,
-                    "Queued OCR, translation, gender detection and complete TTS finish while first playback is blocked");
+                Assert(prefetched.Completed==3 && orderedAudio.Played.SequenceEqual(new byte[] { 1 }) && !head.IsCompleted,
+                    "Queued OCR, translation and complete TTS finish while first playback is blocked");
                 orderedAudio.Release.TrySetResult();
                 await Task.WhenAll(head,next,last).WaitAsync(TimeSpan.FromSeconds(5));
                 Assert(orderedAudio.Played.SequenceEqual(new byte[] { 1,2,3 }) && readerFailure is null && !reader.IsBusy,
@@ -144,7 +143,7 @@ internal static partial class Program
         public Task<IReadOnlyList<SpeechVoice>> GetVoicesAsync(CancellationToken ct)=>Task.FromResult<IReadOnlyList<SpeechVoice>>([]);
         public async IAsyncEnumerable<byte[]> StreamAsync(SpeechRequest request,[System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
         {
-            Assert(request.Text=="Перевод" && request.Gender==SpeakerGender.Female,"Prefetch includes translation and detected voice");
+            Assert(request.Text=="Перевод","Prefetch includes translation");
             byte id=(byte)++Calls;
             await Task.Yield();
             ct.ThrowIfCancellationRequested();

@@ -122,10 +122,10 @@ internal static partial class Program
             Assert(speechChoices.SelectionMode==SelectionMode.Single && speechChoices.SelectedItems.Count==1,"Voice list permits exactly one selection");
             var preview=SetupWizard.VoicePreviewSettings(new AppSettings
             {
-                Language="ru-RU",Translation=new() { Enabled=true,TargetLanguage="de-DE" },Genderization=new() { Enabled=true }
+                Language="ru-RU",Translation=new() { Enabled=true,TargetLanguage="de-DE" }
             },choice);
             Assert(preview.Language==tag && preview.SelectedVoice==choice.ShortName && preview.SpeechProviderId=="edge" &&
-                !preview.Translation.Enabled && !preview.Genderization.Enabled && preview.FallbackRole is null,
+                !preview.Translation.Enabled && preview.FallbackRole is null,
                 "Voice sample uses the selected voice language without translation or role replacement");
         }
         speechLater.IsSelected=true;

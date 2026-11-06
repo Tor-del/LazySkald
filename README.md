@@ -50,22 +50,10 @@ The settings are organized into tabs following the reading pipeline:
 - **Text correction:** optional literal replacements before translation and speech. Add rules using the source and replacement fields; an empty replacement deletes text. Each rule has an **Ignore case** option, disabled by default. The list supports editing, cancelling edits and deleting rules. The prepared `/ → l` rule fixes italic Latin l. Existing text-based rules are imported automatically. Replacements apply everywhere, including word fragments, links and fractions; the longest match wins and replacement output is never processed again. Spaces at the edges are ignored. Click **Save** to apply. Disabled by default.
 - **Translation:** optional LLM translation, provider, model and prompt.
 - **Translation correction:** optional glossary with a form and a list. Enter the source term and preferred translation, or select **Leave unchanged**. **Ignore case** is enabled by default and saved separately for each entry. Use the row buttons to edit or delete entries; cancel discards edits to that entry. Duplicate rules with overlapping case settings are rejected. Only whole words or phrases found in the source text are appended to the translation prompt. Translation must be enabled. Click **Save** to apply the glossary. Existing text-based glossaries are imported automatically. Results depend on the model.
-- **Genderization:** optional narrator gender detection using LM Studio, Ollama or OpenAI API, with independent connection profiles, model discovery, prompt, temperature and timeout.
-- **Speech:** default voice settings; when genderization is enabled, a role list with add/remove controls for female and male roles. Select a role to edit its own TTS provider, voice, rate, playback device and server settings.
-- **Checks:** recognized or manually entered text, translation, detected gender and speech preview.
+- **Speech:** primary and optional fallback voice profiles with their own TTS provider, voice, rate, playback device and server settings.
+- **Checks:** recognized or manually entered text, translation and speech preview.
 - **Controls:** five independent hotkeys and game mode.
 - **Application:** interface language and tray behavior.
-
-Genderization runs after translation and receives both original and spoken text.
-It returns male, female or unknown; ambiguous or mixed narrator genders use the
-default voice. Each role has an independent TTS provider and full settings, including server URL,
-model, encrypted key and format. New roles start with a copy of the default profile.
-You can remove a role to use the default profile for that gender. Turning genderization
-off preserves the role profiles for later use. Previous voice-only roles migrate with
-their original TTS provider. Detected gender accompanies the selected voice in the TTS request.
-Genderization is disabled by default. Its API keys are encrypted with Windows DPAPI.
-Stopping cancels the LLM request. Failed, empty or truncated responses stop speech;
-unexpected non-empty classification responses use unknown gender.
 
 Press **Ctrl + Alt + R**, drag to select text, and release the mouse button.
 Press it again to recognize another fragment and append it to the reading queue without stopping current speech.
@@ -139,8 +127,8 @@ See `THIRD-PARTY-NOTICES.md` for dependency licenses.
 
 Enable caching on the Cache tab and save settings. Caching is off by default.
 Completed readings persist in `%LOCALAPPDATA%\ScreenReader\cache`, including
-original text, translation, detected gender and audio. Exact text and matching
-translation, genderization and TTS settings reuse the saved track without
+original text, translation and audio. Exact text and matching
+translation and TTS settings reuse the saved track without
 provider requests. Output device changes do not invalidate audio. Cancelled or
 failed readings are never saved.
 
@@ -247,7 +235,7 @@ Each missing model has a **Download** button. If Ollama is absent, the app first
 
 Available sizes: **4B (~3.3 GB)**, **12B (~8.1 GB)** and **27B (~17 GB)**. Automatic selection recommends 12B with at least 16 GB RAM and 12 GB VRAM, 27B with at least 32 GB RAM and 24 GB VRAM, otherwise 4B to limit CPU latency. These are conservative guidelines with room for the system and context, not GPU compatibility guarantees. Manual selection is available. Ollama itself needs about 4 GB of disk space.
 
-After downloading, click **Use for translation**, then **Save**. This enables translation and selects the local model while preserving other provider and genderization profiles. Ollama appears first in both LLM lists; existing saved provider selections remain unchanged.
+After downloading, click **Use for translation**, then **Save**. This enables translation and selects the local model while preserving other provider profiles. Ollama appears first in the LLM list; existing saved provider selections remain unchanged.
 
 The catalog also includes **Qwen2.5 Instruct 3B / 7B / 14B** (~1.9 / 4.7 / 9 GB) and **Gemma 3 4B / 12B** (~3.4 / 8.2 GB). Both support multilingual instructions, with explicit Russian support in Qwen2.5. Compare their translation quality on your own texts, particularly with glossaries and custom instructions. Automatic recommendations still use specialized TranslateGemma models.
 

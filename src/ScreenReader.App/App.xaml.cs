@@ -43,7 +43,6 @@ public partial class App : Application
         ReadingOverlay.ApplySettings(Settings.Overlay);
         Reader.StatusChanged += value=>settingsWindow?.SetStatus(value);
         Reader.TextTranslated += value=>settingsWindow?.SetTranslatedText(value);
-        Reader.GenderDetected += value=>settingsWindow?.SetGender(value);
         Reader.TextRecognized += value=>settingsWindow?.SetRecognizedText(value);
         Reader.Failed += error=>
         {
