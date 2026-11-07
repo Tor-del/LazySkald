@@ -38,7 +38,7 @@ jobs:
       - name: Check installer upgrades and uninstall
         run: ./tests/installer/Test-Upgrade.ps1
       - name: Upload release packages
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: LazySkald-win-x64
           path: artifacts/release/*
